@@ -6,7 +6,7 @@ const secret = new TextEncoder().encode(
   process.env.JWT_SECRET || "7-forge-inc-secret-key-1234567890-a-very-long-and-secure-one"
 );
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { nextUrl } = req;
   const token = req.cookies.get(AUTH_COOKIE_NAME)?.value;
 

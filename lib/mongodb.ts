@@ -38,8 +38,11 @@ async function ensureTTLIndex(db: Db) {
 export async function getDb(): Promise<Db> {
   if (_db) return _db;
 
-  if (!client.topology?.isConnected()) {
+  try {
     await client.connect();
+  } catch (error) {
+    console.error("MongoDB connection error:", error);
+    throw error;
   }
 
   // Fallback to "databases" if MONGODB_DB is not provided
