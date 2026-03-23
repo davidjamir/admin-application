@@ -1,0 +1,350 @@
+'use client'
+
+import { useCallback, useEffect, useState } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
+import { 
+  Copy, 
+  Loader2, 
+  RefreshCcw, 
+  Trash2, 
+  UserPlus, 
+  ShieldCheck, 
+  Briefcase,
+  ExternalLink,
+  History,
+  Users,
+  Search,
+  Database
+} from "lucide-react"
+import { SystemUser } from "@/types/facebook"
+import { facebookService } from "@/services/facebook.service"
+import { cn } from "@/lib/utils"
+
+type Props = { adminPassword: string; isAdminVerified: boolean }
+
+export default function SystemUserManager({ adminPassword, isAdminVerified }: Props) {
+    const [status, setStatus] = useState("Authenticated. Awaiting personnel query.")
+    const [systemUsers, setSystemUsers] = useState<SystemUser[]>([])
+    const [crawlToken, setCrawlToken] = useState("")
+    const [crawling, setCrawling] = useState(false)
+    const [saving, setSaving] = useState(false)
+    const [selectedBmFilter, setSelectedBmFilter] = useState("all")
+    const [search, setSearch] = useState("")
+
+    const loadSystemUsers = useCallback(async (password: string) => {
+        try {
+            const res = await fetch("/api/database/systemUsers/secure-list", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password }),
+            })
+            const data = await res.json()
+            if (!res.ok) throw new Error(data.message || "Cloud sync failed")
+            setSystemUsers(data.data ?? [])
+        } catch (err) {
+            toast.error("Personnel sync failed")
+        }
+    }, [])
+
+    useEffect(() => {
+        if (!isAdminVerified || !adminPassword.trim()) {
+            setSystemUsers([])
+            return
+        }
+        void loadSystemUsers(adminPassword.trim())
+    }, [isAdminVerified, adminPassword, loadSystemUsers])
+
+    const handleCrawl = async () => {
+        if (!crawlToken.trim()) return
+        try {
+            setCrawling(true)
+            setStatus("Establishing Graph API handshake...")
+            const me = await facebookService.getMe(crawlToken)
+            const businesses = await facebookService.getBusinesses(crawlToken)
+            
+            const userData: SystemUser = {
+                id: me.id,
+                name: me.name,
+                token: crawlToken,
+                role: "admin",
+                businessId: businesses[0]?.id || "",
+                businessName: businesses[0]?.name || "",
+                appName: "Managed Asset",
+                updatedAt: new Date()
+            }
+
+            setSystemUsers(prev => {
+                const filtered = prev.filter(u => u.id !== userData.id)
+                return [userData, ...filtered]
+            })
+            
+            toast.success(`Identity established: ${me.name}`)
+            setStatus("Identity node active. Ready for registration.")
+            setCrawlToken("")
+        } catch (err) {
+            toast.error("Handshake failed. Validate token.")
+        } finally {
+            setCrawling(false)
+        }
+    }
+
+    const handleSave = async (user: SystemUser) => {
+        try {
+            setSaving(true)
+            const res = await fetch("/api/database/systemUsers/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: adminPassword, userData: user }),
+            })
+            if (!res.ok) throw new Error("Registry failed")
+            toast.success("Identity permanently registered")
+            void loadSystemUsers(adminPassword)
+        } catch (err) {
+            toast.error("Cloud storage failed")
+        } finally {
+            setSaving(false)
+        }
+    }
+
+    const handleRecrawl = async (userId: string) => {
+        try {
+            setStatus(`Re-synchronizing node ${userId}...`)
+            const res = await fetch("/api/database/systemUsers/recrawl", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: adminPassword, userId }),
+            })
+            if (!res.ok) throw new Error("Sync failed")
+            toast.success("Identity synchronized with cloud")
+            void loadSystemUsers(adminPassword)
+        } catch (err) {
+            toast.error("Cloud re-sync failed")
+        }
+    }
+
+    const handleDelete = async (userId: string) => {
+        if (!confirm("Terminate identity node permanently?")) return
+        try {
+            const res = await fetch("/api/database/systemUsers/delete", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ password: adminPassword, userId }),
+            })
+            if (!res.ok) throw new Error("Termination failed")
+            toast.success("Identity node terminated")
+            setSystemUsers(prev => prev.filter(u => u.id !== userId))
+        } catch (err) {
+            toast.error("Command failed")
+        }
+    }
+
+    const bmFilterOptions = useMemo(() => {
+        const seen = new Set<string>()
+        return systemUsers
+            .map((u) => ({ id: (u.businessId ?? "").trim(), name: (u.businessName ?? "—").trim() || "—" }))
+            .filter((bm) => bm.id && !seen.has(bm.id) && seen.add(bm.id))
+    }, [systemUsers])
+
+    const filteredUsers = systemUsers.filter(u => {
+        const matchesBm = selectedBmFilter === "all" || (u.businessId ?? "").trim() === selectedBmFilter
+        const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.id.includes(search)
+        return matchesBm && matchesSearch
+    })
+
+    return (
+        <Card className="border-border/50 bg-card/60 backdrop-blur-xl shadow-xl overflow-hidden">
+            <CardHeader className="border-b border-border/50 bg-muted/30 pb-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                            <Users className="w-5 h-5 text-primary" />
+                        </div>
+                        <div>
+                            <CardTitle className="text-lg">Personnel Management</CardTitle>
+                            <p className="text-xs text-muted-foreground mt-0.5">{status}</p>
+                        </div>
+                    </div>
+                    <Badge variant="outline" className="text-[10px] font-mono bg-background/50">
+                        System User Module v2.0
+                    </Badge>
+                </div>
+            </CardHeader>
+
+            <CardContent className="p-6 space-y-6">
+                {/* Ingestion Controls */}
+                <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-3">
+                    <div className="relative group">
+                        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-hover:text-primary/50 transition-colors">
+                            <UserPlus className="w-4 h-4" />
+                        </div>
+                        <Input 
+                            value={crawlToken}
+                            onChange={(e) => setCrawlToken(e.target.value)}
+                            placeholder="Connect new identity token (EAAG...)"
+                            className="pl-9 h-11 bg-background/50 border-border/50 focus:ring-primary/20"
+                        />
+                    </div>
+                    <Button 
+                        onClick={handleCrawl} 
+                        disabled={crawling || !crawlToken.trim()}
+                        className="h-11 cursor-pointer font-bold shadow-lg shadow-primary/5"
+                    >
+                        {crawling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                        {crawling ? "Establishing..." : "Sync Identity"}
+                    </Button>
+                </div>
+
+                {/* Filters */}
+                <div className="flex flex-wrap items-center gap-3">
+                    <div className="relative w-full md:w-64">
+                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground/50" />
+                         <Input 
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Search Personnel..."
+                            className="pl-9 h-8 text-xs bg-muted/20 border-border/40"
+                         />
+                    </div>
+                    <div className="flex items-center gap-1.5 ml-auto">
+                        <div className="p-1 px-3 rounded-md bg-muted/30 border border-border/30">
+                            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Node Pool:</span>
+                        </div>
+                        <select 
+                            value={selectedBmFilter}
+                            onChange={(e) => setSelectedBmFilter(e.target.value)}
+                            className="h-8 rounded-md border border-border/50 bg-background/50 px-3 text-xs focus:ring-1 focus:ring-primary/20"
+                        >
+                            <option value="all">All Origin Nodes</option>
+                            {bmFilterOptions.map(bm => <option key={bm.id} value={bm.id}>{bm.name}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                {/* Personnel Table */}
+                <div className="rounded-xl border border-border/50 bg-background/50 overflow-hidden">
+                    <Table>
+                        <TableHeader className="bg-muted/50">
+                            <TableRow className="hover:bg-transparent border-border/50">
+                                <TableHead className="w-[180px] text-xs uppercase font-bold tracking-wider">Identity Name</TableHead>
+                                <TableHead className="text-xs uppercase font-bold tracking-wider">Node Context</TableHead>
+                                <TableHead className="text-xs uppercase font-bold tracking-wider">App Origin</TableHead>
+                                <TableHead className="text-xs uppercase font-bold tracking-wider">Sync Integrity</TableHead>
+                                <TableHead className="text-right text-xs uppercase font-bold tracking-wider pr-6">Operations</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {filteredUsers.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={5} className="py-20 text-center">
+                                        <div className="flex flex-col items-center gap-3 opacity-30">
+                                            <Briefcase className="w-10 h-10" />
+                                            <div className="space-y-1">
+                                                <p className="text-xs font-bold uppercase tracking-widest text-foreground">Personnel Pool Empty</p>
+                                                <p className="text-[10px] text-muted-foreground">Synchronize a new identity node to begin.</p>
+                                            </div>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                filteredUsers.map((user) => (
+                                    <TableRow key={user.id} className="group border-border/30 hover:bg-muted/30 transition-colors">
+                                        <TableCell className="py-3">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{user.name}</span>
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-[10px] font-mono text-muted-foreground/60">{user.id}</span>
+                                                    <button 
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(user.id)
+                                                            toast.success("Identity ID copied")
+                                                        }}
+                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-primary"
+                                                    >
+                                                        <Copy className="w-2.5 h-2.5" />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="flex flex-col gap-0.5">
+                                                <span className="text-xs font-medium text-muted-foreground">{user.businessName || "Untethered Node"}</span>
+                                                <span className="text-[9px] font-mono opacity-50">{user.businessId || "—"}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <Badge variant="outline" className="text-[9px] font-medium h-4 border-border/40 text-muted-foreground bg-muted/10">
+                                                {user.appName || "Standard Asset"}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="py-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" />
+                                                <span className="text-[10px] font-bold text-emerald-600/80 uppercase">Active Sync</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="py-3 pr-6 text-right">
+                                            <div className="flex items-center justify-end gap-1.5">
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                                                    onClick={() => {
+                                                        navigator.clipboard.writeText(user.token)
+                                                        toast.success("Auth Token copied")
+                                                    }}
+                                                    title="Copy Token"
+                                                >
+                                                    <History className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
+                                                    onClick={() => handleRecrawl(user.id)}
+                                                    title="Re-synchronize"
+                                                >
+                                                    <RefreshCcw className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 hover:bg-emerald-500/10 hover:text-emerald-500"
+                                                    onClick={() => handleSave(user)}
+                                                    disabled={saving}
+                                                    title="Flash to Cloud"
+                                                >
+                                                    <Database className="w-3.5 h-3.5" />
+                                                </Button>
+                                                <Button 
+                                                    size="icon" 
+                                                    variant="ghost" 
+                                                    className="h-8 w-8 hover:bg-destructive/10 hover:text-destructive"
+                                                    onClick={() => handleDelete(user.id)}
+                                                    title="Terminate Node"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </Button>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
+                        </TableBody>
+                    </Table>
+                </div>
+            </CardContent>
+        </Card>
+    )
+}
