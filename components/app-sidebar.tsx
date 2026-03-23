@@ -42,6 +42,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { SessionUser } from "@/lib/auth/session"
 
 // Sample navigation data
 const navItems = [
@@ -91,7 +92,11 @@ const settingsItems = [
   },
 ]
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  user?: SessionUser | null;
+}
+
+export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const { isMobile } = useSidebar()
 
   return (
@@ -164,8 +169,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                     <AvatarFallback className="rounded-lg bg-primary/10 text-primary">AD</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight ml-1">
-                    <span className="truncate font-semibold uppercase tracking-tight">7 Forge Admin</span>
-                    <span className="truncate text-[10px] text-muted-foreground">admin@7forge.com</span>
+                    <span className="truncate font-semibold uppercase tracking-tight">
+                      {user?.name || "7 Forge Admin"}
+                    </span>
+                    <span className="truncate text-[10px] text-muted-foreground">
+                      {user?.email || "admin@7forge.com"}
+                    </span>
                   </div>
                   <ChevronsUpDown className="ml-auto size-4" />
                 </SidebarMenuButton>
@@ -183,8 +192,8 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                       <AvatarFallback className="rounded-lg">SC</AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">shadcn</span>
-                      <span className="truncate text-xs">m@example.com</span>
+                      <span className="truncate font-semibold">{user?.name || "Admin"}</span>
+                      <span className="truncate text-xs">{user?.email || "admin@7forge.com"}</span>
                     </div>
                   </div>
                 </DropdownMenuLabel>

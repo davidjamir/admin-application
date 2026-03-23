@@ -99,7 +99,7 @@ export default function SchedulesPage() {
     const updateFreq = 1000;
 
     const timer = setInterval(() => {
-      if (document.visibilityState === 'visible') {
+      if (document.visibilityState === 'visible' && document.hasFocus()) {
         setNextSyncProgress(prev => {
           if (prev >= 100) {
             fetchData();
