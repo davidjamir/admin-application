@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -62,9 +62,28 @@ export default function BulkActionsHub({
   const [processing, setProcessing] = useState(false)
   const [responses, setResponses] = useState<ResponseItem[]>([])
 
+  // Auto-select defaults
+  useEffect(() => {
+    if (!targetBmId && businesses.length > 0) setTargetBmId(businesses[0].id)
+  }, [businesses, targetBmId])
+
+  useEffect(() => {
+    if (!targetSystemUserId && systemUsers.length > 0) setTargetSystemUserId(systemUsers[0].id)
+  }, [systemUsers, targetSystemUserId])
+
   const executeAction = async () => {
     if (selectedPageIds.length === 0) {
-      toast.error("Protocol error: No assets targeted.")
+      toast.error("Resource error: No assets selected for execution")
+      return
+    }
+
+    if (!targetBmId && !["remove-user-current-bm"].includes(action)) {
+      toast.error("Context error: Target Business must be specified")
+      return
+    }
+
+    if (["assign-user-current-bm", "remove-user-current-bm"].includes(action) && !targetSystemUserId) {
+      toast.error("Identity error: Target User must be specified")
       return
     }
     
