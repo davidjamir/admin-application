@@ -8,19 +8,7 @@ export async function POST(req: Request) {
     const { password } = (await req.json()) as { password?: string }
     const adminPassword = process.env.ADMIN_PASSWORD
 
-    if (!adminPassword) {
-      return NextResponse.json(
-        { success: false, message: "Admin password not configured" },
-        { status: 500 }
-      )
-    }
-
-    if (!password || password !== adminPassword) {
-      return NextResponse.json(
-        { success: false, message: "Invalid admin password" },
-        { status: 401 }
-      )
-    }
+    // Password requirement removed per user request to match previous project behavior
 
     const db = await getDb()
     const users = await db
