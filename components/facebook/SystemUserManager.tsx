@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -106,7 +106,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             const res = await fetch("/api/database/systemUsers/save", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: adminPassword, userData: user }),
+                body: JSON.stringify({ password: adminPassword, user }),
             })
             if (!res.ok) throw new Error("Registry failed")
             toast.success("Identity permanently registered")
@@ -124,7 +124,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             const res = await fetch("/api/database/systemUsers/recrawl", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: adminPassword, userId }),
+                body: JSON.stringify({ password: adminPassword, id: userId }),
             })
             if (!res.ok) throw new Error("Sync failed")
             toast.success("Identity synchronized with cloud")
@@ -140,7 +140,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             const res = await fetch("/api/database/systemUsers/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: adminPassword, userId }),
+                body: JSON.stringify({ password: adminPassword, id: userId }),
             })
             if (!res.ok) throw new Error("Termination failed")
             toast.success("Identity node terminated")
@@ -227,7 +227,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
                             className="h-8 rounded-md border border-border/50 bg-background/50 px-3 text-xs focus:ring-1 focus:ring-primary/20"
                         >
                             <option value="all">All Origin Nodes</option>
-                            {bmFilterOptions.map(bm => <option key={bm.id} value={bm.id}>{bm.name}</option>)}
+                            {bmFilterOptions.map((bm: {id: string, name: string}) => <option key={bm.id} value={bm.id}>{bm.name}</option>)}
                         </select>
                     </div>
                 </div>
@@ -301,7 +301,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
                                                     variant="ghost" 
                                                     className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
                                                     onClick={() => {
-                                                        navigator.clipboard.writeText(user.token)
+                                                        navigator.clipboard.writeText(user.token || "")
                                                         toast.success("Auth Token copied")
                                                     }}
                                                     title="Copy Token"
