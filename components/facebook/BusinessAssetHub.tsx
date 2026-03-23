@@ -13,8 +13,8 @@ import {
   Briefcase
 } from "lucide-react"
 import { cn } from "@/lib/utils"
-import FacebookLogin from "./FacebookLogin"
-import SystemUserManager from "./SystemUserManager"
+import TokenIngestion from "./TokenIngestion"
+import SystemUserHub from "./SystemUserHub"
 import PageManager from "./PageManager"
 
 type TabKey = "tokens" | "personnel" | "assets"
@@ -35,9 +35,9 @@ export default function BusinessAssetHub() {
              <div>
                <h1 className="text-2xl font-bold tracking-tight">Business Manager</h1>
                <div className="flex items-center gap-2 mt-0.5">
-                  <Badge variant="outline" className="text-[10px] font-mono h-4 bg-muted/50 border-border/50">PLATFORM_V2.0</Badge>
+                  <Badge variant="outline" className="text-[10px] font-mono h-4 bg-muted/50 border-border/50">Platform v3.0</Badge>
                   <div className="w-1 h-1 rounded-full bg-emerald-500" />
-                  <span className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider">Sync Integrity: 100%</span>
+                  <span className="text-[10px] text-emerald-600 font-bold tracking-wider">Sync Integrity: 100%</span>
                </div>
              </div>
           </div>
@@ -49,7 +49,7 @@ export default function BusinessAssetHub() {
             </TabsTrigger>
             <TabsTrigger value="personnel" className="px-5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all flex items-center gap-2">
               <Users className="w-4 h-4" />
-              <span className="hidden sm:inline">Personnel Hub</span>
+              <span className="hidden sm:inline">System User Hub</span>
             </TabsTrigger>
             <TabsTrigger value="assets" className="px-5 rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm transition-all flex items-center gap-2">
               <Layers className="w-4 h-4" />
@@ -59,10 +59,10 @@ export default function BusinessAssetHub() {
         </div>
 
         <TabsContent value="tokens" className="mt-0 focus-visible:outline-none">
-          <FacebookLogin adminPassword={adminPassword} isAdminVerified={isAdminVerified} />
+          <TokenIngestion adminPassword={adminPassword} isAdminVerified={isAdminVerified} />
         </TabsContent>
         <TabsContent value="personnel" className="mt-0 focus-visible:outline-none">
-          <SystemUserManager adminPassword={adminPassword} isAdminVerified={isAdminVerified} />
+          <SystemUserHub adminPassword={adminPassword} isAdminVerified={isAdminVerified} />
         </TabsContent>
         <TabsContent value="assets" className="mt-0 focus-visible:outline-none">
           <PageManager adminPassword={adminPassword} isAdminVerified={isAdminVerified} />

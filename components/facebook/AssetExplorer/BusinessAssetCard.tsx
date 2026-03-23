@@ -93,7 +93,7 @@ export default function BusinessAssetCard({
             <div>
               <div className="flex items-center gap-2">
                  <h3 className="text-sm font-bold tracking-tight">{business.name}</h3>
-                 <Badge variant="outline" className="text-[9px] h-4 font-mono uppercase bg-background px-1.5 border-border/40">
+                 <Badge variant="outline" className="text-[9px] h-4 font-mono bg-background px-1.5 border-border/40">
                     {business.id}
                  </Badge>
               </div>
@@ -107,7 +107,7 @@ export default function BusinessAssetCard({
         <div className="flex items-center gap-3">
            <div className="flex -space-x-1.5">
               {(business.permitted_roles ?? []).map((role, idx) => (
-                <Badge key={idx} variant="outline" className="text-[9px] font-bold h-4 uppercase border-primary/20 bg-primary/5 text-primary">
+                <Badge key={idx} variant="outline" className="text-[9px] font-bold h-4 border-primary/20 bg-primary/5 text-primary">
                   {role}
                 </Badge>
               ))}
@@ -129,9 +129,9 @@ export default function BusinessAssetCard({
                 <TableHead className="w-12 text-center py-2.5">
                    <Layers className="w-3.5 h-3.5 mx-auto opacity-40" />
                 </TableHead>
-                <TableHead className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Architectural Name</TableHead>
-                <TableHead className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Classification</TableHead>
-                <TableHead className="text-[10px] uppercase font-bold tracking-widest text-muted-foreground">Identity Status</TableHead>
+                <TableHead className="text-[10px] font-bold tracking-widest text-muted-foreground">Architectural Name</TableHead>
+                <TableHead className="text-[10px] font-bold tracking-widest text-muted-foreground">Classification</TableHead>
+                <TableHead className="text-[10px] font-bold tracking-widest text-muted-foreground">Identity Status</TableHead>
                 <TableHead className="w-12"></TableHead>
               </TableRow>
             </TableHeader>
@@ -167,19 +167,19 @@ export default function BusinessAssetCard({
                     </TableCell>
                     <TableCell className="py-2">
                        <Badge variant="outline" className="text-[9px] py-0 px-1.5 h-4 border-border/40 text-muted-foreground bg-muted/5 font-medium">
-                          {page.category || "GENERAL"}
+                          {page.category || "General"}
                        </Badge>
                     </TableCell>
                     <TableCell className="py-2">
                        {business.assignedPageIds.includes(page.id) ? (
                          <div className="flex items-center gap-1.5">
                             <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
-                            <span className="text-[10px] font-bold text-emerald-600/70 uppercase">In Control</span>
+                            <span className="text-[10px] font-bold text-emerald-600/70">In Control</span>
                          </div>
                        ) : (
                          <div className="flex items-center gap-1.5 opacity-40">
                             <Lock className="w-2.5 h-2.5" />
-                            <span className="text-[10px] font-bold uppercase">Locked</span>
+                            <span className="text-[10px] font-bold">Locked</span>
                          </div>
                        )}
                     </TableCell>

@@ -68,8 +68,9 @@ export default function BulkActionsHub({
   }, [businesses, targetBmId])
 
   useEffect(() => {
-    if (!targetSystemUserId && systemUsers.length > 0) setTargetSystemUserId(systemUsers[0].id)
-  }, [systemUsers, targetSystemUserId])
+    if (activeViewerId) setTargetSystemUserId(activeViewerId)
+    else if (!targetSystemUserId && systemUsers.length > 0) setTargetSystemUserId(systemUsers[0].id)
+  }, [systemUsers, targetSystemUserId, activeViewerId])
 
   const executeAction = async () => {
     if (selectedPageIds.length === 0) {
@@ -143,7 +144,7 @@ export default function BulkActionsHub({
           </div>
           <div>
             <CardTitle className="text-sm font-bold">Action Control Hub</CardTitle>
-            <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono opacity-60">
+            <p className="text-[10px] text-muted-foreground tracking-widest font-mono opacity-60">
               Targets: {selectedPageIds.length} Assets
             </p>
           </div>
@@ -153,7 +154,7 @@ export default function BulkActionsHub({
       <CardContent className="p-5 space-y-5">
         <div className="space-y-4">
            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Protocol Type</label>
+              <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Protocol Type</label>
               <Select value={action} onValueChange={(v) => setAction(v as ActionType)}>
                 <SelectTrigger className="h-10 bg-background/50 border-border/50 text-xs">
                   <SelectValue />
@@ -181,7 +182,7 @@ export default function BulkActionsHub({
            <div className="space-y-3 p-4 bg-muted/30 border border-border/40 rounded-xl">
               {action !== "remove-user-current-bm" && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Target Business (Context)</label>
+                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Target Business (Context)</label>
                   <Select value={targetBmId} onValueChange={setTargetBmId}>
                     <SelectTrigger className="h-9 bg-background/50 border-border/50 text-xs">
                       <SelectValue placeholder="Select BM..." />
@@ -195,7 +196,7 @@ export default function BulkActionsHub({
 
               {["assign-user-current-bm", "remove-user-current-bm"].includes(action) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Target Identity (User)</label>
+                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Target Identity (User)</label>
                   <Select value={targetSystemUserId} onValueChange={setTargetSystemUserId}>
                     <SelectTrigger className="h-9 bg-background/50 border-border/50 text-xs">
                       <SelectValue placeholder="Select User..." />
@@ -213,19 +214,19 @@ export default function BulkActionsHub({
 
               {["assign-user-current-bm", "share-other-bm"].includes(action) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">Authority Level</label>
+                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Authority Level</label>
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
                       variant={taskMode === "basic" ? "default" : "outline"}
                       onClick={() => setTaskMode("basic")}
-                      className="flex-1 h-8 text-[10px] uppercase font-bold"
+                      className="flex-1 h-8 text-[10px] font-bold"
                     >Basic Access</Button>
                     <Button 
                       size="sm" 
                       variant={taskMode === "full" ? "default" : "outline"}
                       onClick={() => setTaskMode("full")}
-                      className="flex-1 h-8 text-[10px] uppercase font-bold"
+                      className="flex-1 h-8 text-[10px] font-bold"
                     >Full Hierarchy</Button>
                   </div>
                 </div>
@@ -246,7 +247,7 @@ export default function BulkActionsHub({
         {responses.length > 0 && (
            <div className="pt-4 border-t border-dashed border-border/50 space-y-3">
               <div className="flex items-center justify-between">
-                 <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                 <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-muted-foreground">
                     <History className="w-3.5 h-3.5" /> Execution Log
                  </div>
                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={handleCopyLogs}>
