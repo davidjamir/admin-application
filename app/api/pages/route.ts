@@ -12,12 +12,12 @@ export async function GET(request: Request) {
     const forceRecrawl = searchParams.get("forceRecrawl") === "true"
     
     // 1. Try fetching from Redis first unless force recrawl requested
-    let cacheWrapper: any = null
+    let cacheWrapper: { data: Record<string, unknown>[]; timestamp: number } | null = null
     if (!forceRecrawl) {
       cacheWrapper = await redis.get(cacheKey)
     }
     
-    let rawData: any[] = []
+    let rawData: Record<string, unknown>[] = []
     let fetchedAt: number = 0
 
     // 2. Cache MISS or FORCE RECRAWL: Fetch from MongoDB
@@ -32,23 +32,42 @@ export async function GET(request: Request) {
       const queueCounts = await Promise.all(
         documents.map(doc => 
           db.collection("social_queue").countDocuments({ 
-            page: doc.name,
+            page: doc.name as string,
             scheduleAt: { $gte: Date.now() - 3600000 } // Đang chờ hoặc vừa đăng xoay vòng gần đây
           }).catch(() => 0) 
         )
       )
       
+      interface MongoDoc {
+        _id?: { toString(): string };
+        name?: string;
+        createdAt?: Date | { $date: string };
+        updatedAt?: Date | { $date: string };
+        lastScheduledAt?: number;
+        lastActionAt?: number;
+        contentPreview?: string;
+        category?: string;
+      }
+      
       // Map MongoDB BSON structure into standard UI payload
-      rawData = documents.map((doc, index) => ({
-        ...doc,
-        _id: { $oid: doc._id?.toString() || "" }, // Defensive mapping for ObjectId
-        createdAt: doc.createdAt?.$date ? doc.createdAt : { $date: doc.createdAt ? new Date(doc.createdAt).toISOString() : new Date(0).toISOString() },
-        updatedAt: doc.updatedAt?.$date ? doc.updatedAt : { $date: doc.updatedAt ? new Date(doc.updatedAt).toISOString() : new Date(0).toISOString() },
-        lastScheduledAt: doc.lastScheduledAt || Date.now() - 31536000000, 
-        lastActionAt: doc.lastActionAt || Date.now() - 31536000000,
-        contentPreview: doc.contentPreview || "Sẵn sàng phân phối nội dung...",
-        queueCount: queueCounts[index] || 0
-      }))
+      rawData = (documents as MongoDoc[]).map((doc, index) => {
+        const toISO = (d: Date | { $date: string } | undefined) => {
+          if (!d) return new Date(0).toISOString();
+          if (d instanceof Date) return d.toISOString();
+          return d.$date;
+        };
+
+        return {
+          ...doc,
+          _id: { $oid: doc._id?.toString() || "" }, // Defensive mapping for ObjectId
+          createdAt: { $date: toISO(doc.createdAt) },
+          updatedAt: { $date: toISO(doc.updatedAt) },
+          lastScheduledAt: doc.lastScheduledAt || Date.now() - 31536000000, 
+          lastActionAt: doc.lastActionAt || Date.now() - 31536000000,
+          contentPreview: doc.contentPreview || "Sẵn sàng phân phối nội dung...",
+          queueCount: queueCounts[index] || 0
+        };
+      }) as Record<string, unknown>[]
 
       fetchedAt = Date.now()
       cacheWrapper = { data: rawData, timestamp: fetchedAt }
@@ -66,17 +85,17 @@ export async function GET(request: Request) {
 
     // 3. Apply Filters locally so cache is utilized maximally for all filters
     if (categoryFilter && categoryFilter !== "All") {
-      filteredData = filteredData.filter((page) => page.category === categoryFilter)
+      filteredData = filteredData.filter((page) => (page.category as string) === categoryFilter)
     }
 
     if (searchFilter) {
       filteredData = filteredData.filter((page) =>
-        page?.name?.toLowerCase().includes(searchFilter.toLowerCase())
+        (page?.name as string | undefined)?.toLowerCase().includes(searchFilter.toLowerCase())
       )
     }
 
     // 4. Sort correctly based on Health curve timing
-    filteredData.sort((a, b) => (b.lastScheduledAt || 0) - (a.lastScheduledAt || 0))
+    filteredData.sort((a, b) => ((b.lastScheduledAt as number) || 0) - ((a.lastScheduledAt as number) || 0))
 
     return NextResponse.json({
       data: filteredData,
@@ -84,12 +103,13 @@ export async function GET(request: Request) {
       fetchedAt
     })
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Critical System Error [MongoDB/Redis]:", error)
     // Fallback graceful degradation
+    const message = error instanceof Error ? error.message : String(error)
     return NextResponse.json({ 
       error: "Internal Server System Failure", 
-      message: String(error)
+      message
     }, { status: 500 })
   }
 }

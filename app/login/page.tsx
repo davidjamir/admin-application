@@ -7,30 +7,23 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   Loader2, Lock, Mail, ArrowRight, ShieldCheck,
-  Terminal as TerminalIcon, Cpu, Globe, Zap,
-  Sun, Moon, LayoutGrid
+  Globe, Zap,
+  Sun, Moon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Terminal component to simulate tech environment
 const Terminal = () => {
   const [lines, setLines] = useState<string[]>([]);
-  const techLines = [
-    "> Initialize Secure Protocol...",
-    "> Establishing handshaking with MongoDB Atlas",
-    "> Auth service online: v2.4.0",
-    "> Deploying firewall layers...",
-    "> Session timeout: 7200s",
-    "> 7 Forge Systems: Ready for operation",
-    "> Root access requested...",
-    "> System status: PURE_PERFORMANCE",
-    "> Loading Administrative UI modules...",
-    "> Traffic analyzed: 100% clean",
-    "> AI heuristics initialized...",
-    "> Real-time media processing: OK"
-  ];
-
+  
   useEffect(() => {
+    const techLines = [
+      "INITIALIZING_CORE_HANDSHAKE...",
+      "ESTABLISHING_ENCRYPTED_TUNNEL...",
+      "VERIFYING_REGISTRY_INTEGRITY...",
+      "SYNCHRONIZING_ASSET_METADATA...",
+      "READY_FOR_PROVISIONING."
+    ];
     let index = 0;
     const interval = setInterval(() => {
       setLines(prev => [...prev.slice(-7), techLines[index]]);
@@ -102,7 +95,7 @@ export default function LoginPage() {
           description: data.message || "Credential mismatch detected.",
         });
       }
-    } catch (error) {
+    } catch {
       toast.error("Infrastructure Error", {
         description: "Node synchronization failed.",
       });

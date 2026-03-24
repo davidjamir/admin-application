@@ -1,11 +1,10 @@
 'use client'
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+
 import { 
   Zap, 
   Share2, 
@@ -103,7 +102,11 @@ export default function BulkActionsHub({
           result = await facebookService.assignUserToPagesByBusinessAssignedUsersBatch(selectedPageIds, targetBmId, targetSystemUserId, activeToken, taskMode)
           break
         case "remove-user-current-bm":
-          result = await facebookService.removeSystemUserFromPagesByPageAssignedUsersBatch(selectedPageIds, targetSystemUserId, activeToken)
+          if (targetBmId) {
+            result = await facebookService.removeSystemUserFromPagesBatch(selectedPageIds, targetBmId, targetSystemUserId, activeToken)
+          } else {
+            result = await facebookService.removeSystemUserFromPagesByPageAssignedUsersBatch(selectedPageIds, targetSystemUserId, activeToken)
+          }
           break
         case "remove-page-current-bm":
           result = await facebookService.removePagesFromBusinessBatch(selectedPageIds, targetBmId, activeToken)
@@ -122,7 +125,7 @@ export default function BulkActionsHub({
       else toast.error(`Partial failure: ${result.failed.length} nodes rejected command`)
       
       onSuccess()
-    } catch (err) {
+    } catch {
       toast.error("Critical execution error")
     } finally {
       setProcessing(false)
@@ -144,7 +147,7 @@ export default function BulkActionsHub({
           </div>
           <div>
             <CardTitle className="text-sm font-bold">Action Control Hub</CardTitle>
-            <p className="text-[10px] text-muted-foreground tracking-widest font-mono opacity-60">
+            <p className="text-xs text-black tracking-tight font-extrabold">
               Targets: {selectedPageIds.length} Assets
             </p>
           </div>
@@ -154,13 +157,13 @@ export default function BulkActionsHub({
       <CardContent className="p-5 space-y-5">
         <div className="space-y-4">
            <div className="space-y-1.5">
-              <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Protocol Type</label>
+              <label className="text-sm font-bold tracking-widest text-muted-foreground ml-1">Protocol Type</label>
               <Select value={action} onValueChange={(v) => setAction(v as ActionType)}>
-                <SelectTrigger className="h-10 bg-background/50 border-border/50 text-xs">
+                <SelectTrigger className="h-10 bg-background/50 border-border/50 text-sm font-bold text-black">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="assign-user-current-bm" className="text-xs">
+                  <SelectItem value="assign-user-current-bm" className="text-sm">
                     <div className="flex items-center gap-2"><UserPlus className="w-3.5 h-3.5" /> Assign to User</div>
                   </SelectItem>
                   <SelectItem value="remove-user-current-bm" className="text-xs">
@@ -180,15 +183,15 @@ export default function BulkActionsHub({
            </div>
 
            <div className="space-y-3 p-4 bg-muted/30 border border-border/40 rounded-xl">
-              {action !== "remove-user-current-bm" && (
+            {["assign-user-current-bm", "add-current-bm", "remove-page-current-bm", "remove-user-current-bm", "share-other-bm"].includes(action) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Target Business (Context)</label>
+                  <label className="text-sm font-bold tracking-tight text-black ml-1">Target Business (Context)</label>
                   <Select value={targetBmId} onValueChange={setTargetBmId}>
-                    <SelectTrigger className="h-9 bg-background/50 border-border/50 text-xs">
+                    <SelectTrigger className="h-11 bg-background/50 border-border/50 text-sm">
                       <SelectValue placeholder="Select BM..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {businesses.map(bm => <SelectItem key={bm.id} value={bm.id} className="text-xs">{bm.name}</SelectItem>)}
+                      {businesses.map(bm => <SelectItem key={bm.id} value={bm.id} className="text-sm">{bm.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
@@ -196,14 +199,14 @@ export default function BulkActionsHub({
 
               {["assign-user-current-bm", "remove-user-current-bm"].includes(action) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Target Identity (User)</label>
+                  <label className="text-sm font-bold tracking-tight text-black ml-1">Target Identity (User)</label>
                   <Select value={targetSystemUserId} onValueChange={setTargetSystemUserId}>
-                    <SelectTrigger className="h-9 bg-background/50 border-border/50 text-xs">
+                    <SelectTrigger className="h-11 bg-background/50 border-border/50 text-sm font-bold text-black">
                       <SelectValue placeholder="Select User..." />
                     </SelectTrigger>
                     <SelectContent>
                       {systemUsers.map(u => (
-                         <SelectItem key={u.id} value={u.id} className="text-xs">
+                         <SelectItem key={u.id} value={u.id} className="text-sm font-bold text-black">
                            {u.name} • {u.businessName || "No BM"}
                          </SelectItem>
                       ))}
@@ -214,19 +217,19 @@ export default function BulkActionsHub({
 
               {["assign-user-current-bm", "share-other-bm"].includes(action) && (
                 <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Authority Level</label>
+                  <label className="text-sm font-bold tracking-tight text-black ml-1">Authority Level</label>
                   <div className="flex gap-2">
                     <Button 
                       size="sm" 
                       variant={taskMode === "basic" ? "default" : "outline"}
                       onClick={() => setTaskMode("basic")}
-                      className="flex-1 h-8 text-[10px] font-bold"
+                      className="flex-1 h-9 text-sm font-bold"
                     >Basic Access</Button>
                     <Button 
                       size="sm" 
                       variant={taskMode === "full" ? "default" : "outline"}
                       onClick={() => setTaskMode("full")}
-                      className="flex-1 h-8 text-[10px] font-bold"
+                      className="flex-1 h-9 text-sm font-bold"
                     >Full Hierarchy</Button>
                   </div>
                 </div>

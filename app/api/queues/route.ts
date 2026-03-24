@@ -8,7 +8,7 @@ export async function GET(request: Request) {
   const cacheKey = "queues_data_master_v2" // Versioned cache key
 
   try {
-    let payload: any = force ? null : await redis.get(cacheKey)
+    let payload: { crawlQueue: unknown[]; newsQueue: unknown[]; socialQueue: unknown[]; stats: unknown; fetchedAt: number } | null = force ? null : await redis.get(cacheKey)
 
     if (!payload) {
       console.log("[QUEUES API] Fetching fresh data from MongoDB...")
@@ -32,18 +32,18 @@ export async function GET(request: Request) {
         ]).toArray()
       ])
 
-      const mapDoc = (doc: any) => {
-        const getTimestamp = (val: any) => {
+      const mapDoc = (doc: Record<string, unknown>) => {
+        const getTimestamp = (val: string | number | Date | { $date?: string | number | Date } | undefined | null) => {
           if (!val) return Date.now();
           if (typeof val === 'number') return val;
-          if (val.$date) return new Date(val.$date).getTime();
-          return new Date(val).getTime();
+          if (typeof val === 'object' && "$date" in val && val.$date) return new Date(val.$date as string | number | Date).getTime();
+          return new Date(val as string | number | Date).getTime();
         };
 
         return {
           ...doc,
-          _id: doc._id?.toString(),
-          createdAt: new Date(getTimestamp(doc.createdAt)).toISOString(),
+          _id: (doc._id as { toString(): string })?.toString(),
+          createdAt: new Date(getTimestamp(doc.createdAt as string | number | Date | { $date?: string | number | Date } | undefined | null)).toISOString(),
           itemId: String(doc.itemId || "N/A"),
         };
       };
@@ -82,9 +82,9 @@ export async function GET(request: Request) {
         socialQueue: processedSocial,
         stats: {
           crawl: {
-            total: crawlStats.reduce((acc, curr) => acc + curr.count, 0),
+            total: crawlStats.reduce((acc, curr) => acc + (curr.count as number || 0), 0),
             types: crawlStats.reduce((acc, curr) => ({ ...acc, [curr._id || 'unknown']: curr.count }), {}),
-            fails: crawlStats.reduce((acc, curr) => acc + (curr.totalFails || 0), 0)
+            fails: crawlStats.reduce((acc, curr) => acc + (curr.totalFails as number || 0), 0)
           },
           news: {
             total: newsTotal
@@ -101,8 +101,9 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(payload)
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Queues API Error:", error)
-    return NextResponse.json({ error: "Failed to load queues", details: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: "Failed to load queues", details: message }, { status: 500 })
   }
 }

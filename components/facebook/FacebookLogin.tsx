@@ -1,17 +1,17 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow
 } from "@/components/ui/table"
-import { 
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -21,16 +21,13 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
-import { 
-  Copy, 
-  Loader2, 
-  Key, 
-  Search, 
+import {
+  Copy,
+  Loader2,
+  Key,
   Database,
-  Briefcase,
-  Layers,
-  CheckCircle2,
-  AlertCircle
+  Search,
+  Layers
 } from "lucide-react"
 import { facebookService } from "@/services/facebook.service"
 import { FacebookPage, SystemUser } from "@/types/facebook"
@@ -41,24 +38,13 @@ type Props = { adminPassword: string; isAdminVerified: boolean }
 export default function FacebookLogin({ adminPassword, isAdminVerified }: Props) {
     const [status, setStatus] = useState("Select identity to discover assets.")
     const [systemUsers, setSystemUsers] = useState<SystemUser[]>([])
-    const [selectedBmFilter, setSelectedBmFilter] = useState("all")
     const [selectedSystemUserId, setSelectedSystemUserId] = useState("")
     const [pages, setPages] = useState<FacebookPage[]>([])
     const [selectedPageIds, setSelectedPageIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
     const [loadingPages, setLoadingPages] = useState(false)
 
-    const bmFilterOptions = useMemo(() => {
-        const seen = new Set<string>()
-        return systemUsers
-            .map((u) => ({ id: (u.businessId ?? "").trim(), name: (u.businessName ?? "—").trim() || "—" }))
-            .filter((bm) => bm.id && !seen.has(bm.id) && seen.add(bm.id))
-    }, [systemUsers])
 
-    const filteredSystemUsers = useMemo(() => {
-        if (selectedBmFilter === "all") return systemUsers
-        return systemUsers.filter((u) => (u.businessId ?? "").trim() === selectedBmFilter)
-    }, [systemUsers, selectedBmFilter])
 
     const selectedUser = systemUsers.find((u) => u.id === selectedSystemUserId)
 
@@ -72,7 +58,7 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
             const data = await res.json()
             if (!res.ok) throw new Error(data.message || "Failed to load personnel")
             setSystemUsers(data.data ?? [])
-        } catch (err) {
+        } catch {
             toast.error("Cloud sync failed")
         }
     }, [])
@@ -80,7 +66,6 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
     useEffect(() => {
         if (!isAdminVerified || !adminPassword.trim()) {
             setSystemUsers([])
-            setSelectedBmFilter("all")
             setSelectedSystemUserId("")
             setPages([])
             return
@@ -100,11 +85,15 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
                 setLoadingPages(true)
                 setStatus("Crawling page assets...")
                 const fetchedPages = await facebookService.getPages(token)
-                setPages(fetchedPages)
+                const mappedPages = fetchedPages.map(p => ({
+                    ...p,
+                    topic: selectedUser?.category || ""
+                }))
+                setPages(mappedPages)
                 setSelectedPageIds([])
                 setStatus(`${fetchedPages.length} pages ready for ingestion.`)
                 toast.success(`Discovered ${fetchedPages.length} assets`)
-            } catch (err: unknown) {
+            } catch {
                 toast.error("Asset discovery failed")
                 setStatus("Discovery failed. Check identity permissions.")
             } finally {
@@ -112,7 +101,7 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
             }
         }
         void fetchPages()
-    }, [selectedSystemUserId, isAdminVerified])
+    }, [selectedSystemUserId, isAdminVerified, selectedUser?.token, selectedUser?.category])
 
     const isAllSelected = pages.length > 0 && pages.every((p) => selectedPageIds.includes(p.id))
 
@@ -131,6 +120,7 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
                 systemUserName: selectedUser?.name ?? "",
                 appName: selectedUser?.appName ?? "",
                 category: page.category ?? "",
+                topic: selectedUser?.category || "",
                 token: page.access_token,
             }))
 
@@ -145,7 +135,7 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
             toast.success(`Registered ${selectedPages.length} assets`)
             setStatus(`Ingestion complete: ${selectedPages.length} tokens stored.`)
             setSelectedPageIds([])
-        } catch (err: unknown) {
+        } catch {
             toast.error("Token storage failed")
         } finally {
             setSaving(false)
@@ -232,24 +222,25 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
                                         className="border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                     />
                                 </TableHead>
-                                <TableHead className="text-xs uppercase font-bold tracking-wider">Page Architecture</TableHead>
-                                <TableHead className="text-xs uppercase font-bold tracking-wider">Category</TableHead>
-                                <TableHead className="text-xs uppercase font-bold tracking-wider">Token Health</TableHead>
-                                <TableHead className="text-right text-xs uppercase font-bold tracking-wider pr-6">Operations</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Page Identity</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Category</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Topic</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Token Health</TableHead>
+                                <TableHead className="text-right text-xs uppercase font-extrabold tracking-wider pr-6 text-foreground">Operations</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loadingPages ? (
                                 Array.from({ length: 4 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={5} className="py-8 text-center">
+                                        <TableCell colSpan={6} className="py-8 text-center">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground opacity-20" />
                                         </TableCell>
                                     </TableRow>
                                 ))
                             ) : pages.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="py-20 text-center">
+                                    <TableCell colSpan={6} className="py-20 text-center">
                                         <div className="flex flex-col items-center gap-3 opacity-30">
                                             <Layers className="w-10 h-10" />
                                             <div className="space-y-1">
@@ -281,24 +272,27 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
                                                 className="border-border/60"
                                             />
                                         </TableCell>
-                                        <TableCell className="py-3">
-                                            <div className="flex flex-col gap-0.5">
-                                                <span className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{page.name}</span>
-                                                <div className="flex items-center gap-2">
-                                                    <span className="text-[10px] font-mono text-muted-foreground/60">{page.id}</span>
-                                                    <button 
-                                                        onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Page ID") }}
-                                                        className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-primary"
-                                                    >
-                                                        <Copy className="w-2.5 h-2.5" />
-                                                    </button>
-                                                </div>
+                                        <TableCell className="py-3 text-left">
+                                            <span className="text-[10px] font-medium text-foreground transition-colors group-hover:text-primary">{page.name}</span>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-[10px] font-mono text-foreground">{page.id}</span>
+                                                <button 
+                                                    onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Page ID") }}
+                                                    className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-primary"
+                                                >
+                                                    <Copy className="w-2.5 h-2.5" />
+                                                </button>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="py-3">
-                                            <Badge variant="outline" className="text-[9px] font-medium h-4 border-border/40 text-muted-foreground bg-muted/10">
-                                                {page.category || "General"}
-                                            </Badge>
+                                        <TableCell className="py-3 text-left">
+                                            <span className="text-[10px] font-medium text-foreground">
+                                                {page.category || "-"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="py-3 text-left">
+                                            <span className="text-[10px] font-medium text-foreground">
+                                                {page.topic || "-"}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="py-3">
                                             <div className="flex items-center gap-2">
@@ -311,7 +305,7 @@ export default function FacebookLogin({ adminPassword, isAdminVerified }: Props)
                                                 size="sm"
                                                 variant="outline"
                                                 onClick={() => handleCopy(page.access_token, "Page Token")}
-                                                className="h-7 text-[10px] px-2 font-mono border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all"
+                                                className="h-7 text-[10px] px-2 font-mono border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all text-foreground"
                                             >
                                                 <Copy className="w-3 h-3 mr-1.5" />
                                                 EP...{page.access_token.slice(-6)}

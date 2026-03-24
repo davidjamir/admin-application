@@ -24,7 +24,7 @@ export async function proxy(req: NextRequest) {
 
     try {
       await jwtVerify(token, secret);
-    } catch (error) {
+    } catch {
       // Token expired or invalid
       const response = NextResponse.redirect(new URL("/login", req.url));
       response.cookies.delete(AUTH_COOKIE_NAME);
@@ -36,7 +36,7 @@ export async function proxy(req: NextRequest) {
     try {
       await jwtVerify(token, secret);
       return NextResponse.redirect(new URL("/", req.url));
-    } catch (error) {
+    } catch {
       // Ignore if token is invalid on login page
     }
   }

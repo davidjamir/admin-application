@@ -18,22 +18,7 @@ attachDatabasePool(client);
 let _db: Db | null = null;
 let _initialized = false;
 
-// Optional TTL indexing as referenced by your blueprint
-const BATCHES_TTL_INDEX_NAME = "batches_createdAt_ttl";
-const BATCHES_TTL_SECONDS = Math.max(
-  60,
-  Number(process.env.BATCHES_TTL_SECONDS || 60 * 60 * 12),
-);
 
-async function ensureTTLIndex(db: Db) {
-  try {
-    const queueCol = db.collection("queue");
-    // Just a placeholder implementation from your logic
-    // await queueCol.createIndex({ createdAt: 1 }, { expireAfterSeconds: BATCHES_TTL_SECONDS, name: BATCHES_TTL_INDEX_NAME });
-  } catch (e) {
-    console.error("Failed to create TTL index", e);
-  }
-}
 
 export async function getDb(): Promise<Db> {
   if (_db) return _db;

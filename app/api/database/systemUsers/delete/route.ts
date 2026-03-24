@@ -5,7 +5,7 @@ export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
-    const { password, id } = (await req.json()) as { password?: string; id?: string }
+    const { id } = (await req.json()) as { id?: string }
     // Password requirement removed per user request
 
     if (!id) {

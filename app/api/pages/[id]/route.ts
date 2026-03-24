@@ -17,7 +17,7 @@ export async function GET(
   const cacheKey = `page_details_${pageId}`
 
   try {
-    let payload: any = force ? null : await redis.get(cacheKey)
+    let payload: Record<string, unknown> | null = force ? null : await redis.get(cacheKey)
 
     if (!payload) {
       const db = await getDb()
@@ -49,15 +49,15 @@ export async function GET(
         // document lưu reference thông qua trường string "page" (chứa tên của thẻ page).
         const queueCollection = db.collection("social_queue")
         const rawQueue = await queueCollection.find({
-          page: doc.name
+          page: doc.name as string
         }).sort({ scheduleAt: 1 }).limit(50).toArray()
 
-        const mappedQueue = rawQueue.map((item: any) => ({
-          id: item._id?.toString() || item.itemId || Math.random().toString(),
-          content: `ItemID: ${item.itemId || "N/A"}`,
+        const mappedQueue = rawQueue.map((item) => ({
+          id: (item._id as { toString(): string })?.toString() || (item.itemId as string) || Math.random().toString(),
+          content: `ItemID: ${(item.itemId as string) || "N/A"}`,
           scheduledAt: typeof item.scheduleAt === 'number' 
             ? item.scheduleAt 
-            : new Date(item.scheduleAt || item.createdAt || Date.now()).getTime(),
+            : new Date((item.scheduleAt as string | number | Date) || (item.createdAt as string | number | Date) || Date.now()).getTime(),
           status: "PENDING"
         }))
 
@@ -72,7 +72,7 @@ export async function GET(
         let countTomorrow = 0
         let countLater = 0
 
-        mappedQueue.forEach((qItem: any) => {
+        mappedQueue.forEach((qItem) => {
           const t = qItem.scheduledAt
           if (t >= nowMs) {
             const dStr = getHCMDateStr(t)
@@ -95,8 +95,9 @@ export async function GET(
     }
 
     return NextResponse.json(payload)
-  } catch(error: any) {
+  } catch(error: unknown) {
     console.error("Page Details DB Error:", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

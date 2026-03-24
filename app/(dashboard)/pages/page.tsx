@@ -11,6 +11,7 @@ export interface MongoPageData {
   pageId: string
   appName: string
   category: string
+  topic?: string
   createdAt: { $date: string }
   name: string
   source: string
@@ -283,7 +284,11 @@ export default function PagesManagementPage() {
                 
                 <CardFooter className="px-5 py-2.5 bg-muted/30 border-t flex flex-col gap-1.5 text-[11px] text-muted-foreground">
                   <div className="flex w-full justify-between items-center pt-0.5">
-                    <span className="font-medium text-foreground">{page.category}</span>
+                    {page.topic ? (
+                      <span className="font-bold text-primary tracking-tight">{page.topic}</span>
+                    ) : (
+                      <span className="font-medium text-foreground opacity-0">—</span>
+                    )}
                     <span className="flex items-center gap-1">Last scheduled: <span className="font-semibold text-foreground">{
                        !page.lastScheduledAt || page.lastScheduledAt < 0 
                          ? "Chưa có lịch" 
@@ -318,12 +323,14 @@ export default function PagesManagementPage() {
                 <div>
                   <h2 className="text-xl font-bold">{selectedPage.name}</h2>
                   <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1.5">
-                    <span 
-                      className="px-2 py-0.5 rounded-md font-medium border"
-                      style={{ color: sheetColor, borderColor: `${sheetColor}40`, backgroundColor: `${sheetColor}10` }}
-                    >
-                      {selectedPage.category}
-                    </span>
+                    {selectedPage.topic && (
+                      <span 
+                        className="px-2 py-0.5 rounded-md font-medium border"
+                        style={{ color: sheetColor, borderColor: `${sheetColor}40`, backgroundColor: `${sheetColor}10` }}
+                      >
+                        {selectedPage.topic}
+                      </span>
+                    )}
                     <span>•</span>
                     <span>ID: {selectedPage.pageId}</span>
                     <span className="flex-1"></span>
@@ -341,7 +348,7 @@ export default function PagesManagementPage() {
                                 const data = await res.json()
                                 setDetails(data)
                                 toast.success("Recrawl complete", { id: toastId })
-                              } catch(e) {
+                              } catch {
                                 toast.error("Recrawl failed", { id: toastId })
                               }
                             }}

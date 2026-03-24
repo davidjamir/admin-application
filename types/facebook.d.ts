@@ -57,6 +57,7 @@ export interface SystemUser {
   appName?: string
   businessId?: string
   businessName?: string
+  category?: string
   roleCode?: string
   role?: "admin" | "employee" | string
   description?: string
@@ -69,6 +70,7 @@ export interface FacebookPage {
   name: string
   access_token: string
   category?: string
+  topic?: string
   category_list?: Array<{ id: string; name: string }>
   about?: string
   description?: string

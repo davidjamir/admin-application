@@ -31,7 +31,7 @@ const EMPTY_FORM = { name: "", source: "", domain: "", origin: "", content: "", 
 export default function AdCreativesPage() {
   const [items, setItems]             = useState<AdItem[]>([])
   const [loading, setLoading]         = useState(true)
-  const [refreshing, setRefreshing]   = useState(false)
+  const [, setRefreshing]   = useState(false)
   const [fetchedAt, setFetchedAt]     = useState<number | null>(null)
   const [hasMounted, setHasMounted]   = useState(false)
   
@@ -82,10 +82,10 @@ export default function AdCreativesPage() {
       
       const getOrigin = (domain: string) => domain.split(".").slice(-2).join(".")
       
-      if (data.blogs) data.blogs.forEach((b: any) => origins.add(getOrigin(b.blogDns)))
-      if (data.wraps) data.wraps.forEach((w: any) => origins.add(getOrigin(w.target_host)))
+      if (data.blogs) data.blogs.forEach((b: { blogDns: string }) => origins.add(getOrigin(b.blogDns)))
+      if (data.wraps) data.wraps.forEach((w: { target_host: string }) => origins.add(getOrigin(w.target_host)))
       if (data.quotas) {
-        data.quotas.forEach((q: any) => {
+        data.quotas.forEach((q: { type: string, domain: string }) => {
           if (q.type === 'origin') origins.add(q.domain)
           else origins.add(getOrigin(q.domain))
         })
@@ -130,7 +130,7 @@ export default function AdCreativesPage() {
     if (enabledFilter === "disabled") list = list.filter(i => !i.enabled)
     
     list.sort((a, b) => {
-      const av = a[sortKey] as any, bv = b[sortKey] as any
+      const av = a[sortKey], bv = b[sortKey]
       if (av < bv) return sortDir === "asc" ? -1 : 1
       if (av > bv) return sortDir === "asc" ? 1 : -1
       return 0
@@ -152,10 +152,7 @@ export default function AdCreativesPage() {
     else { setSortKey(key); setSortDir("asc") }
   }
 
-  const SortIcon = ({ col }: { col: SortKey }) => {
-    if (sortKey !== col) return <ChevronsUpDown className="w-3 h-3 opacity-30" />
-    return sortDir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
-  }
+
 
   const copy = async (text: string, label: string) => {
     await navigator.clipboard.writeText("")
@@ -326,7 +323,7 @@ export default function AdCreativesPage() {
               <div className="flex items-center gap-2">
                 <select
                   value={enabledFilter}
-                  onChange={e => setEnabledFilter(e.target.value as any)}
+                  onChange={e => setEnabledFilter(e.target.value as "all" | "enabled" | "disabled")}
                   className="px-2 py-1.5 rounded-lg border bg-card text-xs font-semibold focus:outline-none cursor-pointer shadow-sm"
                 >
                   <option value="all">All Status</option>
@@ -610,7 +607,7 @@ export default function AdCreativesPage() {
   )
 }
 
-function TH<T>({ label, col, sortKey, sortDir, handleSort }: { label: string; col: keyof T; sortKey: string; sortDir: string; handleSort: (k: any) => void }) {
+function TH<T>({ label, col, sortKey, sortDir, handleSort }: { label: string; col: keyof T; sortKey: string; sortDir: string; handleSort: (k: keyof T) => void }) {
   const isSorted = sortKey === col
   return (
     <th onClick={() => handleSort(col)}

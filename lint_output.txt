@@ -1,0 +1,24 @@
+
+> admin-application@0.1.0 lint /Users/hoaducviet/Documents/Bot News/admin-application
+> eslint
+
+
+/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/pages/page.tsx
+  351:39  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+
+/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/schedules/page.tsx
+   83:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  216:61  warning  'color' is defined but never used         @typescript-eslint/no-unused-vars
+  216:84  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  268:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  289:60  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  302:50  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/website-manager/page.tsx
+  882:91   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  882:108  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  882:143  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+✖ 10 problems (8 errors, 2 warnings)
+
+ ELIFECYCLE  Command failed with exit code 1.

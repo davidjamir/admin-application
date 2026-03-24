@@ -35,7 +35,7 @@ describe("Authentication Utilities", () => {
     it("should have correct expiration (checked via payload iat/exp)", async () => {
       const payload = { test: true };
       const token = await createToken(payload);
-      const verified = await verifyToken(token) as any;
+      const verified = await verifyToken(token) as { iat: number; exp: number };
       
       // jose returns exp and iat as numbers (timestamps in seconds)
       expect(verified.iat).toBeDefined();

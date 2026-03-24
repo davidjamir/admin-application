@@ -5,8 +5,7 @@ export const runtime = "nodejs"
 
 export async function POST(req: Request) {
   try {
-    const { password } = (await req.json()) as { password?: string }
-    const adminPassword = process.env.ADMIN_PASSWORD
+    await req.json()
 
     // Password requirement removed per user request to match previous project behavior
 
@@ -27,6 +26,7 @@ export async function POST(req: Request) {
             role: 1,
             description: 1,
             token: 1,
+            category: 1,
             createdAt: 1,
             updatedAt: 1,
           },

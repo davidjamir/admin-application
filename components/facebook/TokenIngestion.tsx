@@ -102,7 +102,7 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
             const data = await res.json()
             if (!res.ok) throw new Error(data.message || "Failed to load personnel")
             setSystemUsers(data.data ?? [])
-        } catch (err) {
+        } catch {
             toast.error("Identity sync failed")
         }
     }, [])
@@ -131,11 +131,15 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                 setLoadingPages(true)
                 setStatus(`Crawling assets for ${selectedUser.name}...`)
                 const fetchedPages = await facebookService.getPages(token)
-                setPages(fetchedPages)
-                setSelectedPageIds(fetchedPages.map(p => p.id))
-                setStatus(`${fetchedPages.length} pages identified for ingestion.`)
-                toast.success(`Discovered ${fetchedPages.length} assets`)
-            } catch (err: unknown) {
+                const mappedPages = fetchedPages.map(p => ({
+                    ...p,
+                    topic: selectedUser?.category || ""
+                }))
+                setPages(mappedPages)
+                setSelectedPageIds(mappedPages.map(p => p.id))
+                setStatus(`${mappedPages.length} pages identified for ingestion.`)
+                toast.success(`Discovered ${mappedPages.length} assets`)
+            } catch {
                 toast.error("Asset discovery failed")
                 setStatus("Discovery failed. Check token permissions.")
             } finally {
@@ -143,7 +147,7 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
             }
         }
         void fetchPages()
-    }, [selectedSystemUserId, isAdminVerified, selectedUser])
+    }, [selectedSystemUserId, isAdminVerified, selectedUser?.token, selectedUser?.category, selectedUser?.name])
 
     const isAllSelected = pages.length > 0 && pages.every((p) => selectedPageIds.includes(p.id))
 
@@ -162,6 +166,7 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                 systemUserName: selectedUser?.name ?? "",
                 appName: selectedUser?.appName ?? "",
                 category: page.category ?? "",
+                topic: selectedUser?.category || "",
                 token: page.access_token,
             }))
 
@@ -176,7 +181,7 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
             toast.success(`Registered ${selectedPages.length} core assets`)
             setStatus(`Ingestion finalized: ${selectedPages.length} tokens committed.`)
             setSelectedPageIds([])
-        } catch (err: unknown) {
+        } catch {
             toast.error("Registry commit failed")
         } finally {
             setSaving(false)
@@ -379,24 +384,25 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                                         className="border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                                     />
                                 </TableHead>
-                                <TableHead className="text-left text-sm font-bold tracking-widest text-muted-foreground">Asset ID</TableHead>
-                                <TableHead className="text-left text-sm font-bold tracking-widest text-muted-foreground">Asset Identify</TableHead>
-                                <TableHead className="text-left text-sm font-bold tracking-widest text-muted-foreground">Category</TableHead>
-                                <TableHead className="text-left text-sm font-bold tracking-widest text-muted-foreground">Access Token</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Asset ID</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Asset Identity</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Category</TableHead>
+                                <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Topic</TableHead>
+                                <TableHead className="text-right text-xs uppercase font-extrabold tracking-wider pr-6 text-foreground">Access Token</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {loadingPages ? (
                                 Array.from({ length: 1 }).map((_, i) => (
                                     <TableRow key={i}>
-                                        <TableCell colSpan={5} className="py-10 text-center">
+                                        <TableCell colSpan={6} className="py-10 text-center">
                                             <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary/20" />
                                         </TableCell>
                                     </TableRow>
                                 ))
                             ) : pages.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={5} className="py-24 text-center">
+                                    <TableCell colSpan={6} className="py-24 text-center">
                                         <div className="flex flex-col items-center gap-4 opacity-20">
                                             <Layers className="w-12 h-12" />
                                             <div className="space-y-1">
@@ -430,7 +436,7 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                                         </TableCell>
                                         <TableCell className="py-4">
                                             <div className="flex items-center justify-between gap-4 max-w-[180px]">
-                                                <span className="text-sm font-mono text-muted-foreground/60">{page.id}</span>
+                                                <span className="text-sm font-mono text-foreground">{page.id}</span>
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"
@@ -442,16 +448,21 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                                             </div>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <span className="font-bold text-sm leading-tight group-hover:text-primary transition-colors">{page.name}</span>
+                                            <span className="text-sm leading-tight text-foreground transition-colors group-hover:text-primary">{page.name}</span>
                                         </TableCell>
                                         <TableCell className="py-4">
-                                            <Badge variant="outline" className="text-sm font-medium h-6 border-border/40 text-muted-foreground bg-muted/20 tracking-tighter">
-                                                {page.category || "General"}
-                                            </Badge>
+                                            <span className="text-sm font-medium text-foreground">
+                                                {page.category || "-"}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell className="py-4">
+                                            <span className="text-sm font-medium text-foreground">
+                                                {page.topic || "-"}
+                                            </span>
                                         </TableCell>
                                         <TableCell className="py-4" onClick={e => e.stopPropagation()}>
                                             <div className="flex items-center justify-between gap-4 max-w-[200px]">
-                                                <span className="text-sm font-mono text-muted-foreground/60">
+                                                <span className="text-sm font-mono text-foreground">
                                                     {page.access_token.slice(0, 4)}...{page.access_token.slice(-8)}
                                                 </span>
                                                 <Button

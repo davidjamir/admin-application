@@ -3,33 +3,25 @@
 import { useCallback, useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { 
   Tabs, 
-  TabsContent, 
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs"
-import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { 
-  Briefcase, 
-  Search, 
   RefreshCcw, 
   Loader2,
-  ShieldCheck,
   User,
   Shield,
   Layers,
-  Activity,
-  AlertTriangle,
-  FileText
+  Activity
 } from "lucide-react"
 import { facebookService } from "@/services/facebook.service"
 import { FacebookBusiness, FacebookPage, SystemUser } from "@/types/facebook"
 import BusinessAssetCard from "./BusinessAssetCard"
 import BulkActionsHub from "./BulkActionsHub"
-import { cn } from "@/lib/utils"
+
 
 type Props = { adminPassword: string; isAdminVerified: boolean }
 
@@ -64,7 +56,7 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
       const data = await res.json()
       if (!res.ok) throw new Error(data.message)
       setSystemUsers(data.data ?? [])
-    } catch (err) {
+    } catch {
       toast.error("Identity sync failed")
     }
   }, [])
@@ -110,7 +102,7 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
         setStatus(`Synchronized ${rows.length} Business Nodes.`)
       }
       toast.success("Asset pool synchronized")
-    } catch (err) {
+    } catch {
       toast.error("Discovery failed. Check token authority.")
       setStatus("Discovery protocol rejected.")
     } finally {
@@ -139,8 +131,8 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
 
               <Tabs 
                 value={mode} 
-                onValueChange={(v) => {
-                  setMode(v as any)
+                onValueChange={(v: string) => {
+                  setMode(v as "system-user" | "account-user")
                   setBusinessRows([])
                   setStandalonePages([])
                   setSelectedPageIds([])
@@ -167,9 +159,9 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
           <CardContent className="p-6">
             <div className="flex flex-wrap items-center gap-4 mb-8">
                <div className="flex flex-col gap-1.5 min-w-[280px]">
-                  <label className="text-[10px] font-bold tracking-widest text-muted-foreground ml-1">Identity Authority</label>
+                  <label className="text-sm font-bold tracking-tight text-black ml-1">Identity Authority</label>
                   <select 
-                    className="h-11 rounded-xl border border-border/50 bg-background/50 px-4 text-xs font-semibold focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer"
+                    className="h-11 rounded-xl border border-border/50 bg-background/50 px-4 text-sm font-bold text-black focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer"
                     onChange={(e) => {
                       const user = systemUsers.find(u => u.id === e.target.value)
                       if (user) handleFetchAssets(user.token || "", user.id)
@@ -187,7 +179,7 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                   {loading && (
                     <div className="flex items-center gap-2 text-primary animate-pulse">
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span className="text-[10px] font-bold tracking-widest">Protocol sync in progress...</span>
+                      <span className="text-sm font-bold tracking-tight">Protocol sync in progress...</span>
                     </div>
                   )}
                </div>
@@ -196,14 +188,14 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-11 px-4 border-border/50 bg-background/50 text-[10px] font-bold tracking-widest"
+                    className={`h-11 px-6 border-border/50 bg-background/50 text-sm font-bold tracking-tight cursor-pointer ${loading ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
                     onClick={() => {
                         const user = systemUsers.find(u => u.id === activeViewerId)
                         if (user) handleFetchAssets(user.token || "", user.id)
                     }}
                     disabled={!activeViewerId || loading}
                   >
-                    <RefreshCcw className="w-3.5 h-3.5 mr-2" /> Re-scan Assets
+                    <RefreshCcw className={`w-4 h-4 mr-2 ${loading ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : ""}`} /> Re-scan Assets
                   </Button>
                </div>
             </div>
@@ -214,11 +206,9 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                 standalonePages.length > 0 ? (
                   <div className="rounded-2xl border border-border/40 bg-background/30 overflow-hidden">
                      <BusinessAssetCard 
-                        business={{ id: "SYSTEM_INTERNAL", name: "Internal Identity Assets", pages: standalonePages, assignedPageIds: standalonePages.map(p => p.id) } as any}
+                        business={{ id: "SYSTEM_INTERNAL", name: "Internal Identity Assets", pages: standalonePages, assignedPageIds: standalonePages.map(p => p.id) } as BusinessRow}
                         selectedPageIds={selectedPageIds}
                         onSelectionChange={setSelectedPageIds}
-                        activeViewerId={activeViewerId}
-                        activeToken={activeViewerToken}
                      />
                   </div>
                 ) : !loading && (
@@ -232,8 +222,6 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                       business={row}
                       selectedPageIds={selectedPageIds}
                       onSelectionChange={setSelectedPageIds}
-                      activeViewerId={activeViewerId}
-                      activeToken={activeViewerToken}
                     />
                   ))
                 ) : !loading && (
@@ -265,13 +253,13 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
 
 function EmptyState({ mode }: { mode: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-32 opacity-20 text-center px-8">
-      <div className="p-5 bg-muted rounded-full mb-6">
+    <div className="flex flex-col items-center justify-center py-32 text-center px-8">
+      <div className="p-5 bg-muted rounded-full mb-6 opacity-20">
         <Layers className="w-16 h-16" />
       </div>
       <div className="max-w-xs space-y-2">
-        <h3 className="text-sm font-bold tracking-widest">Architectural Registry Empty</h3>
-        <p className="text-[10px] tracking-tight leading-relaxed">Select a validated identity node to discover assets linked via {mode} protocol.</p>
+        <h3 className="text-sm font-extrabold tracking-widest text-black">Architectural Registry Empty</h3>
+        <p className="text-[10px] tracking-tight leading-relaxed font-bold text-black/60">Select a validated identity node to discover assets linked via {mode} protocol.</p>
       </div>
     </div>
   )

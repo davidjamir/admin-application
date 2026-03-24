@@ -10,8 +10,7 @@ import {
 import { toast } from "sonner"
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RTooltip,
-  ResponsiveContainer, ReferenceLine,
-  BarChart, Bar, Cell, LabelList, Legend
+  ResponsiveContainer, ReferenceLine
 } from "recharts"
 
 /* ─────────────── Types ─────────────── */
@@ -56,24 +55,31 @@ const isFromOrigin = (domain: string, origin: string) => {
 }
 
 /* ─────────────── Sort Hook ─────────────── */
-function useSort<T>(data: T[], defaultKey: keyof T) {
-  const [key, setKey] = useState<keyof T>(defaultKey)
+function useSort<T>(data: T[], defaultKey: string) {
+  const [key, setKey] = useState<string>(defaultKey)
   const [dir, setDir] = useState<"asc" | "desc">("asc")
-  const toggle = (k: keyof T) => {
+  
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const getVal = (obj: any, path: string): any => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return path.split('.').reduce((acc, part) => acc && typeof acc === 'object' ? (acc as any)[part] : undefined, obj)
+  }
+
+  const toggle = (k: string) => {
     if (key === k) setDir(d => d === "asc" ? "desc" : "asc")
     else { setKey(k); setDir("asc") }
   }
   const sorted = useMemo(() => [...data].sort((a, b) => {
-    const av = a[key] as any, bv = b[key] as any
+    const av = getVal(a, key), bv = getVal(b, key)
     if (av < bv) return dir === "asc" ? -1 : 1
     if (av > bv) return dir === "asc" ? 1 : -1
     return 0
   }), [data, key, dir])
-  const Icon = ({ col }: { col: keyof T }) => {
+  const Icon = ({ col }: { col: string }) => {
     if (key !== col) return <ChevronsUpDown className="w-3 h-3 opacity-30" />
     return dir === "asc" ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />
   }
-  return { sorted, toggle, Icon }
+  return { sorted, toggle, Icon, key }
 }
 
 /* ══════════════ Page ══════════════ */
@@ -131,9 +137,7 @@ export default function WebsiteManagerPage() {
     return matchSearch && matchOrigin
   }), [wraps, q, originFilter])
 
-  const filteredQuotas = useMemo(() => quotas.filter(qt =>
-    qt.domain.toLowerCase().includes(q) || qt.key.toLowerCase().includes(q) || qt.type.toLowerCase().includes(q)
-  ), [quotas, q])
+
 
   /* ── sort hooks ── */
   const blogSort  = useSort(filteredBlogs,  "blogDns")
@@ -188,7 +192,7 @@ export default function WebsiteManagerPage() {
     
     // Group by date
     return dates.map(date => {
-      const dayData: any = { date: date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }
+      const dayData: Record<string, number | string> = { date: date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3") }
       
       // Initialize all origins to 0 to prevent gaps
       allOriginNames.forEach(name => {
@@ -200,7 +204,7 @@ export default function WebsiteManagerPage() {
       let dayTotal = 0
       recs.forEach(r => {
         const key = `origin_${r.domain}`
-        dayData[key] = (dayData[key] || 0) + r.count
+        dayData[key] = (Number(dayData[key]) || 0) + r.count
         dayTotal += r.count
       })
       dayData.total = dayTotal
@@ -230,30 +234,7 @@ export default function WebsiteManagerPage() {
   }, [allSubdomainGroups, search, originFilter, dateFilter])
 
   /** Latest stats for each origin (for sorting/filtering list) */
-  const originStats = useMemo(() => {
-    const map = new Map<string, { origin: string; totalCount: number; totalLimit: number; subdomains: number }>()
-    
-    // Total subdomains per origin (from allSubdomainGroups)
-    allSubdomainGroups.forEach(g => {
-      const origin = getOrigin(g.domain)
-      const prev = map.get(origin) || { origin, totalCount: 0, totalLimit: 0, subdomains: 0 }
-      prev.subdomains += 1
-      map.set(origin, prev)
-    })
 
-    // Latest counts from originQuotas
-    const latestDate = Array.from(new Set(originQuotas.map(oq => oq.date))).sort().pop()
-    originQuotas.forEach(q => {
-      const prev = map.get(q.domain) || { origin: q.domain, totalCount: 0, totalLimit: 0, subdomains: 0 }
-      if (q.date === latestDate) {
-        prev.totalCount = q.count
-        prev.totalLimit = q.limit
-      }
-      map.set(q.domain, prev)
-    })
-    
-    return Array.from(map.values()).sort((a, b) => b.totalCount - a.totalCount)
-  }, [allSubdomainGroups, originQuotas])
 
   const originList = useMemo(() => ["all", ...allOriginNames], [allOriginNames])
 
@@ -457,7 +438,7 @@ export default function WebsiteManagerPage() {
                   <YAxis tick={{ fontSize: 9 }} />
                   <RTooltip
                     contentStyle={{ fontSize: 11, borderRadius: 8, border: "1px solid hsl(0,0%,88%)" }}
-                    formatter={(val: any, name: string) => [val, name === "count" ? "Posts" : "Limit"]}
+                    formatter={(val: number | string, name: string) => [val, name === "count" ? "Posts" : "Limit"]}
                     labelFormatter={l => `Date: ${String(l).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}`}
                   />
                   {qt.limit > 0 && (
@@ -905,15 +886,14 @@ export default function WebsiteManagerPage() {
   )
 }
 
-function TH<T>({ label, col, sort }: { label: string; col: keyof T | string; sort: any }) {
-  const isSorted = sort.key === col
-  return (
-    <th onClick={() => sort.toggle(col)} 
-      className={`px-4 py-3 text-left font-bold text-[10px] uppercase tracking-wider cursor-pointer hover:bg-muted transition-colors ${isSorted ? "text-primary" : "text-muted-foreground"}`}>
-      <div className="flex items-center gap-1.5">
-        {label}
-        <sort.Icon col={col} />
-      </div>
-    </th>
-  )
-}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const TH = <T,>({ label, col, sort }: { label: string; col: keyof T | string; sort: any }) => (
+  <th className="px-4 py-3 text-left cursor-pointer group hover:bg-muted/50 transition-colors"
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    onClick={() => sort.toggle(col as any)}>
+    <div className="flex items-center gap-2 text-[10px] font-extrabold text-muted-foreground uppercase tracking-widest">
+      {label}
+      <sort.Icon col={col} />
+    </div>
+  </th>
+)

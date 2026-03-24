@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ message: "User not found" }, { status: 404 });
     }
 
-    const updateData: any = {};
+    const updateData: Record<string, unknown> = {};
     if (name) updateData.name = name;
     if (email) updateData.email = email;
 

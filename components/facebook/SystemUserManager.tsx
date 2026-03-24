@@ -15,14 +15,12 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { 
-  Copy, 
-  Loader2, 
+  Copy,
+  Loader2,
   RefreshCcw, 
   Trash2, 
   UserPlus, 
-  ShieldCheck, 
   Briefcase,
-  ExternalLink,
   History,
   Users,
   Search,
@@ -30,7 +28,6 @@ import {
 } from "lucide-react"
 import { SystemUser } from "@/types/facebook"
 import { facebookService } from "@/services/facebook.service"
-import { cn } from "@/lib/utils"
 
 type Props = { adminPassword: string; isAdminVerified: boolean }
 
@@ -42,6 +39,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
     const [saving, setSaving] = useState(false)
     const [selectedBmFilter, setSelectedBmFilter] = useState("all")
     const [search, setSearch] = useState("")
+    const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set())
 
     const loadSystemUsers = useCallback(async (password: string) => {
         try {
@@ -53,8 +51,8 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             const data = await res.json()
             if (!res.ok) throw new Error(data.message || "Cloud sync failed")
             setSystemUsers(data.data ?? [])
-        } catch (err) {
-            toast.error("Personnel sync failed")
+        } catch {
+            toast.error("Identity sync failed")
         }
     }, [])
 
@@ -93,7 +91,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             toast.success(`Identity established: ${me.name}`)
             setStatus("Identity node active. Ready for registration.")
             setCrawlToken("")
-        } catch (err) {
+        } catch {
             toast.error("Handshake failed. Validate token.")
         } finally {
             setCrawling(false)
@@ -111,7 +109,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             if (!res.ok) throw new Error("Registry failed")
             toast.success("Identity permanently registered")
             void loadSystemUsers(adminPassword)
-        } catch (err) {
+        } catch {
             toast.error("Cloud storage failed")
         } finally {
             setSaving(false)
@@ -120,6 +118,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
 
     const handleRecrawl = async (userId: string) => {
         try {
+            setRecrawlingIds(prev => new Set(prev).add(userId))
             setStatus(`Re-synchronizing node ${userId}...`)
             const res = await fetch("/api/database/systemUsers/recrawl", {
                 method: "POST",
@@ -129,8 +128,14 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             if (!res.ok) throw new Error("Sync failed")
             toast.success("Identity synchronized with cloud")
             void loadSystemUsers(adminPassword)
-        } catch (err) {
+        } catch {
             toast.error("Cloud re-sync failed")
+        } finally {
+            setRecrawlingIds(prev => {
+                const next = new Set(prev)
+                next.delete(userId)
+                return next
+            })
         }
     }
 
@@ -145,7 +150,7 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
             if (!res.ok) throw new Error("Termination failed")
             toast.success("Identity node terminated")
             setSystemUsers(prev => prev.filter(u => u.id !== userId))
-        } catch (err) {
+        } catch {
             toast.error("Command failed")
         }
     }
@@ -199,9 +204,9 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
                     <Button 
                         onClick={handleCrawl} 
                         disabled={crawling || !crawlToken.trim()}
-                        className="h-11 cursor-pointer font-bold shadow-lg shadow-primary/5"
+                        className={`h-11 cursor-pointer font-bold shadow-lg shadow-primary/5 ${crawling ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
                     >
-                        {crawling ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
+                        {crawling ? <Loader2 className="w-4 h-4 animate-spin mr-2 text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" /> : <RefreshCcw className="w-4 h-4 mr-2" />}
                         {crawling ? "Establishing..." : "Sync Identity"}
                     </Button>
                 </div>
@@ -308,15 +313,16 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
                                                 >
                                                     <History className="w-3.5 h-3.5" />
                                                 </Button>
-                                                <Button 
-                                                    size="icon" 
-                                                    variant="ghost" 
-                                                    className="h-8 w-8 hover:bg-primary/10 hover:text-primary"
-                                                    onClick={() => handleRecrawl(user.id)}
-                                                    title="Re-synchronize"
-                                                >
-                                                    <RefreshCcw className="w-3.5 h-3.5" />
-                                                </Button>
+                                                 <Button 
+                                                     size="icon" 
+                                                     variant="ghost" 
+                                                     className={`h-8 w-8 hover:bg-primary/10 hover:text-primary ${recrawlingIds.has(user.id) ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_10px_rgba(16,185,129,0.2)] opacity-100" : ""}`}
+                                                     onClick={() => handleRecrawl(user.id)}
+                                                     title="Re-synchronize"
+                                                     disabled={recrawlingIds.has(user.id)}
+                                                 >
+                                                     <RefreshCcw className={`w-3.5 h-3.5 ${recrawlingIds.has(user.id) ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : ""}`} />
+                                                 </Button>
                                                 <Button 
                                                     size="icon" 
                                                     variant="ghost" 

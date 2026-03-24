@@ -7,7 +7,6 @@ import {
   Layers,
   Calendar,
   Settings,
-  Command,
   ChevronsUpDown,
   CreditCard,
   LogOut,
@@ -32,6 +31,7 @@ import {
   SidebarGroupLabel,
   useSidebar,
 } from "@/components/ui/sidebar"
+import Link from "next/link"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -105,7 +105,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
-              <a href="/">
+              <Link href="/">
                 <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-blue-600 text-primary-foreground shadow-lg shadow-primary/20">
                   <ShieldCheck className="size-6" />
                 </div>
@@ -113,7 +113,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                   <span className="font-bold text-lg tracking-tight">7 Forge</span>
                   <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Systems Inc</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -127,10 +127,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             {navItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild isActive={item.isActive} tooltip={item.title}>
-                  <a href={item.url}>
+                  <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}
@@ -144,10 +144,10 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
             {settingsItems.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton asChild tooltip={item.title}>
-                  <a href={item.url}>
+                  <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
-                  </a>
+                  </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             ))}

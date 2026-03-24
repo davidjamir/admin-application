@@ -10,7 +10,7 @@ export async function GET(request: Request) {
   const force = searchParams.get("force") === "true"
 
   try {
-    let payload: any = force ? null : await redis.get(CACHE_KEY)
+    let payload: { blogs: unknown[]; wraps: unknown[]; quotas: unknown[]; fetchedAt: number } | null = force ? null : await redis.get(CACHE_KEY)
 
     if (!payload) {
       const db = await getDb()
@@ -27,42 +27,45 @@ export async function GET(request: Request) {
 
       console.log(`[website-manager] Fetched ${rawQuotas.length} quotas since ${thresholdDate}`)
 
-      const toMs = (v: any): number => {
+      const toMs = (v: unknown): number => {
         if (!v) return Date.now()
-        if (v.$date) return new Date(v.$date).getTime()
-        if (v instanceof Date) return v.getTime()
+        if (typeof v === "object") {
+          if ("$date" in v && v.$date) {
+            return new Date(v.$date as string | number | Date).getTime()
+          }
+          if (v instanceof Date) return v.getTime()
+        }
         if (typeof v === "number") return v
-        return new Date(v).getTime()
+        if (typeof v === "string") return new Date(v).getTime()
+        return Date.now()
       }
 
-      const blogs = rawBlogs.map((d: any) => ({
-        _id: d._id?.toString(),
+      const blogs = rawBlogs.map((d: Record<string, unknown>) => ({
+        _id: (d._id as { toString(): string })?.toString(),
         blogDns: d.blogDns || "",
         blogEmail: d.blogEmail || "",
-        blogIndex: d.blogIndex ?? 0,
-        blogPassword: d.blogPassword || "",
-        blogPriority: d.blogPriority ?? 0,
-        blogUser: d.blogUser || "",
-        channel: d.channel || "",
-        enabled: d.enabled ?? true,
-        wrapDomain: d.wrapDomain || "",
+        blogIps: d.blogIps || "",
+        blogName: d.blogName || "",
+        blogSmtp: d.blogSmtp || "",
+        blogType: d.blogType || "",
+        isPublic: d.isPublic || false,
         createdAt: toMs(d.createdAt),
         updatedAt: toMs(d.updatedAt),
       }))
 
-      const wraps = rawWraps.map((d: any) => ({
-        _id: d._id?.toString(),
+      const wraps = rawWraps.map((d: Record<string, unknown>) => ({
+        _id: (d._id as { toString(): string })?.toString(),
         prefix: d.prefix || "",
         wrap_host: d.wrap_host || "",
-        target_host: d.target_host || "",
+        wrap_token: d.wrap_token || "",
         createdAt: toMs(d.createdAt),
         updatedAt: toMs(d.updatedAt),
       }))
 
-      const quotas = rawQuotas.map((d: any) => ({
-        _id: typeof d._id === "string" ? d._id : d._id?.toString(),
-        count: d.count ?? 0,
-        date: d.date || "",
+      const quotas = rawQuotas.map((d: Record<string, unknown>) => ({
+        _id: typeof d._id === "string" ? d._id : (d._id as { toString(): string })?.toString(),
+        count: (d.count as number) ?? 0,
+        date: (d.date as string) || "",
         domain: d.domain || "",
         key: d.key || "",
         limit: d.limit ?? 0,
@@ -76,8 +79,10 @@ export async function GET(request: Request) {
     }
 
     return NextResponse.json(payload)
-  } catch (error: any) {
-    console.error("[website-manager GET]", error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
+  } catch (error: unknown) {
+    const err = error instanceof Error ? error : new Error(String(error))
+    console.error("[WEBSITES_GET_ERROR]", err)
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

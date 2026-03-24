@@ -14,8 +14,7 @@ import {
   Loader2,
   PieChart,
   Layers,
-  Clock,
-  ExternalLink
+  Clock
 } from "lucide-react"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -28,6 +27,8 @@ interface QueueItem {
   failCount?: number
   page?: string
   scheduleAt?: number
+  status?: string
+  updatedAt?: string | number | Date
 }
 
 interface QueuesData {
@@ -81,8 +82,9 @@ export default function SchedulesPage() {
       } else {
         throw new Error(json.error || "Failed to fetch")
       }
-    } catch (error: any) {
-      console.error("Failed to fetch queues", error)
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error))
+      console.error("Failed to fetch queues", err)
       toast.error("Database Connection Refused", {
         description: "Protocol ECONNREFUSED when reaching Atlas Cluster.",
       })
@@ -214,7 +216,20 @@ export default function SchedulesPage() {
   )
 }
 
-function QueueSection({ title, items, stats, loading, icon, color, onCopy, type }: any) {
+interface QueueSectionProps {
+  id?: string
+  title: string
+  items?: QueueItem[]
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  stats?: { total: number; [key: string]: any } // More specific stats typing
+  loading: boolean
+  icon: React.ReactNode
+  color: string
+  onCopy: (id: string) => void
+  type: string
+}
+
+function QueueSection({ title, items, stats, loading, icon, onCopy, type }: QueueSectionProps) {
   return (
     <div className="flex flex-col h-full min-h-0">
       <Card className="flex flex-col h-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
@@ -243,7 +258,7 @@ function QueueSection({ title, items, stats, loading, icon, color, onCopy, type 
              {type === 'crawl' ? (
                 <>
                   <Metric label="Fails" value={stats?.fails || 0} icon={<AlertCircle className="size-3" />} highlight={stats?.fails > 0} />
-                  <Metric label={Object.keys(stats?.types || {})?.[0] || 'Crawler'} value={Object.values(stats?.types || {})?.[0] || 0} icon={<Layers className="size-3" />} />
+                   <Metric label={Object.keys(stats?.types || {})?.[0] || 'Crawler'} value={(Object.values(stats?.types || {})?.[0] as string | number) || 0} icon={<Layers className="size-3" />} />
                 </>
              ) : type === 'news' ? (
                 <>
@@ -266,7 +281,7 @@ function QueueSection({ title, items, stats, loading, icon, color, onCopy, type 
                 {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 w-full rounded-2xl opacity-50" />)}
               </div>
             ) : items && items.length > 0 ? (
-              items.map((item: any) => (
+              items.map((item: QueueItem) => (
                 <QueueItemRecord key={item._id} item={item} type={type} onCopy={() => onCopy(item.itemId)} />
               ))
             ) : (
@@ -287,7 +302,14 @@ function QueueSection({ title, items, stats, loading, icon, color, onCopy, type 
   )
 }
 
-function Metric({ label, value, icon, highlight = false }: any) {
+interface MetricProps {
+  label: string
+  value: string | number
+  icon: React.ReactNode
+  highlight?: boolean
+}
+
+function Metric({ label, value, icon, highlight = false }: MetricProps) {
   return (
     <div className={`flex flex-col gap-1 p-2 rounded-md border bg-background/50 shadow-sm ${highlight ? 'border-rose-200 bg-rose-50/50 text-rose-600 dark:border-rose-900 dark:bg-rose-900/10' : ''}`}>
       <span className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-60 flex items-center gap-1">
@@ -300,26 +322,33 @@ function Metric({ label, value, icon, highlight = false }: any) {
   )
 }
 
-function QueueItemRecord({ item, type, onCopy }: any) {
-  const [now, setNow] = useState(Date.now());
+interface QueueItemRecordProps {
+  item: QueueItem
+  type: string
+  onCopy: () => void
+}
+
+function QueueItemRecord({ item, type, onCopy }: QueueItemRecordProps) {
+  const [now, setNow] = useState(() => Date.now());
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  const isFailed = item.failCount > 0;
+  const isFailed = (item.failCount ?? 0) > 0;
   
   let color = "emerald"; 
   let intensity = 1;
   let statusLabel = "";
-  const scheduleTime = type === 'social' ? item.scheduleAt : new Date(item.createdAt).getTime();
+  const scheduleTime = type === 'social' ? (item.scheduleAt ?? now) : new Date(item.createdAt).getTime();
 
   if (type === 'social') {
     const diffMs = scheduleTime - now;
     // 5-minute grace period (300,000ms)
     const isEssentiallyOverdue = diffMs < -300000;
     
+    const isFailed = (item.failCount ?? 0) > 0;
     if (isFailed || isEssentiallyOverdue) {
       color = "purple";
       intensity = 1;
@@ -340,9 +369,10 @@ function QueueItemRecord({ item, type, onCopy }: any) {
     }
   } else {
     // Crawl and News items
-    color = isFailed ? "purple" : "emerald";
+    const isFailedInternal = (item.failCount ?? 0) > 0;
+    color = isFailedInternal ? "purple" : "emerald";
     intensity = 1;
-    statusLabel = isFailed ? "Error" : (item.status || "Pending");
+    statusLabel = isFailedInternal ? "Error" : (item.status || "Pending");
   }
 
   const statusColorMap: Record<string, string> = {
@@ -362,7 +392,7 @@ function QueueItemRecord({ item, type, onCopy }: any) {
     hour: 'numeric', minute: '2-digit', hour12: true
   }) : null;
 
-  const formattedDisplayTime = type === 'social' ? new Date(scheduleTime).toLocaleString('en-US', {
+  const formattedDisplayTime = type === 'social' ? new Date(scheduleTime ?? now).toLocaleString('en-US', {
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true
   }) : formattedCreated;
@@ -379,7 +409,7 @@ function QueueItemRecord({ item, type, onCopy }: any) {
     const secs = Math.floor((absMs % (60 * 1000)) / 1000);
     
     const sign = "-";
-    if (days > 0) return `${sign}${days}d ${hours}h`;
+    if (days > 0) return `${sign}${days}h ${hours}h`;
     if (hours > 0) return `${sign}${hours}h ${mins}m`;
     return `${sign}${mins}m ${secs}s`;
   };
@@ -438,7 +468,7 @@ function QueueItemRecord({ item, type, onCopy }: any) {
         {type === 'social' && (
            <div className="text-right shrink-0">
               <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 leading-none mb-1.5 opacity-60">Time</p>
-              <p className="text-[13px] font-bold tracking-tight text-slate-800 dark:text-slate-100">{getCountdown(scheduleTime - now)}</p>
+              <p className="text-[13px] font-bold tracking-tight text-slate-800 dark:text-slate-100">{getCountdown((scheduleTime ?? now) - now)}</p>
            </div>
         )}
       </div>
