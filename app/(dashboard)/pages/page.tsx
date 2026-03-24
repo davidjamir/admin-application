@@ -64,7 +64,7 @@ export default function PagesManagementPage() {
         
         // Update available categories when viewing all
         if (categoryFilter === "All" && !searchQuery && json.data) {
-          const uniqueCats = Array.from(new Set(json.data.map((p: MongoPageData) => p.category).filter(Boolean))) as string[]
+          const uniqueCats = Array.from(new Set(json.data.map((p: MongoPageData) => p.topic).filter(Boolean))) as string[]
           setAvailableCategories(["All", ...uniqueCats.sort()])
         }
 

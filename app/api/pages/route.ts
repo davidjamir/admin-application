@@ -85,7 +85,7 @@ export async function GET(request: Request) {
 
     // 3. Apply Filters locally so cache is utilized maximally for all filters
     if (categoryFilter && categoryFilter !== "All") {
-      filteredData = filteredData.filter((page) => (page.category as string) === categoryFilter)
+      filteredData = filteredData.filter((page) => (page.topic as string) === categoryFilter)
     }
 
     if (searchFilter) {
