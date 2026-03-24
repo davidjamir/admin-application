@@ -89,8 +89,11 @@ export async function GET(request: Request) {
     }
 
     if (searchFilter) {
+      const query = searchFilter.toLowerCase()
       filteredData = filteredData.filter((page) =>
-        (page?.name as string | undefined)?.toLowerCase().includes(searchFilter.toLowerCase())
+        (page?.name as string | undefined)?.toLowerCase().includes(query) ||
+        (page?.category as string | undefined)?.toLowerCase().includes(query) ||
+        (page?.topic as string | undefined)?.toLowerCase().includes(query)
       )
     }
 
