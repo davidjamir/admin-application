@@ -37,6 +37,7 @@ export default function PagesManagementPage() {
   const [data, setData] = useState<MongoPageData[]>([])
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState("All")
+  const [availableCategories, setAvailableCategories] = useState<string[]>(["All"])
   const [searchQuery, setSearchQuery] = useState("")
   const [fetchedAt, setFetchedAt] = useState<number | null>(null)
   
@@ -47,7 +48,7 @@ export default function PagesManagementPage() {
   const [activeTab, setActiveTab] = useState<"queue" | "history">("queue")
   const [showToken, setShowToken] = useState(false)
 
-  const categories = ["All", "Tin tức nóng", "Công nghệ", "Giải trí", "Tài chính", "Đội thể thao", "Gaming"]
+  // categories is now managed via availableCategories state
 
   useEffect(() => {
     const fetchData = async () => {
@@ -60,6 +61,13 @@ export default function PagesManagementPage() {
         const res = await fetch(url.toString())
         const json = await res.json()
         setData(json.data)
+        
+        // Update available categories when viewing all
+        if (categoryFilter === "All" && !searchQuery && json.data) {
+          const uniqueCats = Array.from(new Set(json.data.map((p: MongoPageData) => p.category).filter(Boolean))) as string[]
+          setAvailableCategories(["All", ...uniqueCats.sort()])
+        }
+
         if (json.fetchedAt) setFetchedAt(json.fetchedAt)
       } catch (error) {
         console.error("Failed to fetch pages", error)
@@ -194,12 +202,14 @@ export default function PagesManagementPage() {
           <div className="flex items-center gap-2">
             <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
             <select
-              className="flex h-9 w-full sm:w-[140px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              className="flex h-9 w-full sm:w-[160px] rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-bold cursor-pointer"
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
             >
-              {categories.map((cat) => (
-                <option key={cat} value={cat}>{cat}</option>
+              {availableCategories.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat === "All" ? "All Categories" : cat}
+                </option>
               ))}
             </select>
           </div>
