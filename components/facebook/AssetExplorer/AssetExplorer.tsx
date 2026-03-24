@@ -44,7 +44,18 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
   // Selection State
   const [activeViewerToken, setActiveViewerToken] = useState("")
   const [activeViewerId, setActiveViewerId] = useState("")
+  const [manualToken, setManualToken] = useState("")
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([])
+  const [showToken, setShowToken] = useState(false)
+
+  // Clear data when switching modes
+  useEffect(() => {
+    setBusinessRows([])
+    setStandalonePages([])
+    setActiveViewerToken("")
+    setActiveViewerId("")
+    setStatus("System ready. Select identity or paste token.")
+  }, [mode])
   
   const loadSystemUsers = useCallback(async (password: string) => {
     try {
@@ -110,6 +121,26 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
     }
   }
 
+  const handleManualSync = async () => {
+    if (!manualToken.trim()) {
+      toast.error("Please provide an Access Token")
+      return
+    }
+    
+    try {
+      setLoading(true)
+      setStatus("Verifying Identity Protocol...")
+      const me = await facebookService.getMe(manualToken.trim())
+      toast.success(`Identity Verified: ${me.name}`)
+      await handleFetchAssets(manualToken.trim(), me.id)
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Manual sync failed")
+      setStatus("Verification error.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 items-start">
       <div className="space-y-6">
@@ -158,8 +189,11 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
 
           <CardContent className="p-6">
             <div className="flex flex-wrap items-center gap-4 mb-8">
-               <div className="flex flex-col gap-1.5 min-w-[280px]">
-                  <label className="text-sm font-bold tracking-tight text-black ml-1">Identity Authority</label>
+             <div className="flex flex-col gap-1.5 flex-1 min-w-[280px]">
+                <label className="text-sm font-bold tracking-tight text-black ml-1">
+                  {mode === "system-user" ? "Identity Authority" : "Account Access Token"}
+                </label>
+                {mode === "system-user" ? (
                   <select 
                     className="h-11 rounded-xl border border-border/50 bg-background/50 px-4 text-sm font-bold text-black focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer"
                     onChange={(e) => {
@@ -173,7 +207,16 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                        <option key={u.id} value={u.id}>{u.name} ({u.id})</option>
                     ))}
                   </select>
-               </div>
+                ) : (
+                  <input
+                    type="text"
+                    placeholder="Paste access token here (EAAB...)"
+                    className="h-11 rounded-xl border border-border/50 bg-background/50 px-4 text-sm font-mono text-black focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all"
+                    value={manualToken}
+                    onChange={(e) => setManualToken(e.target.value)}
+                  />
+                )}
+             </div>
                
                <div className="flex items-end h-11 pb-1">
                   {loading && (
@@ -184,20 +227,25 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                   )}
                </div>
 
-               <div className="ml-auto flex items-end">
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className={`h-11 px-6 border-border/50 bg-background/50 text-sm font-bold tracking-tight cursor-pointer ${loading ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
-                    onClick={() => {
-                        const user = systemUsers.find(u => u.id === activeViewerId)
-                        if (user) handleFetchAssets(user.token || "", user.id)
-                    }}
-                    disabled={!activeViewerId || loading}
-                  >
-                    <RefreshCcw className={`w-4 h-4 mr-2 ${loading ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : ""}`} /> Re-scan Assets
-                  </Button>
-               </div>
+                <div className="ml-auto flex items-end">
+                   <Button 
+                     variant="outline" 
+                     size="sm" 
+                     className={`h-11 px-6 border-border/50 bg-background/50 text-sm font-bold tracking-tight cursor-pointer ${loading ? "border-emerald-500/50 bg-emerald-500/5 shadow-[0_0_15px_rgba(16,185,129,0.2)]" : ""}`}
+                     onClick={() => {
+                        if (mode === "system-user") {
+                            const user = systemUsers.find(u => u.id === activeViewerId)
+                            if (user) handleFetchAssets(user.token || "", user.id)
+                        } else {
+                            handleManualSync()
+                        }
+                     }}
+                     disabled={(mode === "system-user" ? !activeViewerId : !manualToken) || loading}
+                   >
+                     <RefreshCcw className={`w-4 h-4 mr-2 ${loading ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : ""}`} /> 
+                     {mode === "system-user" ? "Re-scan Assets" : "Crawl & Process"}
+                   </Button>
+                </div>
             </div>
 
             {/* Asset Display Area */}
