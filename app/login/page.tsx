@@ -125,7 +125,7 @@ export default function LoginPage() {
         {/* Theme Toggle Button */}
         <button
           onClick={toggleTheme}
-          className="absolute top-0 right-6 p-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all active:scale-95"
+          className="absolute top-0 right-6 p-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-md hover:bg-white/20 transition-all active:scale-95 cursor-pointer"
           aria-label="Toggle Theme"
         >
           {isDark ? <Sun className="size-5 text-yellow-400" /> : <Moon className="size-5 text-slate-600" />}
@@ -212,13 +212,13 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={isLoading}
-                  className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden group"
+                  className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black rounded-2xl transition-all shadow-xl shadow-primary/20 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-3 overflow-hidden group cursor-pointer"
                 >
                   {isLoading ? (
                     <Loader2 className="size-6 animate-spin" />
                   ) : (
                     <>
-                      INITIALIZE PROTOCOL
+                      LOG IN
                       <ArrowRight className="size-5 transition-transform group-hover:translate-x-1" />
                     </>
                   )}
