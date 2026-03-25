@@ -27,6 +27,7 @@ export async function POST(req: Request) {
             description: 1,
             token: 1,
             category: 1,
+            status: 1,
             createdAt: 1,
             updatedAt: 1,
           },

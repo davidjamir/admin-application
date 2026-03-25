@@ -5,8 +5,10 @@ import { facebookService } from "@/services/facebook.service"
 export const runtime = "nodejs"
 
 export async function POST(req: Request) {
+  let targetId: string | undefined
   try {
     const { id } = (await req.json()) as { id?: string }
+    targetId = id
     // Password requirement removed per user request
 
     if (!id) {
@@ -22,23 +24,95 @@ export async function POST(req: Request) {
 
     // Refresh user info from Facebook
     const fbUser = await facebookService.getMe(user.token)
-    const businesses = await facebookService.getBusinesses(user.token)
     
-    // Find the business this user belongs to (if any)
-    const business = businesses.find((b) => b.id === user.businessId) || businesses[0]
+    // IDENTITY VERIFICATION: Ensure the token actually belongs to the user we're recrawling
+    if (fbUser.id !== id) {
+      console.error(`Identity mismatch: target ${id}, token belongs to ${fbUser.id}`)
+      return NextResponse.json({ 
+        success: false, 
+        message: "Identity mismatch: Token belongs to a different user. Recrawl aborted to prevent data corruption." 
+      }, { status: 403 })
+    }
 
-    const updateData = {
-      name: fbUser.name,
-      businessId: business?.id,
-      businessName: business?.name,
+    const fbName = fbUser.name
+    const nameParts = fbName.split("-").map(p => p.trim())
+    
+    // Parse name: Code Role - Tên BM - Note
+    let roleCode = ""
+    let role = "Admin"
+    let businessName = ""
+    let category = ""
+
+    if (nameParts.length >= 1) {
+      roleCode = nameParts[0]
+      if (roleCode.toUpperCase() === "EM") role = "Employee"
+      else if (roleCode.toUpperCase() === "AD") role = "Admin"
+    }
+    if (nameParts.length >= 2) {
+      businessName = nameParts[1]
+    }
+    if (nameParts.length >= 3) {
+      const rawNote = nameParts[2]
+      const expansionMap: Record<string, string> = {
+        "NB": "NBA",
+        "ML": "MLB",
+        "NH": "NHL",
+        "NF": "NFL",
+        "Mu": "Music",
+        "Mus": "Music",
+        "Musi": "Music",
+        "Mo": "Movie",
+        "Mov": "Movie",
+        "Movi": "Movie"
+      }
+
+      category = rawNote.split(",")
+        .map(p => {
+          const part = p.trim().replace(/\s*\d+$/, "")
+          return expansionMap[part] || part
+        })
+        .filter((v, i, a) => v && a.indexOf(v) === i)
+        .join(", ")
+    }
+
+    const updateData: Record<string, string | Date> = {
+      name: fbName,
+      roleCode,
+      role,
       updatedAt: new Date(),
     }
 
+    // Preserve businessId as requested, only update businessName if parsed
+    if (businessName) {
+      updateData.businessName = businessName
+    }
+    if (category) {
+      updateData.category = category
+    }
+
+    if (user.appName) {
+      updateData.appName = user.appName.charAt(0).toUpperCase() + user.appName.slice(1)
+    }
+
+    // Set status to Active on successful recrawl
+    updateData.status = "Active"
+
     await db.collection("system_users").updateOne({ id }, { $set: updateData })
 
-    return NextResponse.json({ success: true, message: "System user recrawled" })
+    return NextResponse.json({ success: true, message: "System user recrawled with data preservation" })
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error"
+    
+    // Update status to Disabled in database on failure
+    try {
+      const db = await getDb()
+      if (targetId) {
+        await db.collection("system_users").updateOne({ id: targetId }, { $set: { status: "Disabled", updatedAt: new Date() } })
+      }
+    } catch (dbError) {
+      console.error("Failed to update status to Disabled:", dbError)
+    }
+
     return NextResponse.json(
       { success: false, message: "Failed to recrawl system user", error: message },
       { status: 500 }

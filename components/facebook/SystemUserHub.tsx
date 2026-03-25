@@ -29,7 +29,8 @@ import {
     Activity,
     Key,
     Box,
-    Tag
+    Tag,
+    AlertTriangle
 } from "lucide-react"
 import { SystemUser } from "@/types/facebook"
 import { facebookService } from "@/services/facebook.service"
@@ -48,6 +49,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogTitle,
+} from "@/components/ui/dialog"
 
 type Props = { adminPassword: string; isAdminVerified: boolean }
 
@@ -67,7 +75,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
         name: "",
         id: "",
         lastSyncedToken: "",
-        role: "admin",
+        role: "Admin",
         roleCode: ""
     })
 
@@ -76,6 +84,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
     const [selectedBmFilter, setSelectedBmFilter] = useState("all")
     const [search, setSearch] = useState("")
     const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set())
+    const [deletingUser, setDeletingUser] = useState<SystemUser | null>(null)
 
     // Edit state
     const [editingUser, setEditingUser] = useState<SystemUser | null>(null)
@@ -120,20 +129,40 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
             // Parse name: Code Role - Tên BM - Note
             const nameParts = me.name.split("-").map(p => p.trim())
             let roleCode = ""
-            let role: "admin" | "employee" = "admin"
+            let role = "Admin"
             let businessName = businesses[0]?.name || ""
             let note = ""
 
             if (nameParts.length >= 1) {
                 roleCode = nameParts[0]
-                if (roleCode.toUpperCase() === "EM") role = "employee"
-                else if (roleCode.toUpperCase() === "AD") role = "admin"
+                if (roleCode.toUpperCase() === "EM") role = "Employee"
+                else if (roleCode.toUpperCase() === "AD") role = "Admin"
             }
             if (nameParts.length >= 2) {
                 businessName = nameParts[1]
             }
             if (nameParts.length >= 3) {
-                note = nameParts[2]
+                const rawNote = nameParts[2]
+                const expansionMap: Record<string, string> = {
+                    "NB": "NBA",
+                    "ML": "MLB",
+                    "NH": "NHL",
+                    "NF": "NFL",
+                    "Mu": "Music",
+                    "Mus": "Music",
+                    "Musi": "Music",
+                    "Mo": "Movie",
+                    "Mov": "Movie",
+                    "Movi": "Movie"
+                }
+
+                note = rawNote.split(",")
+                    .map(p => {
+                        const part = p.trim().replace(/\s*\d+$/, "")
+                        return expansionMap[part] || part
+                    })
+                    .filter((v, i, a) => v && a.indexOf(v) === i)
+                    .join(", ")
             }
 
             setAddForm(prev => ({
@@ -142,10 +171,13 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                 id: me.id,
                 businessId: businesses[0]?.id || prev.businessId || "",
                 businessName: businessName,
-                role: role,
+                role: role as "Admin" | "Employee",
                 roleCode: roleCode,
+                appName: prev.appName ? prev.appName.charAt(0).toUpperCase() + prev.appName.slice(1) : "Managed Asset",
                 category: note || prev.category,
-                lastSyncedToken: addForm.token
+                lastSyncedToken: addForm.token,
+                status: "Active",
+                updatedAt: new Date()
             }))
 
             toast.success(`Identity verified: ${me.name}`)
@@ -208,11 +240,17 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ password: adminPassword, id: user.id }),
             })
-            if (!res.ok) throw new Error("Sync failed")
+            if (!res.ok) {
+                const data = await res.json()
+                throw new Error(data.message || "Sync failed")
+            }
             toast.success("Identity integrity re-verified")
             void loadSystemUsers(adminPassword)
-        } catch {
-            toast.error("Cloud re-sync failed")
+        } catch (err: unknown) {
+            const message = err instanceof Error ? err.message : "Cloud re-sync failed"
+            toast.error(message)
+            // Refresh to show the "Disabled" status updated by backend
+            void loadSystemUsers(adminPassword)
         } finally {
             setRecrawlingIds(prev => {
                 const next = new Set(prev)
@@ -222,19 +260,27 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
         }
     }
 
-    const handleDelete = async (userId: string) => {
-        if (!confirm("Permanently terminate this identity? This action is irreversible.")) return
+    const handleDelete = async (user: SystemUser) => {
+        setDeletingUser(user)
+    }
+
+    const confirmDelete = async () => {
+        if (!deletingUser) return
         try {
+            setSaving(true)
             const res = await fetch("/api/database/systemUsers/delete", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ password: adminPassword, id: userId }),
+                body: JSON.stringify({ password: adminPassword, id: deletingUser.id }),
             })
             if (!res.ok) throw new Error("Termination failed")
             toast.success("Identity terminated")
-            setSystemUsers(prev => prev.filter(u => u.id !== userId))
+            setSystemUsers(prev => prev.filter(u => u.id !== deletingUser.id))
         } catch {
             toast.error("Command failed")
+        } finally {
+            setSaving(false)
+            setDeletingUser(null)
         }
     }
 
@@ -245,7 +291,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
             token: user.token || "",
             businessId: user.businessId || "",
             businessName: user.businessName || "",
-            appName: user.appName || "",
+            appName: user.appName ? user.appName.charAt(0).toUpperCase() + user.appName.slice(1) : "",
             category: user.category || ""
         }
         setEditForm(formData)
@@ -440,8 +486,8 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                                              <SelectValue placeholder="Select Role" />
                                                          </SelectTrigger>
                                                          <SelectContent>
-                                                             <SelectItem value="admin">Admin (AD)</SelectItem>
-                                                             <SelectItem value="employee">Employee (EM)</SelectItem>
+                                                             <SelectItem value="Admin">Admin (AD)</SelectItem>
+                                                             <SelectItem value="Employee">Employee (EM)</SelectItem>
                                                          </SelectContent>
                                                      </Select>
                                                  </div>
@@ -471,7 +517,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                                 <Input
                                                     value={addForm.appName}
                                                     onChange={(e) => setAddForm({ ...addForm, appName: e.target.value })}
-                                                     placeholder="MANAGED_IDENTITY"
+                                                     placeholder="Managed Identity"
                                                     className="h-11 bg-background/50 border-border/50 focus:ring-primary/20"
                                                 />
                                             </div>
@@ -524,7 +570,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                                              name: "",
                                                              id: "",
                                                              lastSyncedToken: "",
-                                                             role: "admin",
+                                                             role: "Admin",
                                                              roleCode: ""
                                                          })
                                                      })
@@ -550,6 +596,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                             <TableRow className="hover:bg-transparent border-border/50">
                                 <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset ID</TableHead>
                                 <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset Identity</TableHead>
+                                <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Status</TableHead>
                                 <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Category</TableHead>
                                 <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">App</TableHead>
                                 <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Update</TableHead>
@@ -559,7 +606,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                         <TableBody>
                             {filteredUsers.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="py-24 text-center">
+                                    <TableCell colSpan={7} className="py-24 text-center">
                                         <div className="flex flex-col items-center gap-4 opacity-20">
                                             <Briefcase className="w-12 h-12" />
                                             <div className="space-y-1">
@@ -587,7 +634,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                                         navigator.clipboard.writeText(user.id)
                                                         toast.success("Identity ID copied")
                                                     }}
-                                                    className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors shrink-0"
+                                                    className="h-6 w-6 text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
                                                 >
                                                     <Copy className="w-3 h-3" />
                                                 </Button>
@@ -596,6 +643,18 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                         <TableCell className="py-5 px-6">
                                             <span className="text-sm text-foreground tracking-tight group-hover:text-primary transition-colors">{user.name}</span>
                                         </TableCell>
+                                        <TableCell className="py-5 px-6 shrink-0">
+                                            <Badge 
+                                                variant="outline" 
+                                                className={`text-[9px] font-bold uppercase tracking-wider h-5 px-2 border-none ${
+                                                    user.status === "Disabled" 
+                                                    ? "bg-red-500/10 text-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]" 
+                                                    : "bg-emerald-500/10 text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                                                }`}
+                                            >
+                                                {user.status || "Active"}
+                                            </Badge>
+                                        </TableCell>
                                         <TableCell className="py-5 px-6">
                                             <span className="text-sm text-foreground tracking-tight">
                                                 {user.category || "—"}
@@ -603,7 +662,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                         </TableCell>
                                         <TableCell className="py-5 px-6 text-left">
                                             <span className="text-sm text-foreground tracking-tight">
-                                                {user.appName || "Standard Core"}
+                                                {user.appName ? user.appName.charAt(0).toUpperCase() + user.appName.slice(1) : "Standard Core"}
                                             </span>
                                         </TableCell>
                                         <TableCell className="py-5 px-6 text-left">
@@ -646,7 +705,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                                     size="icon"
                                                     variant="ghost"
                                                     className="h-9 w-9 text-red-500 hover:bg-red-500/10 border border-red-500/20 hover:border-red-500/50 transition-all cursor-pointer"
-                                                    onClick={(e) => { e.stopPropagation(); handleDelete(user.id) }}
+                                                    onClick={(e) => { e.stopPropagation(); handleDelete(user) }}
                                                     title="Delete"
                                                 >
                                                     <Trash2 className="w-4 h-4" />
@@ -688,23 +747,35 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                                         <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-blue-500/20 rounded-2xl blur opacity-30 group-hover:opacity-50 transition duration-1000"></div>
                                         <div className="relative p-5 bg-card/80 border border-border/40 rounded-2xl space-y-4 shadow-sm">
                                             <div className="flex items-start justify-between">
-                                                 <div className="space-y-1">
-                                                     <p className="text-[10px] font-bold tracking-widest text-muted-foreground/60">System User Identify</p>
-                                                     <h3 className="font-bold text-base text-foreground tracking-tight">{editingUser?.name}</h3>
+                                                 <div className="space-y-1.5">
+                                                     <p className="text-[11px] font-bold tracking-widest text-muted-foreground/60 uppercase">System User Identify</p>
+                                                     <h3 className="font-black text-xl text-foreground tracking-tight">{editingUser?.name}</h3>
                                                  </div>
-                                                <div className="p-2 bg-primary/10 rounded-lg">
-                                                    <ShieldCheck className="w-4 h-4 text-primary" />
+                                                <div className="p-2.5 bg-primary/10 rounded-xl">
+                                                    <ShieldCheck className="w-5 h-5 text-primary" />
                                                 </div>
                                             </div>
                                             
-                                            <div className="grid grid-cols-2 gap-4 pt-2 border-t border-border/20">
-                                                <div className="space-y-1">
-                                                     <p className="text-[9px] font-bold text-muted-foreground/40 tracking-tighter">Business Name</p>
-                                                    <p className="text-xs font-semibold truncate">{editingUser?.businessName || "Unassigned"}</p>
+                                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-border/20">
+                                                <div className="space-y-1.5">
+                                                     <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">Business Name</p>
+                                                    <p className="text-sm font-bold truncate text-foreground">{editingUser?.businessName || "Unassigned"}</p>
                                                 </div>
-                                                 <div className="space-y-1">
-                                                     <p className="text-[9px] font-bold text-muted-foreground/40 tracking-tighter">System User ID</p>
-                                                     <p className="text-[10px] font-mono font-medium opacity-60 truncate">{editingUser?.id}</p>
+                                                 <div className="space-y-1.5">
+                                                     <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">Business ID</p>
+                                                     <p className="text-xs font-mono font-bold opacity-80 truncate text-blue-500">{editingUser?.businessId || "—"}</p>
+                                                 </div>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-6 pt-4 border-t border-border/20">
+                                                 <div className="space-y-1.5">
+                                                     <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">System User ID</p>
+                                                     <p className="text-xs font-mono font-bold opacity-80 truncate text-slate-500">{editingUser?.id}</p>
+                                                 </div>
+                                                 <div className="space-y-1.5">
+                                                     <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">Role</p>
+                                                     <Badge variant="outline" className="text-[10px] font-bold px-2 py-0 h-5 border-primary/30 text-primary bg-primary/5">
+                                                         {editingUser?.role || "Admin"}
+                                                     </Badge>
                                                  </div>
                                             </div>
                                         </div>
@@ -769,6 +840,61 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                     </SheetContent>
                 </Sheet>
             </CardContent>
+
+            <Dialog open={!!deletingUser} onOpenChange={(open) => !open && setDeletingUser(null)}>
+                <DialogContent className="sm:max-w-[400px] bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl p-0 overflow-hidden rounded-2xl">
+                    <div className="p-6 space-y-4">
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-red-500/10 rounded-xl border border-red-500/20">
+                                <AlertTriangle className="w-6 h-6 text-red-500" />
+                            </div>
+                            <div className="space-y-1">
+                                <DialogTitle className="text-xl font-bold tracking-tight">Terminate Identity</DialogTitle>
+                                <DialogDescription className="text-xs text-muted-foreground/70">
+                                    Archive deletion request protocol
+                                </DialogDescription>
+                            </div>
+                        </div>
+                        
+                        <div className="p-4 bg-red-500/5 rounded-xl border border-red-500/10 space-y-4">
+                            <div className="flex flex-col items-center gap-2 pb-3 border-b border-red-500/10">
+                                <p className="text-[10px] font-black uppercase text-red-500/40 tracking-[0.2em] leading-none">Target Identity</p>
+                                <div className="flex flex-col items-center gap-1.5">
+                                    <span className="text-xs font-mono font-bold text-red-600/80 leading-none tracking-tight">{deletingUser?.id}</span>
+                                    <span className="text-sm font-bold text-foreground/90 leading-none">{deletingUser?.name}</span>
+                                </div>
+                            </div>
+                            <p className="text-sm font-medium text-red-600/90 leading-relaxed text-center">
+                                Permanently terminate this identity?<br/>
+                                <span className="text-[11px] opacity-70 font-normal">This action is irreversible.</span>
+                            </p>
+                        </div>
+                    </div>
+
+                    <DialogFooter className="p-4 bg-muted/20 border-t border-border/50 gap-2 sm:gap-0">
+                        <Button 
+                            variant="ghost" 
+                            onClick={() => setDeletingUser(null)}
+                            className="flex-1 h-11 rounded-xl border border-border/30 hover:bg-muted/50 transition-all font-semibold cursor-pointer"
+                        >
+                            Cancel
+                        </Button>
+                        <Button 
+                            variant="outline"
+                            onClick={confirmDelete}
+                            disabled={saving}
+                            className={`flex-1 h-11 rounded-xl transition-all font-bold cursor-pointer border ${
+                                saving 
+                                ? "bg-red-600 border-transparent text-white shadow-lg shadow-red-500/20" 
+                                : "bg-background border-red-500/30 text-red-500 hover:bg-red-500/5 hover:border-red-500/50"
+                            }`}
+                        >
+                            {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2 text-white" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                            {saving ? "Purging..." : "Terminate"}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </Card>
     )
 }

@@ -59,10 +59,11 @@ export interface SystemUser {
   businessName?: string
   category?: string
   roleCode?: string
-  role?: "admin" | "employee" | string
+  role?: "Admin" | "Employee" | "admin" | "employee" | string
   description?: string
   createdAt?: string | Date
   updatedAt?: string | Date
+  status?: "Active" | "Disabled"
 }
 
 export interface FacebookPage {

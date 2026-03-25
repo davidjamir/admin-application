@@ -205,7 +205,7 @@ export default function BulkActionsHub({
                       <SelectValue placeholder="Select User..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {systemUsers.map(u => (
+                      {systemUsers.filter(u => (u.status || "Active") === "Active").map(u => (
                          <SelectItem key={u.id} value={u.id} className="text-sm font-bold text-black">
                            {u.name} • {u.businessName || "No BM"}
                          </SelectItem>

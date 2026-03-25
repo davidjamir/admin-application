@@ -429,6 +429,7 @@ export const facebookService = {
     name?: string
     about?: string
     description?: string
+    category?: string
     category_list?: Array<{ id: string; name: string }>
     website?: string
     phone?: string
@@ -439,7 +440,7 @@ export const facebookService = {
     const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(pageId)}`)
     url.searchParams.set(
       "fields",
-      "id,name,about,description,category_list,website,phone,location,emails"
+      "id,name,about,description,category,category_list,website,phone,location,emails"
     )
     url.searchParams.set("access_token", pageToken)
 
@@ -451,6 +452,7 @@ export const facebookService = {
       name?: string
       about?: string
       description?: string
+      category?: string
       category_list?: Array<{ id: string; name: string }>
       website?: string
       phone?: string
@@ -494,6 +496,7 @@ export const facebookService = {
       name: data.name,
       about: data.about,
       description: data.description,
+      category: data.category,
       category_list: categoryList,
       website: data.website,
       phone: data.phone,

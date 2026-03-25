@@ -3,22 +3,38 @@
 > eslint
 
 
-/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/pages/page.tsx
-  351:39  warning  'e' is defined but never used  @typescript-eslint/no-unused-vars
+/Users/hoaducviet/Documents/Bot News/admin-application/app/api/database/systemUsers/recrawl/route.ts
+  78:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/schedules/page.tsx
-   83:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  216:61  warning  'color' is defined but never used         @typescript-eslint/no-unused-vars
-  216:84  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  268:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  289:60  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  302:50  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+/Users/hoaducviet/Documents/Bot News/admin-application/app/api/facebook/domains/route.ts
+  10:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
 
-/Users/hoaducviet/Documents/Bot News/admin-application/app/(dashboard)/website-manager/page.tsx
-  882:91   error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  882:108  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
-  882:143  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+/Users/hoaducviet/Documents/Bot News/admin-application/components/facebook/AssetExplorer/PageEditModal.tsx
+    9:3   warning  'SheetFooter' is defined but never used                                                                          @typescript-eslint/no-unused-vars
+   25:19  warning  'Globe' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   25:26  warning  'Phone' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+   25:33  warning  'Mail' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   25:39  warning  'MapPin' is defined but never used                                                                               @typescript-eslint/no-unused-vars
+   25:64  warning  'RefreshCcw' is defined but never used                                                                           @typescript-eslint/no-unused-vars
+   71:44  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+   79:10  warning  'domainsLoading' is assigned a value but never used                                                              @typescript-eslint/no-unused-vars
+  122:14  warning  'err' is defined but never used                                                                                  @typescript-eslint/no-unused-vars
+  133:24  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  148:45  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  154:9   error    'clean' is never reassigned. Use 'const' instead                                                                 prefer-const
+  200:6   warning  React Hook useEffect has a missing dependency: 'loadPageInfo'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  205:26  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  210:26  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
+  236:19  error    Unexpected any. Specify a different type                                                                         @typescript-eslint/no-explicit-any
 
-✖ 10 problems (8 errors, 2 warnings)
+/Users/hoaducviet/Documents/Bot News/admin-application/components/facebook/SystemUserHub.tsx
+   57:5   warning  'DialogHeader' is defined but never used  @typescript-eslint/no-unused-vars
+  175:31  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+/Users/hoaducviet/Documents/Bot News/admin-application/components/facebook/SystemUserManager.tsx
+  37:5  warning  'DialogHeader' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 21 problems (10 errors, 11 warnings)
+  1 error and 0 warnings potentially fixable with the `--fix` option.
 
  ELIFECYCLE  Command failed with exit code 1.
