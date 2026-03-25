@@ -12,6 +12,19 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const TECH_LINES = [
+  "INITIALIZING_CORE_HANDSHAKE...",
+  "ESTABLISHING_ENCRYPTED_TUNNEL...",
+  "VERIFYING_REGISTRY_INTEGRITY...",
+  "SYNCHRONIZING_ASSET_METADATA...",
+  "PULLING_SECURE_CREDENTIALS...",
+  "REPLYING_TO_CHALLENGE_NODE...",
+  "VALIDATING_RSA_4096_BITMAP...",
+  "SESSION_TOKEN_GENERATED: 0x8F2A...",
+  "BYPASSING_LATENCY_BARRIERS...",
+  "READY_FOR_PROVISIONING."
+];
+
 // Terminal component to simulate tech environment
 const Terminal = () => {
   const [lines, setLines] = useState<string[]>([
@@ -22,23 +35,10 @@ const Terminal = () => {
   ]);
   const [currentLine, setCurrentLine] = useState("");
   const [lineIndex, setLineIndex] = useState(0);
-  
-  const techLines = [
-    "INITIALIZING_CORE_HANDSHAKE...",
-    "ESTABLISHING_ENCRYPTED_TUNNEL...",
-    "VERIFYING_REGISTRY_INTEGRITY...",
-    "SYNCHRONIZING_ASSET_METADATA...",
-    "PULLING_SECURE_CREDENTIALS...",
-    "REPLYING_TO_CHALLENGE_NODE...",
-    "VALIDATING_RSA_4096_BITMAP...",
-    "SESSION_TOKEN_GENERATED: 0x8F2A...",
-    "BYPASSING_LATENCY_BARRIERS...",
-    "READY_FOR_PROVISIONING."
-  ];
 
   useEffect(() => {
     let charIndex = 0;
-    const lineToType = techLines[lineIndex];
+    const lineToType = TECH_LINES[lineIndex];
     
     const typingInterval = setInterval(() => {
       if (charIndex < lineToType.length) {
@@ -49,7 +49,7 @@ const Terminal = () => {
         const timeout = setTimeout(() => {
           setLines(prev => [...prev.slice(-6), lineToType]);
           setCurrentLine("");
-          setLineIndex(prev => (prev + 1) % techLines.length);
+          setLineIndex(prev => (prev + 1) % TECH_LINES.length);
         }, 800);
         return () => clearTimeout(timeout);
       }
