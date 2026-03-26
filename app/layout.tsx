@@ -39,7 +39,7 @@ export default function RootLayout({
         >
           <TooltipProvider>
             {children}
-            <Toaster richColors />
+            <Toaster richColors duration={5000} />
           </TooltipProvider>
         </ThemeProvider>
       </body>

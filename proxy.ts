@@ -13,7 +13,7 @@ export async function proxy(req: NextRequest) {
   const isLoginPage = nextUrl.pathname === "/login";
   const isDashboardPage = nextUrl.pathname === "/" || nextUrl.pathname.startsWith("/") && !nextUrl.pathname.startsWith("/api") && !nextUrl.pathname.startsWith("/_next") && !nextUrl.pathname.startsWith("/favicon.ico");
 
-  // Skip middleware for everything except the dashboard and login page
+  // Skip proxy for everything except the dashboard and login page
   // We want to protect the root and all (dashboard) sub-routes
   // but avoid interfering with public assets or API internal calls (though we might want to protect some API later)
 

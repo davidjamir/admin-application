@@ -91,6 +91,42 @@ export interface FacebookBusiness {
   id: string
   name: string
   permitted_roles?: string[]
+  verification_status?: string
+  is_promotable?: boolean;
+  sharing_eligibility_status?: string;
+  can_create_ad_accounts?: boolean;
+  created_time?: string;
+  primary_page?: { id: string; name: string };
+  timezone_id?: number;
+  vertical?: string;
+  extendedcredits?: {
+    data: Array<{
+      id: string;
+      max_line_of_credit: string;
+      receivable_amount: string;
+    }>;
+  };
+  owned_ad_accounts?: {
+    data: Array<{
+      id: string;
+      name: string;
+      account_status: number;
+      amount_spent: string;
+      currency: string;
+    }>;
+  };
+  adspixels?: { data: { id: string; name: string }[] };
+  whatsapp_business_accounts?: { data: { id: string; name: string; status: string }[] };
+  business_users?: { data: { id: string; name: string; email: string; role: string }[] };
+  business_asset_groups?: { data: { id: string; name: string }[] };
+}
+
+export interface BusinessRow extends FacebookBusiness {
+  pages: FacebookPage[]
+  assignedPageIds: string[]
+  apps?: { id: string; name: string; category?: string }[]
+  system_users?: { id: string; name: string; role: string }[]
+  business_asset_groups?: { data: { id: string; name: string }[] }
 }
 
 export interface BusinessPageRow extends FacebookPage {

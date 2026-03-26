@@ -128,3 +128,26 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url)
+    const id = searchParams.get("id")
+    if (!id) return NextResponse.json({ error: "Missing id" }, { status: 400 })
+
+    const { ObjectId } = await import("mongodb")
+    const db = await getDb()
+
+    const result = await db.collection("ads").deleteOne({ _id: new ObjectId(id) })
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Not found" }, { status: 404 })
+    }
+
+    await redis.del(CACHE_KEY)
+    return NextResponse.json({ success: true })
+  } catch (error: unknown) {
+    console.error("[ad-creatives DELETE]", error)
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

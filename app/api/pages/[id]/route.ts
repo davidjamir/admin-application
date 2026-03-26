@@ -58,6 +58,9 @@ export async function GET(
           scheduledAt: typeof item.scheduleAt === 'number' 
             ? item.scheduleAt 
             : new Date((item.scheduleAt as string | number | Date) || (item.createdAt as string | number | Date) || Date.now()).getTime(),
+          createdAt: typeof item.createdAt === 'number'
+            ? item.createdAt
+            : new Date((item.createdAt as string | number | Date) || Date.now()).getTime(),
           status: "PENDING"
         }))
 

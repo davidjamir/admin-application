@@ -9,6 +9,8 @@ const uri = process.env.MONGODB_URI;
 const options = {
   appName: "devrel.vercel.integration",
   maxIdleTimeMS: 5000,
+  serverSelectionTimeoutMS: 30000,
+  connectTimeoutMS: 30000,
 };
 
 // Vercel connection strategy
