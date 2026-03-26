@@ -15,7 +15,7 @@ export const PageStats: React.FC<PageStatsProps> = ({
       <button 
         onClick={handleRefresh} 
         disabled={loading}
-        className={`p-1.5 rounded transition-colors disabled:opacity-50 cursor-pointer ${loading ? "border-green-600 text-green-600 border bg-green-50/50" : "bg-muted/50 hover:bg-muted text-muted-foreground"}`}
+        className={`p-1.5 rounded-sm transition-colors disabled:opacity-50 cursor-pointer ${loading ? "border-green-600 text-green-600 border bg-green-50/50" : "bg-muted/50 hover:bg-muted text-muted-foreground"}`}
         title="Force Recrawl"
       >
         <RefreshCcw className={`h-3.5 w-3.5 ${loading ? 'animate-spin' : ''}`} />
