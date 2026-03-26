@@ -10,7 +10,7 @@ import { AdCreativeAddPanel } from "./components/AdCreativeAddPanel"
 
 export default function AdCreativesPage() {
   const {
-    items, loading, fetchedAt, websiteOrigins,
+    items, loading, refreshing, fetchedAt, websiteOrigins,
     search, setSearch, sourceFilter, setSourceFilter,
     domainFilter, setDomainFilter, enabledFilter, setEnabledFilter,
     sortKey, sortDir, handleSort,
@@ -31,6 +31,7 @@ export default function AdCreativesPage() {
       <div className="p-6 flex flex-col gap-10 flex-1 min-w-0">
         <AdCreativeHeader 
           fetchedAt={fetchedAt}
+          refreshing={refreshing}
           fetchData={fetchData}
           onAddOpen={() => { setSelected(null); setAddOpen(true) }}
         />
