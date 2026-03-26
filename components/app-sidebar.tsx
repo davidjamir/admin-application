@@ -32,6 +32,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -50,7 +51,7 @@ const navItems = [
     title: "Dashboard",
     url: "/",
     icon: LayoutDashboard,
-    isActive: true,
+    isActive: false, // Initially false, will be determined by pathname
   },
   {
     title: "Pages Management",
@@ -98,6 +99,7 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
   const { isMobile } = useSidebar()
+  const pathname = usePathname()
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -126,7 +128,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarMenu>
             {navItems.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild isActive={item.isActive} tooltip={item.title}>
+                <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
@@ -143,7 +145,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarMenu>
             {settingsItems.map((item) => (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild tooltip={item.title}>
+                <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                   <Link href={item.url}>
                     <item.icon />
                     <span>{item.title}</span>
