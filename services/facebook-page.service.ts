@@ -5,7 +5,7 @@ const LIMIT = 200
 export const facebookPageService = {
   async getPages(token: string): Promise<FacebookPage[]> {
     const url = new URL("https://graph.facebook.com/me/accounts")
-    url.searchParams.set("fields", "id,name,access_token,category")
+    url.searchParams.set("fields", "id,name,access_token,category,tasks")
     url.searchParams.set("access_token", token)
     url.searchParams.set("limit", LIMIT.toString())
 
@@ -57,7 +57,7 @@ export const facebookPageService = {
     )
     url.searchParams.set("access_token", pageToken)
 
-    const res = await fetch(url.toString())
+    const res = await fetch(url.toString(), { cache: "no-store" })
     if (!res.ok) throw new Error("Failed to fetch page info")
 
     const data = (await res.json()) as {

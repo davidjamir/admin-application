@@ -17,7 +17,7 @@ import { Loader2, Pencil } from "lucide-react"
 import { usePageEdit } from "@/hooks/usePageEdit"
 import { LocationFields } from "./components/PageEdit/LocationFields"
 import { ContactFields } from "./components/PageEdit/ContactFields"
-import { AboutDescriptionFields } from "./components/PageEdit/AboutDescriptionFields"
+import { AboutField, DescriptionField } from "./components/PageEdit/AboutDescriptionFields"
 
 interface Props {
   isOpen: boolean
@@ -39,7 +39,9 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
     handlePhoneChange,
     handleRandomPhone,
     domains, selectedDomain,
-    handleDomainSelect
+    handleDomainSelect,
+    hasChanges,
+    updateInitialData
   } = usePageEdit(adminToken, page, isOpen)
 
   const handleSave = async (e: React.FormEvent) => {
@@ -59,8 +61,8 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
       }
       await facebookService.updatePageInfo(adminToken, page.id, updates, page.access_token)
       toast.success("Page information updated successfully")
+      updateInitialData()
       onSuccess?.()
-      onClose()
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to update page information"
       toast.error(message)
@@ -79,7 +81,7 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
             <div className="p-2 bg-primary/10 rounded-xl">
               <Pencil className="w-5 h-5 text-primary" />
             </div>
-            Edit Page: {page.name}
+            {page.name}
           </SheetTitle>
           <p className="text-xs text-muted-foreground font-mono mt-1 opacity-60">ID: {page.id}</p>
         </SheetHeader>
@@ -93,11 +95,9 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
           ) : pageInfo ? (
             <form id="edit-page-form" onSubmit={handleSave} className="space-y-6">
               <div className="flex flex-col gap-6">
-                <AboutDescriptionFields 
-                  about={pageInfo.about || ""}
-                  setAbout={(val) => setPageInfo({ ...pageInfo, about: val })}
-                  description={pageInfo.description || ""}
-                  setDescription={(val) => setPageInfo({ ...pageInfo, description: val })}
+                <AboutField 
+                  value={pageInfo.about || ""}
+                  onChange={(val) => setPageInfo({ ...pageInfo, about: val })}
                 />
 
                 <div className="flex flex-col gap-4">
@@ -137,24 +137,23 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
                   handleDomainSelect={handleDomainSelect}
                 />
 
-                <div className="flex flex-col pt-4 gap-2 opacity-60">
-                  <div className="flex justify-between items-center text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
-                    <span>Direct Data Fetch</span>
-                    <span>Optimized for Dashboard</span>
-                  </div>
+                <DescriptionField 
+                  value={pageInfo.description || ""}
+                  onChange={(val) => setPageInfo({ ...pageInfo, description: val })}
+                />
+
                 </div>
-              </div>
             </form>
           ) : null}
         </div>
 
-        <div className="border-t p-6 bg-card sticky bottom-0 flex justify-end gap-3 rounded-b-xl shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
-          <Button type="button" variant="ghost" onClick={onClose} className="rounded-lg px-8 h-10 font-bold">Cancel</Button>
+        <div className="border-t p-6 bg-card sticky bottom-0 flex justify-between items-center rounded-b-xl shadow-[0_-4px_12px_rgba(0,0,0,0.05)]">
+          <Button type="button" variant="outline" onClick={onClose} className="rounded-lg px-8 h-10 font-bold border-border/50 hover:bg-muted/50 transition-all cursor-pointer">Cancel</Button>
           <Button 
             type="submit" 
             form="edit-page-form"
-            disabled={saving} 
-            className="rounded-lg px-12 h-10 bg-[#8daaff] hover:bg-[#7a99ff] text-white font-bold shadow-lg shadow-blue-500/20 transition-all"
+            disabled={saving || !hasChanges} 
+            className="w-[140px] h-10 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold shadow-lg shadow-blue-500/20 transition-all cursor-pointer disabled:bg-blue-300 disabled:shadow-none disabled:cursor-not-allowed flex items-center justify-center"
           >
             {saving ? <><Loader2 className="w-4 h-4 animate-spin mr-2" /> Saving...</> : "Update"}
           </Button>

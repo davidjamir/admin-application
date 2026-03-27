@@ -18,11 +18,17 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
   const [businesses, setBusinesses] = useState<FacebookBusiness[]>([])
   const [businessRows, setBusinessRows] = useState<BusinessRow[]>([])
   const [standalonePages, setStandalonePages] = useState<FacebookPage[]>([])
+  const [systemUserPages, setSystemUserPages] = useState<FacebookPage[]>([])
+  const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set())
   
-  // selection state
-  const [activeViewerToken, setActiveViewerToken] = useState("")
-  const [activeViewerId, setActiveViewerId] = useState("")
+  // selection state (Separate for each mode)
+  const [activeSystemUserToken, setActiveSystemUserToken] = useState("")
+  const [activeSystemUserId, setActiveSystemUserId] = useState("")
+  
   const [manualToken, setManualToken] = useState("")
+  const [activeAccountUserToken, setActiveAccountUserToken] = useState("")
+  const [activeAccountUserId, setActiveAccountUserId] = useState("")
+  
   const [selectedPageIds, setSelectedPageIds] = useState<string[]>([])
 
   // Detail Sheet State
@@ -61,81 +67,143 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     }
   }, [])
 
-  const handleFetchAssets = useCallback(async (token: string, userId: string) => {
+  const fetchSystemUserAssets = useCallback(async (token: string, userId: string) => {
     if (!token) return
     try {
       setLoading(true)
       setSelectedPageIds([])
-      setActiveViewerToken(token)
-      setActiveViewerId(userId)
+      setActiveSystemUserToken(token)
+      setActiveSystemUserId(userId)
 
-      if (mode === "system-user") {
-        const pages = await facebookService.getPages(token)
-        setStandalonePages(pages)
-        setBusinessRows([])
-      } else {
-        const bms = await facebookService.getBusinesses(token)
-        setBusinesses(bms)
-        
-        const rows = await Promise.all(bms.map(async (bm) => {
-          try {
-            const res = await fetch(`/api/facebook/business/${bm.id}?token=${token}&force=true`)
-            if (res.ok) {
-              const fullData: BusinessRow = await res.json()
-              const pageIds = (fullData.pages || []).map((p: FacebookPage) => p.id)
-              
-              // Still fetch assigned pages for the current identity
-              const assignedPageIds = await facebookService.getAssignedPageIdsInBusinessBatch(
-                token, 
-                bm.id, 
-                userId, 
-                pageIds
-              ).catch(() => [] as string[])
-
-              return {
-                ...bm,
-                ...fullData,
-                pages: fullData.pages || [],
-                assignedPageIds
-              }
-            }
-          } catch (e) {
-            console.error(`Failed to fetch rich details for BM ${bm.id}`, e)
-          }
-
-          // Fallback to minimal data if API fails
-          const [ownedPages, clientPages] = await Promise.all([
-            facebookService.getBusinessPages(token, bm.id),
-            facebookService.getBusinessClientPages(token, bm.id).catch(() => [] as FacebookPage[])
-          ])
-          
-          const allPages = [...ownedPages, ...clientPages]
-          const uniquePages = Array.from(new Map(allPages.map(p => [p.id, p])).values())
-          const pageIds = uniquePages.map(p => p.id)
-          const assignedPageIds = await facebookService.getAssignedPageIdsInBusinessBatch(
-            token, 
-            bm.id, 
-            userId, 
-            pageIds
-          ).catch(() => [] as string[])
-
-          return {
-            ...bm,
-            pages: uniquePages,
-            assignedPageIds
-          }
-        }))
-        
-        setBusinessRows(rows)
-        setStandalonePages([])
-      }
-      toast.success("Asset pool synchronized")
+      const pages = await facebookService.getPages(token)
+      setSystemUserPages(pages)
+      toast.success("System user assets synchronized")
     } catch {
-      toast.error("Discovery failed. Check token authority.")
+      toast.error("Discovery failed. Check system user permissions.")
     } finally {
       setLoading(false)
     }
-  }, [mode])
+  }, [])
+
+  const fetchAccountUserAssets = useCallback(async (token: string, userId: string) => {
+    if (!token) return
+    try {
+      setLoading(true)
+      setSelectedPageIds([])
+      setActiveAccountUserToken(token)
+      setActiveAccountUserId(userId)
+
+      const [bms, allUserPages] = await Promise.all([
+        facebookService.getBusinesses(token),
+        facebookService.getPages(token)
+      ])
+      setBusinesses(bms)
+      
+      const rows = await Promise.all(bms.map(async (bm) => {
+        try {
+          const res = await fetch(`/api/facebook/business/${bm.id}?token=${token}`)
+          if (res.ok) {
+            const fullData: BusinessRow = await res.json()
+            const pageIds = (fullData.pages || []).map((p: FacebookPage) => p.id)
+            
+            const assignedPageIds = await facebookService.getAssignedPageIdsInBusinessBatch(
+              token, 
+              bm.id, 
+              userId, 
+              pageIds
+            ).catch(() => [] as string[])
+
+            return {
+              ...bm,
+              ...fullData,
+              pages: fullData.pages || [],
+              assignedPageIds
+            }
+          }
+        } catch (e) {
+          console.error(`Failed to fetch rich details for BM ${bm.id}`, e)
+        }
+
+        const [ownedPages, clientPages] = await Promise.all([
+          facebookService.getBusinessPages(token, bm.id),
+          facebookService.getBusinessClientPages(token, bm.id).catch(() => [] as FacebookPage[])
+        ])
+        
+        const allPages = [...ownedPages, ...clientPages]
+        const uniquePages = Array.from(new Map(allPages.map(p => [p.id, p])).values())
+        const pageIds = uniquePages.map(p => p.id)
+        const assignedPageIds = await facebookService.getAssignedPageIdsInBusinessBatch(
+          token, 
+          bm.id, 
+          userId, 
+          pageIds
+        ).catch(() => [] as string[])
+
+        return {
+          ...bm,
+          pages: uniquePages,
+          assignedPageIds
+        }
+      }))
+      
+      setBusinessRows(rows)
+
+      const bmPageIds = new Set(rows.flatMap(bm => (bm.pages || []).map(p => p.id)))
+      const standalone = allUserPages.filter(p => !bmPageIds.has(p.id))
+      
+      setStandalonePages(standalone)
+      toast.success("Account user assets synchronized")
+    } catch {
+      toast.error("Discovery failed. Check account token authority.")
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  const handleRecrawlBusiness = useCallback(async (businessId: string) => {
+    if (!activeAccountUserToken || !activeAccountUserId) return
+    
+    try {
+      setRecrawlingIds(prev => new Set(prev).add(businessId))
+      const res = await fetch(`/api/facebook/business/${businessId}?token=${activeAccountUserToken}&force=true`)
+      if (!res.ok) throw new Error("Failed to recrawl business")
+      
+      const fullData: BusinessRow = await res.json()
+      const pageIds = (fullData.pages || []).map((p: FacebookPage) => p.id)
+      
+      const assignedPageIds = await facebookService.getAssignedPageIdsInBusinessBatch(
+        activeAccountUserToken, 
+        businessId, 
+        activeAccountUserId, 
+        pageIds
+      ).catch(() => [] as string[])
+
+      const updatedRow: BusinessRow = {
+        ...businessRows.find(b => b.id === businessId)!,
+        ...fullData,
+        pages: fullData.pages || [],
+        assignedPageIds
+      }
+
+      setBusinessRows(prev => prev.map(b => b.id === businessId ? updatedRow : b))
+      
+      const allUserPages = await facebookService.getPages(activeAccountUserToken)
+      const allRows = businessRows.map(b => b.id === businessId ? updatedRow : b)
+      const bmPageIds = new Set(allRows.flatMap(bm => (bm.pages || []).map(p => p.id)))
+      const standalone = allUserPages.filter(p => !bmPageIds.has(p.id))
+      setStandalonePages(standalone)
+      
+      toast.success("Business data refreshed")
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Recrawl failed")
+    } finally {
+      setRecrawlingIds(prev => {
+        const next = new Set(prev)
+        next.delete(businessId)
+        return next
+      })
+    }
+  }, [activeAccountUserToken, activeAccountUserId, businessRows])
 
   const handleManualSync = useCallback(async () => {
     if (!manualToken.trim()) {
@@ -147,13 +215,13 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
       setLoading(true)
       const me = await facebookService.getMe(manualToken.trim())
       toast.success(`Identity Verified: ${me.name}`)
-      await handleFetchAssets(manualToken.trim(), me.id)
+      await fetchAccountUserAssets(manualToken.trim(), me.id)
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Manual sync failed")
     } finally {
       setLoading(false)
     }
-  }, [manualToken, handleFetchAssets])
+  }, [manualToken, fetchAccountUserAssets])
 
   // Auto-sync when manualToken changes (debounced)
   const debouncedToken = useDebounce(manualToken, 500)
@@ -161,26 +229,23 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
   const [lastSyncedToken, setLastSyncedToken] = useState("")
 
   useEffect(() => {
-    if (debouncedToken && debouncedToken !== lastSyncedToken) {
+    if (mode === "account-user" && debouncedToken && debouncedToken !== lastSyncedToken) {
         saveTokenToStorage(debouncedToken)
         void handleManualSync()
         setLastSyncedToken(debouncedToken)
-    } else if (!debouncedToken) {
+    } else if (mode === "account-user" && !debouncedToken) {
         saveTokenToStorage("")
         setLastSyncedToken("")
     }
-  }, [debouncedToken, lastSyncedToken, saveTokenToStorage, handleManualSync])
+  }, [debouncedToken, lastSyncedToken, saveTokenToStorage, handleManualSync, mode])
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingPage, setEditingPage] = useState<FacebookPage | null>(null)
 
-  // Clear data when switching modes
+  // Note: Data clearing on mode switch is removed to allow persistent state between tabs.
+  // Instead, we only clear selected page IDs to prevent action confusion.
   useEffect(() => {
-    setBusinessRows([])
-    setStandalonePages([])
-    setActiveViewerToken("")
-    setActiveViewerId("")
     setSelectedPageIds([])
   }, [mode])
   
@@ -225,16 +290,16 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     return activeUsers.filter((u) => (u.businessId ?? "").trim() === selectedBmFilter)
   }, [systemUsers, selectedBmFilter])
 
-  const handleCopyUserToken = () => {
-    if (activeViewerToken) {
-      navigator.clipboard.writeText(activeViewerToken)
+  const handleCopyUserToken = (token: string) => {
+    if (token) {
+      navigator.clipboard.writeText(token)
       toast.success("Access Token copied")
     }
   }
 
   const activeSystemUser = useMemo(() => {
-    return systemUsers.find(u => u.id === activeViewerId)
-  }, [systemUsers, activeViewerId])
+    return systemUsers.find(u => u.id === activeSystemUserId)
+  }, [systemUsers, activeSystemUserId])
 
   const availableAdmins = useMemo(() => {
     if (!activeSystemUser) return []
@@ -275,8 +340,11 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     businesses,
     businessRows, setBusinessRows,
     standalonePages, setStandalonePages,
-    activeViewerToken, setActiveViewerToken,
-    activeViewerId, setActiveViewerId,
+    systemUserPages, setSystemUserPages,
+    activeSystemUserToken, setActiveSystemUserToken,
+    activeSystemUserId, setActiveSystemUserId,
+    activeAccountUserToken, setActiveAccountUserToken,
+    activeAccountUserId, setActiveAccountUserId,
     manualToken, setManualToken,
     selectedPageIds, setSelectedPageIds,
     isEditModalOpen, setIsEditModalOpen,
@@ -287,7 +355,10 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     setIsDetailSheetOpen,
     selectedBusiness,
     openBusinessDetail,
-    handleFetchAssets,
+    fetchSystemUserAssets,
+    fetchAccountUserAssets,
+    handleRecrawlBusiness,
+    recrawlingIds,
     handleManualSync,
     handleCopyUserToken,
     selectedBmFilter, setSelectedBmFilter,

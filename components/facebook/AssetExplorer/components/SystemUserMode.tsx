@@ -9,7 +9,7 @@ import { EmptyState } from "./EmptyState"
 interface SystemUserModeProps {
   loading: boolean
   systemUsers: SystemUser[]
-  standalonePages: FacebookPage[]
+  systemUserPages: FacebookPage[]
   selectedBmFilter: string
   setSelectedBmFilter: (val: string) => void
   activeViewerId: string
@@ -33,7 +33,7 @@ interface SystemUserModeProps {
 }
 
 export function SystemUserMode({
-  loading, systemUsers, standalonePages, selectedBmFilter, setSelectedBmFilter,
+  loading, systemUsers, systemUserPages, selectedBmFilter, setSelectedBmFilter,
   activeViewerId, activeViewerToken, selectedSystemAdminId, setSelectedSystemAdminId,
   selectedPageIds, setSelectedPageIds, handleFetchAssets, handleCopyUserToken,
   loadSystemUsers, adminPassword, availableAdmins, filteredSystemUsers,
@@ -146,8 +146,8 @@ export function SystemUserMode({
           <div className="flex items-center gap-4">
               <h3 className="text-lg tracking-tighter text-black">All Pages</h3>
               <div className="flex items-center gap-3 text-[10px] text-black/40 tracking-wider">
-                 <span>pages: {standalonePages.length}</span>
-                 <span>selected: {selectedPageIds.length}</span>
+                  <span>pages: {systemUserPages.length}</span>
+                  <span>selected: {selectedPageIds.length}</span>
               </div>
           </div>
 
@@ -197,9 +197,9 @@ export function SystemUserMode({
                       <TableHead className="text-sm font-bold text-black px-6 text-center">Actions</TableHead>
                       <TableHead className="w-16 px-6 text-right">
                           <Checkbox 
-                              checked={standalonePages.length > 0 && selectedPageIds.length === standalonePages.length}
+                              checked={systemUserPages.length > 0 && selectedPageIds.length === systemUserPages.length}
                               onCheckedChange={(checked) => {
-                                  if (checked) setSelectedPageIds(standalonePages.map(p => p.id))
+                                  if (checked) setSelectedPageIds(systemUserPages.map(p => p.id))
                                   else setSelectedPageIds([])
                               }}
                               className="h-5 w-5 rounded-md border-border/60"
@@ -209,20 +209,22 @@ export function SystemUserMode({
               </TableHeader>
               <TableBody>
                   {loading ? (
-                      <TableRow>
-                          <TableCell colSpan={6} className="py-10 text-center">
-                              <Loader2 className="w-10 h-10 animate-spin mx-auto text-green-600/20" />
-                              <p className="mt-4 text-[10px] font-normal tracking-widest text-black/20 capitalize">Establishing identity link...</p>
+                      <TableRow className="hover:bg-transparent">
+                          <TableCell colSpan={6} className="py-20 text-center border-none">
+                              <div className="flex flex-col items-center justify-center">
+                                <Loader2 className="w-10 h-10 animate-spin text-green-600/20" />
+                                <p className="mt-4 text-[10px] font-normal tracking-widest text-black/20 capitalize">Establishing identity link...</p>
+                              </div>
                           </TableCell>
                       </TableRow>
-                  ) : standalonePages.length === 0 ? (
-                      <TableRow>
-                          <TableCell colSpan={6} className="py-10 text-center">
+                  ) : systemUserPages.length === 0 ? (
+                      <TableRow className="hover:bg-transparent">
+                          <TableCell colSpan={6} className="py-20 text-center border-none">
                               <EmptyState mode="System User" />
                           </TableCell>
                       </TableRow>
                   ) : (
-                      standalonePages.map((page, index) => (
+                      systemUserPages.map((page, index) => (
                           <TableRow 
                               key={page.id} 
                               className={`group border-border/20 transition-all duration-300 cursor-pointer h-14 ${selectedPageIds.includes(page.id) ? "bg-primary/[0.03]" : "hover:bg-muted/40"}`}
@@ -239,7 +241,7 @@ export function SystemUserMode({
                                   <Button 
                                       variant="ghost" 
                                       size="icon" 
-                                      className="h-8 w-8 rounded-lg hover:bg-primary/10 transition-all text-primary"
+                                      className="h-8 w-8 rounded-lg hover:bg-primary/10 transition-all text-primary cursor-pointer"
                                       onClick={() => {
                                           setEditingPage(page)
                                           setIsEditModalOpen(true)

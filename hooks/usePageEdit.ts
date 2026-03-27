@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useMemo, useState } from "react"
 import { FacebookPage } from "@/types/facebook"
 import { facebookService } from "@/services/facebook.service"
 import { toast } from "sonner"
@@ -16,6 +16,22 @@ export type PageInfo = {
   phone?: string;
   location?: { street?: string; city?: string; zip?: string; country?: string };
   emails?: string[];
+}
+  
+export type InitialPageData = {
+  about: string;
+  description: string;
+  category: string;
+  website: string;
+  location: {
+    street: string;
+    city: string;
+    zip: string;
+    country: string;
+  };
+  email: string;
+  countryCode: string;
+  phoneNumber: string;
 }
 
 export const COUNTRY_CODES = [
@@ -43,6 +59,7 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [pageInfo, setPageInfo] = useState<PageInfo | null>(null)
+  const [initialData, setInitialData] = useState<InitialPageData | null>(null)
   const [originalEmail, setOriginalEmail] = useState("")
   
   const [fullAddress, setFullAddress] = useState("")
@@ -53,7 +70,7 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
 
   const fetchDomains = useCallback(async () => {
     try {
-      const res = await fetch("/api/facebook/domains")
+      const res = await fetch("/api/facebook/domains", { cache: "no-store" })
       if (res.ok) {
         const data = await res.json()
         setDomains(data)
@@ -67,6 +84,10 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
     if (!page) return
     try {
       setLoading(true)
+      // Clear current state to show fresh loading
+      setPageInfo(null)
+      setInitialData(null)
+      
       const info = await facebookService.getPageInfo(adminToken, page.id, page.access_token)
       setPageInfo(info)
       setOriginalEmail(info.emails?.[0] || "")
@@ -76,19 +97,43 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
       setFullAddress(addrParts.join(", "))
       
       const currentPhone = info.phone || ""
+      let initialCC = "+84"
+      let initialPN = currentPhone
+
       if (currentPhone) {
+        // Try matching against COUNTRY_CODES first
         const matched = COUNTRY_CODES.find(c => currentPhone.startsWith(c.value))
         if (matched) {
-          setCountryCode(matched.value)
-          setPhoneNumber(currentPhone.replace(matched.value, "").trim())
+          initialCC = matched.value
+          initialPN = currentPhone.substring(matched.value.length).trim()
         } else if (currentPhone.startsWith("+")) {
-          const plusPart = currentPhone.match(/^\+\d+/)?.[0] || "+84"
-          setCountryCode(plusPart)
-          setPhoneNumber(currentPhone.replace(plusPart, "").trim())
-        } else {
-          setPhoneNumber(currentPhone)
+          // If no match but starts with +, extract the code (e.g., +123...)
+          const codeMatch = currentPhone.match(/^\+\d+/)
+          if (codeMatch) {
+            initialCC = codeMatch[0]
+            initialPN = currentPhone.substring(initialCC.length).trim()
+          }
         }
       }
+
+      setCountryCode(initialCC)
+      setPhoneNumber(initialPN)
+
+      setInitialData({
+        about: info.about || "",
+        description: info.description || "",
+        category: info.category || "",
+        website: info.website || "",
+        location: {
+          street: loc.street || "",
+          city: loc.city || "",
+          zip: loc.zip || "",
+          country: loc.country || ""
+        },
+        email: info.emails?.[0] || "",
+        countryCode: initialCC,
+        phoneNumber: initialPN
+      })
     } catch {
       toast.error("Failed to load page information")
     } finally {
@@ -102,12 +147,57 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
       void fetchDomains()
     } else {
       setPageInfo(null)
+      setInitialData(null)
       setFullAddress("")
       setPhoneNumber("")
       setSelectedDomain("")
       setOriginalEmail("")
     }
   }, [isOpen, page, loadPageInfo, fetchDomains])
+
+  const hasChanges = useMemo(() => {
+    if (!initialData || !pageInfo) return false
+    
+    // Compare basic fields
+    const aboutChanged = (pageInfo.about || "") !== initialData.about
+    const descChanged = (pageInfo.description || "") !== initialData.description
+    const catChanged = (pageInfo.category || "") !== initialData.category
+    const webChanged = (pageInfo.website || "") !== initialData.website
+    
+    // Compare location
+    const loc1 = pageInfo.location || {}
+    const loc2 = initialData.location || {}
+    const locChanged = (loc1.street || "") !== (loc2.street || "") || 
+                       (loc1.city || "") !== (loc2.city || "") || 
+                       (loc1.zip || "") !== (loc2.zip || "") || 
+                       (loc1.country || "") !== (loc2.country || "")
+    
+    // Compare contacts
+    const emailChanged = (pageInfo.emails?.[0] || "") !== (initialData.email || "")
+    const phoneChanged = countryCode !== initialData.countryCode || phoneNumber.trim() !== (initialData.phoneNumber || "")
+    
+    return aboutChanged || descChanged || catChanged || webChanged || locChanged || emailChanged || phoneChanged
+  }, [pageInfo, initialData, countryCode, phoneNumber])
+
+  const updateInitialData = useCallback(() => {
+    if (!pageInfo) return
+    const loc = pageInfo.location || {}
+    setInitialData({
+      about: pageInfo.about || "",
+      description: pageInfo.description || "",
+      category: pageInfo.category || "",
+      website: pageInfo.website || "",
+      location: {
+        street: loc.street || "",
+        city: loc.city || "",
+        zip: loc.zip || "",
+        country: loc.country || ""
+      },
+      email: pageInfo.emails?.[0] || "",
+      countryCode,
+      phoneNumber: phoneNumber.trim()
+    })
+  }, [pageInfo, countryCode, phoneNumber])
 
   const handleFullAddressChange = (val: string) => {
     setFullAddress(val)
@@ -166,7 +256,6 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
     const [code, ...rest] = random.split(" ")
     setCountryCode(code)
     setPhoneNumber(rest.join(" "))
-    toast.info(`Generated random phone: ${random}`)
   }
 
   const handleDomainSelect = (val: string) => {
@@ -189,6 +278,8 @@ export function usePageEdit(adminToken: string, page: FacebookPage | null, isOpe
     handlePhoneChange,
     handleRandomPhone,
     domains, selectedDomain, setSelectedDomain,
-    handleDomainSelect
+    handleDomainSelect,
+    hasChanges,
+    updateInitialData
   }
 }

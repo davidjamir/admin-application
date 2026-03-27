@@ -19,25 +19,31 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
     systemUsers, loadSystemUsers,
     businessRows,
     standalonePages,
-    activeViewerToken,
-    activeViewerId,
+    systemUserPages,
+    activeSystemUserToken,
+    activeSystemUserId,
+    activeAccountUserToken,
+    // activeAccountUserId,
     manualToken, setManualToken,
     selectedPageIds, setSelectedPageIds,
     isEditModalOpen, setIsEditModalOpen,
     editingPage, setEditingPage,
-    handleFetchAssets,
+    fetchSystemUserAssets,
+    // fetchAccountUserAssets,
     handleManualSync,
     handleCopyUserToken,
     selectedBmFilter, setSelectedBmFilter,
     selectedSystemAdminId, setSelectedSystemAdminId,
     bmFilterOptions,
     filteredSystemUsers,
-    activeSystemUser,
     availableAdmins,
     isDetailSheetOpen,
     setIsDetailSheetOpen,
     selectedBusiness,
-    openBusinessDetail
+    openBusinessDetail,
+    activeSystemUser,
+    // handleRecrawlBusiness,
+    // recrawlingIds
   } = useAssetExplorer(adminPassword, isAdminVerified)
 
   const handleDeleteSelected = async () => {
@@ -53,14 +59,14 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
             
             const result = await facebookService.removeSystemUserFromPagesByPageAssignedUsersBatch(
                 selectedPageIds,
-                activeViewerId,
+                activeSystemUserId,
                 admin.token
             )
             
             if (result.successPageIds.length > 0) {
                 toast.success(`Removed ${result.successPageIds.length} permissions`)
-                const user = systemUsers.find(u => u.id === activeViewerId)
-                if (user) await handleFetchAssets(user.token || "", user.id)
+                const user = systemUsers.find(u => u.id === activeSystemUserId)
+                if (user) await fetchSystemUserAssets(user.token || "", user.id)
             }
             if (result.failed.length > 0) {
                 toast.error(`Failed to remove ${result.failed.length} permissions`)
@@ -93,17 +99,15 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
               <SystemUserMode
                 loading={loading}
                 systemUsers={systemUsers}
-                standalonePages={standalonePages}
+                systemUserPages={systemUserPages}
                 selectedBmFilter={selectedBmFilter}
                 setSelectedBmFilter={setSelectedBmFilter}
-                activeViewerId={activeViewerId}
-                activeViewerToken={activeViewerToken}
                 selectedSystemAdminId={selectedSystemAdminId}
                 setSelectedSystemAdminId={setSelectedSystemAdminId}
                 selectedPageIds={selectedPageIds}
                 setSelectedPageIds={setSelectedPageIds}
-                handleFetchAssets={handleFetchAssets}
-                handleCopyUserToken={handleCopyUserToken}
+                handleFetchAssets={fetchSystemUserAssets}
+                handleCopyUserToken={() => handleCopyUserToken(activeSystemUserToken)}
                 loadSystemUsers={loadSystemUsers}
                 adminPassword={adminPassword}
                 availableAdmins={availableAdmins}
@@ -114,6 +118,8 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                 setIsEditModalOpen={setIsEditModalOpen}
                 handleDeleteSelected={handleDeleteSelected}
                 handleCopySelected={handleCopySelected}
+                activeViewerId={activeSystemUserId}
+                activeViewerToken={activeSystemUserToken}
               />
             ) : (
               <AccountUserMode
@@ -127,6 +133,9 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                 setIsDetailSheetOpen={setIsDetailSheetOpen}
                 selectedBusiness={selectedBusiness}
                 openBusinessDetail={openBusinessDetail}
+                activeAccountUserToken={activeAccountUserToken}
+                setEditingPage={setEditingPage}
+                setIsEditModalOpen={setIsEditModalOpen}
               />
             )}
           </CardContent>
@@ -142,11 +151,9 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
         }}
         page={editingPage}
         onSuccess={() => {
-          if (activeViewerToken && activeViewerId) {
-            void handleFetchAssets(activeViewerToken, activeViewerId)
-          }
+          // No refresh needed for basic info updates
         }}
-        adminToken={selectedSystemAdminId && systemUsers.find(u => u.id === selectedSystemAdminId)?.token || activeViewerToken}
+        adminToken={selectedSystemAdminId && systemUsers.find(u => u.id === selectedSystemAdminId)?.token || (mode === "system-user" ? activeSystemUserToken : activeAccountUserToken)}
       />
     </div>
   )

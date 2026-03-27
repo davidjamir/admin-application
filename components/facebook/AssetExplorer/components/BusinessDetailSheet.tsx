@@ -66,7 +66,7 @@ export function BusinessDetailSheet({ business, isOpen, onClose }: BusinessDetai
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent className="sm:max-w-[60vw] w-full p-0 border-l border-border/50 bg-card/95 backdrop-blur-xl">
+      <SheetContent className="!w-[60%] !max-w-none p-0 border-l border-border/50 bg-card/95 backdrop-blur-xl overflow-y-auto">
         <div className="h-full flex flex-col">
           <SheetHeader className="p-6 border-b border-border/50 bg-muted/30">
             <div className="flex items-center gap-4">

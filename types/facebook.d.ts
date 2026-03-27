@@ -78,6 +78,7 @@ export interface FacebookPage {
   website?: string
   emails?: string[]
   phone?: string
+  tasks?: string[]
   location?: {
     street?: string
     city?: string
