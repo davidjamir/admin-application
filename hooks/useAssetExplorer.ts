@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState, useMemo } from "react"
 import { toast } from "sonner"
 import { facebookService } from "@/services/facebook.service"
-import { FacebookBusiness, FacebookPage, SystemUser, BusinessRow } from "@/types/facebook"
+import { FacebookBusiness, FacebookPage, SystemUser, BusinessRow, FacebookUser } from "@/types/facebook"
 import { useDebounce } from "./use-debounce"
 
 const TOKEN_STORAGE_KEY = "fb_asset_explorer_token"
@@ -20,6 +20,8 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
   const [standalonePages, setStandalonePages] = useState<FacebookPage[]>([])
   const [systemUserPages, setSystemUserPages] = useState<FacebookPage[]>([])
   const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set())
+  const [currentUser, setCurrentUser] = useState<FacebookUser | null>(null)
+  const [lastSyncTime, setLastSyncTime] = useState<string>("")
   
   // selection state (Separate for each mode)
   const [activeSystemUserToken, setActiveSystemUserToken] = useState("")
@@ -77,6 +79,9 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
 
       const pages = await facebookService.getPages(token)
       setSystemUserPages(pages)
+      const now = new Date()
+      const formattedSync = `${now.toLocaleString('en-US', { month: 'short' })} ${now.getDate()},${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`
+      setLastSyncTime(formattedSync)
       toast.success("System user assets synchronized")
     } catch {
       toast.error("Discovery failed. Check system user permissions.")
@@ -147,6 +152,9 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
       }))
       
       setBusinessRows(rows)
+      const now = new Date()
+      const formattedSync = `${now.toLocaleString('en-US', { month: 'short' })} ${now.getDate()},${now.getFullYear()} ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}`
+      setLastSyncTime(formattedSync)
 
       const bmPageIds = new Set(rows.flatMap(bm => (bm.pages || []).map(p => p.id)))
       const standalone = allUserPages.filter(p => !bmPageIds.has(p.id))
@@ -214,6 +222,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     try {
       setLoading(true)
       const me = await facebookService.getMe(manualToken.trim())
+      setCurrentUser(me)
       toast.success(`Identity Verified: ${me.name}`)
       await fetchAccountUserAssets(manualToken.trim(), me.id)
     } catch (err: unknown) {
@@ -349,6 +358,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     selectedPageIds, setSelectedPageIds,
     isEditModalOpen, setIsEditModalOpen,
     editingPage, setEditingPage,
+    currentUser,
     activeSystemUser,
     availableAdmins,
     isDetailSheetOpen,
@@ -364,6 +374,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     selectedBmFilter, setSelectedBmFilter,
     selectedSystemAdminId, setSelectedSystemAdminId,
     bmFilterOptions,
-    filteredSystemUsers
+    filteredSystemUsers,
+    lastSyncTime
   }
 }

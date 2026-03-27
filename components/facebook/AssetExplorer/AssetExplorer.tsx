@@ -28,6 +28,7 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
     selectedPageIds, setSelectedPageIds,
     isEditModalOpen, setIsEditModalOpen,
     editingPage, setEditingPage,
+    currentUser,
     fetchSystemUserAssets,
     // fetchAccountUserAssets,
     handleManualSync,
@@ -42,8 +43,9 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
     selectedBusiness,
     openBusinessDetail,
     activeSystemUser,
-    // handleRecrawlBusiness,
-    // recrawlingIds
+    handleRecrawlBusiness,
+    recrawlingIds,
+    lastSyncTime
   } = useAssetExplorer(adminPassword, isAdminVerified)
 
   const handleDeleteSelected = async () => {
@@ -136,6 +138,11 @@ export default function AssetExplorer({ adminPassword, isAdminVerified }: Props)
                 activeAccountUserToken={activeAccountUserToken}
                 setEditingPage={setEditingPage}
                 setIsEditModalOpen={setIsEditModalOpen}
+                systemUsers={systemUsers}
+                currentUser={currentUser}
+                lastSyncTime={lastSyncTime}
+                handleRecrawlBusiness={handleRecrawlBusiness}
+                recrawlingIds={recrawlingIds}
               />
             )}
           </CardContent>

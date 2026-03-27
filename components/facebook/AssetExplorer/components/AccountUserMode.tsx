@@ -45,6 +45,11 @@ interface AccountUserModeProps {
   activeAccountUserToken: string
   setEditingPage: (page: FacebookPage | null) => void
   setIsEditModalOpen: (open: boolean) => void
+  systemUsers: any[]
+  currentUser: any | null
+  lastSyncTime: string
+  handleRecrawlBusiness: (id: string) => Promise<void>
+  recrawlingIds: Set<string>
 }
 
 export function AccountUserMode({
@@ -60,7 +65,12 @@ export function AccountUserMode({
   openBusinessDetail,
   activeAccountUserToken,
   setEditingPage,
-  setIsEditModalOpen
+  setIsEditModalOpen,
+  systemUsers,
+  currentUser,
+  lastSyncTime,
+  handleRecrawlBusiness,
+  recrawlingIds
 }: AccountUserModeProps & { standalonePages?: FacebookPage[] }) {
   const [selectedBusinessIds] = useState<string[]>([])
   const [selectedStandalonePageIds, setSelectedStandalonePageIds] = useState<string[]>([])
@@ -554,6 +564,11 @@ export function AccountUserMode({
         business={selectedBusiness}
         isOpen={isDetailSheetOpen}
         onClose={() => setIsDetailSheetOpen(false)}
+        systemUsers={systemUsers}
+        currentUser={currentUser}
+        lastSync={lastSyncTime}
+        isRecrawling={recrawlingIds.has(selectedBusiness?.id || "")}
+        onRecrawl={() => selectedBusiness && handleRecrawlBusiness(selectedBusiness.id)}
       />
     </div>
   )
