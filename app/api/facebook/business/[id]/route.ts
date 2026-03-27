@@ -49,13 +49,17 @@ export async function GET(
     clientUrl.searchParams.set("access_token", token)
     clientUrl.searchParams.set("limit", LIMIT.toString())
 
-    const [detailsRes, ownedRes, clientRes, systemUsersRes, meRes, appsRes, assetGroupsRes] = await Promise.all([
+    const appFields = "id,name,link,category,icon_url,daily_active_users,weekly_active_users,monthly_active_users,app_install_tracked"
+
+    const [detailsRes, ownedRes, clientRes, systemUsersRes, meRes, ownedAppsRes, clientAppsRes, pendingAppsRes, assetGroupsRes] = await Promise.all([
       fetch(detailsUrl.toString()),
       fetch(ownedUrl.toString()),
       fetch(clientUrl.toString()),
       fetch(`https://graph.facebook.com/${businessId}/system_users?fields=id,name,role,email&access_token=${token}`),
       fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`),
-      fetch(`https://graph.facebook.com/${businessId}/apps?fields=id,name,link,category,icon_url&access_token=${token}`),
+      fetch(`https://graph.facebook.com/${businessId}/owned_apps?fields=${appFields}&access_token=${token}`),
+      fetch(`https://graph.facebook.com/${businessId}/client_apps?fields=${appFields}&access_token=${token}`),
+      fetch(`https://graph.facebook.com/${businessId}/pending_client_apps?fields=${appFields}&access_token=${token}`),
       facebookAssetGroupService.getBusinessAssetGroups(token, businessId)
     ])
 
@@ -89,7 +93,30 @@ export async function GET(
     const clientData = clientRes.ok ? await clientRes.json().catch(() => ({ data: [] })) : { data: [] }
     const systemUsersData = systemUsersRes.ok ? await systemUsersRes.json().catch(() => ({ data: [] })) : { data: [] }
     const meData = meRes.ok ? await meRes.json().catch(() => ({ id: "", name: "Current User" })) : { id: "", name: "Current User" }
-    const appsData = appsRes.ok ? await appsRes.json().catch(() => ({ data: [] })) : { data: [] }
+    
+    // Process Apps
+    if (!ownedAppsRes.ok) {
+        const err = await ownedAppsRes.json().catch(() => ({}));
+        console.error(`[API] Failed to fetch owned_apps for BM ${businessId}:`, JSON.stringify(err));
+    }
+    if (!clientAppsRes.ok) {
+        const err = await clientAppsRes.json().catch(() => ({}));
+        console.error(`[API] Failed to fetch client_apps for BM ${businessId}:`, JSON.stringify(err));
+    }
+    if (!pendingAppsRes.ok) {
+        const err = await pendingAppsRes.json().catch(() => ({}));
+        console.error(`[API] Failed to fetch pending_client_apps for BM ${businessId}:`, JSON.stringify(err));
+    }
+
+    const ownedAppsData = ownedAppsRes.ok ? await ownedAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
+    const clientAppsData = clientAppsRes.ok ? await clientAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
+    const pendingAppsData = pendingAppsRes.ok ? await pendingAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
+    
+    const ownedApps = (ownedAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'owned' }))
+    const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'sharing' }))
+    const pendingApps = (pendingAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'pending' }))
+    const allApps = [...ownedApps, ...clientApps, ...pendingApps]
+
     const assetGroupsData = assetGroupsRes // This is now an array from the service
     
     const payload = {
@@ -97,7 +124,7 @@ export async function GET(
       pages: [...(ownedData.data || []), ...(clientData.data || [])],
       system_users: systemUsersData.data || [],
       currentUser: meData,
-      apps: appsData.data || [],
+      apps: allApps,
       business_asset_groups: { data: Array.isArray(assetGroupsData) ? assetGroupsData : [] },
       fetchedAt: Date.now()
     }

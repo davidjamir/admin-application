@@ -14,8 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { BusinessDetailSheet } from "./BusinessDetailSheet"
-import { BusinessRow } from "@/types/facebook"
-import { FacebookPage } from "@/types/facebook"
+import { BusinessRow, SystemUser, FacebookPage } from "@/types/facebook"
 import { Badge } from "@/components/ui/badge"
 import {
   Tooltip,
@@ -45,8 +44,8 @@ interface AccountUserModeProps {
   activeAccountUserToken: string
   setEditingPage: (page: FacebookPage | null) => void
   setIsEditModalOpen: (open: boolean) => void
-  systemUsers: any[]
-  currentUser: any | null
+  systemUsers: SystemUser[]
+  currentUser: SystemUser | null
   lastSyncTime: string
   handleRecrawlBusiness: (id: string) => Promise<void>
   recrawlingIds: Set<string>
@@ -117,7 +116,7 @@ export function AccountUserMode({
     if (!tasks) return "Unknown"
     const allTasks = ["MODERATE", "MESSAGING", "ANALYZE", "ADVERTISE", "CREATE_CONTENT", "MANAGE"]
     const hasAll = allTasks.every(t => tasks.includes(t))
-    
+
     if (hasAll) return "Owner"
     if (tasks.includes("MANAGE")) return "Admin"
     if (tasks.includes("CREATE_CONTENT")) return "Editor"
@@ -218,8 +217,8 @@ export function AccountUserMode({
                 </TableRow>
               ) : businessRows.length > 0 ? (
                 businessRows.map((bm, index) => (
-                  <TableRow 
-                    key={bm.id} 
+                  <TableRow
+                    key={bm.id}
                     className={`group border-border/20 transition-all duration-300 cursor-pointer h-14 ${selectedBusinessIds.includes(bm.id) ? "bg-primary/[0.03]" : "hover:bg-muted/40"}`}
                     onClick={() => openBusinessDetail(bm)}
                   >
@@ -263,30 +262,30 @@ export function AccountUserMode({
                           <TooltipContent className="max-w-[250px] p-3 rounded-xl border-border/40 shadow-xl bg-background/95 backdrop-blur-md space-y-2">
                             <p className="text-[10px] font-bold uppercase tracking-wider text-black/60">Business Health Status</p>
                             <div className="space-y-1.5 pt-1">
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-[10px] text-black/40">Is Promotable</span>
+                                <span className={`text-[10px] font-medium ${bm.is_promotable !== false ? "text-green-600" : "text-red-600"}`}>
+                                  {bm.is_promotable !== false ? "Yes" : "No"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-[10px] text-black/40">Can Create Ad Accounts</span>
+                                <span className={`text-[10px] font-medium ${bm.can_create_ad_accounts !== false ? "text-green-600" : "text-orange-600"}`}>
+                                  {bm.can_create_ad_accounts !== false ? "Yes" : "No"}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-[10px] text-black/40">Sharing Eligibility</span>
+                                <span className={`text-[10px] font-medium ${bm.sharing_eligibility_status === "eligible" ? "text-green-600" : "text-orange-600"}`}>
+                                  {bm.sharing_eligibility_status || "Unknown"}
+                                </span>
+                              </div>
+                              <div className="border-t border-border/40 my-1 pt-1.5">
                                 <div className="flex items-center justify-between gap-4">
-                                    <span className="text-[10px] text-black/40">Is Promotable</span>
-                                    <span className={`text-[10px] font-medium ${bm.is_promotable !== false ? "text-green-600" : "text-red-600"}`}>
-                                        {bm.is_promotable !== false ? "Yes" : "No"}
-                                    </span>
+                                  <span className="text-[10px] text-black/40">Verification</span>
+                                  <span className="text-[10px] font-medium capitalize text-black">{bm.verification_status || "unverified"}</span>
                                 </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className="text-[10px] text-black/40">Can Create Ad Accounts</span>
-                                    <span className={`text-[10px] font-medium ${bm.can_create_ad_accounts !== false ? "text-green-600" : "text-orange-600"}`}>
-                                        {bm.can_create_ad_accounts !== false ? "Yes" : "No"}
-                                    </span>
-                                </div>
-                                <div className="flex items-center justify-between gap-4">
-                                    <span className="text-[10px] text-black/40">Sharing Eligibility</span>
-                                    <span className={`text-[10px] font-medium ${bm.sharing_eligibility_status === "eligible" ? "text-green-600" : "text-orange-600"}`}>
-                                        {bm.sharing_eligibility_status || "Unknown"}
-                                    </span>
-                                </div>
-                                <div className="border-t border-border/40 my-1 pt-1.5">
-                                    <div className="flex items-center justify-between gap-4">
-                                        <span className="text-[10px] text-black/40">Verification</span>
-                                        <span className="text-[10px] font-medium capitalize text-black">{bm.verification_status || "unverified"}</span>
-                                    </div>
-                                </div>
+                              </div>
                             </div>
                           </TooltipContent>
                         </Tooltip>
@@ -319,8 +318,8 @@ export function AccountUserMode({
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={7} className="py-20 text-center border-none">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                       <Search className="h-6 w-6 opacity-20" />
-                       <span className="text-xs italic tracking-widest font-normal text-black/20 capitalize">No businesses found</span>
+                      <Search className="h-6 w-6 opacity-20" />
+                      <span className="text-xs italic tracking-widest font-normal text-black/20 capitalize">No businesses found</span>
                     </div>
                   </TableCell>
                 </TableRow>
@@ -335,63 +334,63 @@ export function AccountUserMode({
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-normal tracking-tighter text-black">Pages Outside Business</h2>
           <div className="flex items-center gap-4 text-[10px] text-black/40 tracking-wider">
-                <div className="flex items-center gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        className="h-8 px-3 text-xs text-black/60 hover:text-black hover:bg-black/5 gap-1.5 transition-all duration-200 rounded-lg border border-border/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                        onClick={() => {
-                            const ids = selectedStandalonePageIds.join("\n")
-                            navigator.clipboard.writeText(ids)
-                            toast.success(`Copied ${selectedStandalonePageIds.length} page IDs`)
-                        }}
-                        disabled={selectedStandalonePageIds.length === 0}
-                    >
-                        <Copy className="w-3.5 h-3.5" />
-                        <span>Copy Selected ({selectedStandalonePageIds.length})</span>
-                    </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 px-3 text-xs text-black/60 hover:text-black hover:bg-black/5 gap-1.5 transition-all duration-200 rounded-lg border border-border/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                onClick={() => {
+                  const ids = selectedStandalonePageIds.join("\n")
+                  navigator.clipboard.writeText(ids)
+                  toast.success(`Copied ${selectedStandalonePageIds.length} page IDs`)
+                }}
+                disabled={selectedStandalonePageIds.length === 0}
+              >
+                <Copy className="w-3.5 h-3.5" />
+                <span>Copy Selected ({selectedStandalonePageIds.length})</span>
+              </Button>
 
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 px-3 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50/50 gap-1.5 transition-all duration-200 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
-                                disabled={isAddingToBm || selectedStandalonePageIds.length === 0}
-                            >
-                                {isAddingToBm ? (
-                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                ) : (
-                                    <Plus className="w-3.5 h-3.5" />
-                                )}
-                                <span>Add ({selectedStandalonePageIds.length}) into Business</span>
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-[240px] max-h-[350px] overflow-y-auto p-1 rounded-xl shadow-xl backdrop-blur-md bg-white/95 border-border/40">
-                            <div className="p-2 text-[10px] font-bold uppercase tracking-wider text-black/40 border-b border-border/20 mb-1">
-                                Select Target Business
-                            </div>
-                            {businessRows.filter(bm => bm.permitted_roles?.includes("ADMIN")).length > 0 ? (
-                                businessRows
-                                    .filter(bm => bm.permitted_roles?.includes("ADMIN"))
-                                    .map((bm) => (
-                                        <DropdownMenuItem 
-                                            key={bm.id} 
-                                            onClick={() => handleAddToBm(bm.id)}
-                                            className="flex flex-col items-start gap-1 p-2 cursor-pointer focus:bg-muted/60 rounded-lg"
-                                        >
-                                            <span className="text-xs font-medium text-black truncate w-full">{bm.name}</span>
-                                            <span className="text-[9px] font-mono text-black/40">{bm.id}</span>
-                                        </DropdownMenuItem>
-                                    ))
-                            ) : (
-                                <div className="p-4 text-center text-xs text-muted-foreground italic">
-                                    No admin businesses found
-                                </div>
-                            )}
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs text-blue-600 border border-blue-200 hover:bg-blue-50/50 gap-1.5 transition-all duration-200 rounded-lg cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    disabled={isAddingToBm || selectedStandalonePageIds.length === 0}
+                  >
+                    {isAddingToBm ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Plus className="w-3.5 h-3.5" />
+                    )}
+                    <span>Add ({selectedStandalonePageIds.length}) into Business</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-[240px] max-h-[350px] overflow-y-auto p-1 rounded-xl shadow-xl backdrop-blur-md bg-white/95 border-border/40">
+                  <div className="p-2 text-[10px] font-bold uppercase tracking-wider text-black/40 border-b border-border/20 mb-1">
+                    Select Target Business
+                  </div>
+                  {businessRows.filter(bm => bm.permitted_roles?.includes("ADMIN")).length > 0 ? (
+                    businessRows
+                      .filter(bm => bm.permitted_roles?.includes("ADMIN"))
+                      .map((bm) => (
+                        <DropdownMenuItem
+                          key={bm.id}
+                          onClick={() => handleAddToBm(bm.id)}
+                          className="flex flex-col items-start gap-1 p-2 cursor-pointer focus:bg-muted/60 rounded-lg"
+                        >
+                          <span className="text-xs font-medium text-black truncate w-full">{bm.name}</span>
+                          <span className="text-[9px] font-mono text-black/40">{bm.id}</span>
+                        </DropdownMenuItem>
+                      ))
+                  ) : (
+                    <div className="p-4 text-center text-xs text-muted-foreground italic">
+                      No admin businesses found
+                    </div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
             <span>items: {standalonePages.length}</span>
           </div>
         </div>
@@ -437,14 +436,14 @@ export function AccountUserMode({
                 </TableHead>
                 <TableHead className="w-[200px] text-sm font-bold text-black px-6 text-center">Actions</TableHead>
                 <TableHead className="w-16 px-6 text-right">
-                    <Checkbox 
-                        checked={standalonePages.length > 0 && selectedStandalonePageIds.length === standalonePages.length}
-                        onCheckedChange={(checked) => {
-                            if (checked) setSelectedStandalonePageIds(standalonePages.map(p => p.id))
-                            else setSelectedStandalonePageIds([])
-                        }}
-                        className="h-5 w-5 rounded-md border-border/60"
-                    />
+                  <Checkbox
+                    checked={standalonePages.length > 0 && selectedStandalonePageIds.length === standalonePages.length}
+                    onCheckedChange={(checked) => {
+                      if (checked) setSelectedStandalonePageIds(standalonePages.map(p => p.id))
+                      else setSelectedStandalonePageIds([])
+                    }}
+                    className="h-5 w-5 rounded-md border-border/60"
+                  />
                 </TableHead>
               </TableRow>
             </TableHeader>
@@ -460,12 +459,12 @@ export function AccountUserMode({
                 </TableRow>
               ) : standalonePages.length > 0 ? (
                 standalonePages.map((page, index) => (
-                  <TableRow 
-                    key={page.id} 
+                  <TableRow
+                    key={page.id}
                     className={`group border-border/20 transition-all duration-300 h-14 cursor-pointer ${selectedStandalonePageIds.includes(page.id) ? "bg-primary/[0.03]" : "hover:bg-muted/40"}`}
                     onClick={() => {
-                        const isChecked = selectedStandalonePageIds.includes(page.id)
-                        setSelectedStandalonePageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
+                      const isChecked = selectedStandalonePageIds.includes(page.id)
+                      setSelectedStandalonePageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
                     }}
                   >
                     <TableCell className="text-center text-black font-normal text-sm w-16 px-6">{index + 1}</TableCell>
@@ -493,55 +492,55 @@ export function AccountUserMode({
                       </span>
                     </TableCell>
                     <TableCell className="w-[200px] px-6 text-center">
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={`text-[9.5px] font-bold border rounded-md whitespace-nowrap ${getRoleStyles(getPageRole(page.tasks))}`}
                       >
                         {getPageRole(page.tasks)}
                       </Badge>
                     </TableCell>
                     <TableCell className="w-[200px] px-6 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                            <Button 
-                                variant="outline" 
-                                size="icon" 
-                                className="h-8 w-8 border-border/30 bg-background/50 hover:bg-muted transition-all cursor-pointer rounded-md"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    if (page.access_token) {
-                                        navigator.clipboard.writeText(page.access_token)
-                                        toast.success("Page access token copied")
-                                    } else {
-                                        toast.error("No access token found for this page")
-                                    }
-                                }}
-                                title="Copy Access Token"
-                            >
-                                <Copy className="w-3.5 h-3.5 text-black/40" />
-                            </Button>
-                            <Button 
-                                variant="outline" 
-                                size="icon" 
-                                className="h-8 w-8 border-border/30 bg-background/50 hover:bg-muted transition-all cursor-pointer rounded-md"
-                                onClick={(e) => {
-                                    e.stopPropagation()
-                                    setEditingPage(page)
-                                    setIsEditModalOpen(true)
-                                }}
-                                title="Edit Page"
-                            >
-                                <Pencil className="w-3.5 h-3.5 text-black/40" />
-                            </Button>
-                        </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 border-border/30 bg-background/50 hover:bg-muted transition-all cursor-pointer rounded-md"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            if (page.access_token) {
+                              navigator.clipboard.writeText(page.access_token)
+                              toast.success("Page access token copied")
+                            } else {
+                              toast.error("No access token found for this page")
+                            }
+                          }}
+                          title="Copy Access Token"
+                        >
+                          <Copy className="w-3.5 h-3.5 text-black/40" />
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-8 w-8 border-border/30 bg-background/50 hover:bg-muted transition-all cursor-pointer rounded-md"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setEditingPage(page)
+                            setIsEditModalOpen(true)
+                          }}
+                          title="Edit Page"
+                        >
+                          <Pencil className="w-3.5 h-3.5 text-black/40" />
+                        </Button>
+                      </div>
                     </TableCell>
                     <TableCell className="w-16 px-6 text-right" onClick={e => e.stopPropagation()}>
-                        <Checkbox 
-                            checked={selectedStandalonePageIds.includes(page.id)}
-                            onCheckedChange={(checked) => {
-                                setSelectedStandalonePageIds(prev => checked ? [...prev, page.id] : prev.filter(id => id !== page.id))
-                            }}
-                            className="h-5 w-5 rounded-md border-border/60"
-                        />
+                      <Checkbox
+                        checked={selectedStandalonePageIds.includes(page.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedStandalonePageIds(prev => checked ? [...prev, page.id] : prev.filter(id => id !== page.id))
+                        }}
+                        className="h-5 w-5 rounded-md border-border/60"
+                      />
                     </TableCell>
                   </TableRow>
                 ))
@@ -549,8 +548,8 @@ export function AccountUserMode({
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 text-muted-foreground">
-                        <Search className="h-6 w-6 opacity-20" />
-                        <span className="text-xs italic tracking-widest font-normal text-black/20 capitalize">No pages outside business</span>
+                      <Search className="h-6 w-6 opacity-20" />
+                      <span className="text-xs italic tracking-widest font-normal text-black/20 capitalize">No pages outside business</span>
                     </div>
                   </TableCell>
                 </TableRow>

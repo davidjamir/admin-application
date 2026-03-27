@@ -53,6 +53,7 @@ export interface SystemUser {
   _id?: string
   id: string
   name: string
+  email?: string
   token?: string
   appName?: string
   businessId?: string
@@ -125,7 +126,19 @@ export interface FacebookBusiness {
 export interface BusinessRow extends FacebookBusiness {
   pages: FacebookPage[]
   assignedPageIds: string[]
-  apps?: { id: string; name: string; category?: string }[]
+  apps?: Array<{ 
+    id: string; 
+    name: string; 
+    category?: string; 
+    link?: string; 
+    icon_url?: string; 
+    source?: "owned" | "sharing" | "pending";
+    daily_active_users?: string | number;
+    weekly_active_users?: string | number;
+    monthly_active_users?: string | number;
+    app_install_tracked?: boolean;
+    permitted_tasks?: string[];
+  }>
   system_users?: { id: string; name: string; role: string }[]
   business_asset_groups?: { data: { id: string; name: string }[] }
 }

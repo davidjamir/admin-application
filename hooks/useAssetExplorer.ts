@@ -194,6 +194,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
       }
 
       setBusinessRows(prev => prev.map(b => b.id === businessId ? updatedRow : b))
+      setSelectedBusiness(updatedRow)
       
       const allUserPages = await facebookService.getPages(activeAccountUserToken)
       const allRows = businessRows.map(b => b.id === businessId ? updatedRow : b)
