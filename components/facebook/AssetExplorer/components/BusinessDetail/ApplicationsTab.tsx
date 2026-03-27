@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Smartphone, Users, BadgeCheck, Fingerprint, ExternalLink, Link2, Settings, ChevronRight, Zap } from "lucide-react"
+import { Smartphone, Users, BadgeCheck, Fingerprint, ExternalLink, Link2, Settings, ChevronRight, Zap, Boxes, Handshake, Clock } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { BusinessRow } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
@@ -20,11 +20,9 @@ export const ApplicationsTab = ({ business }: ApplicationsTabProps) => {
     { label: "Weekly Active Users", value: selectedApp.weekly_active_users || "0", icon: Users },
     { label: "Monthly Active Users", value: selectedApp.monthly_active_users || "0", icon: Users },
   ] : []
-
   const ownedApps = business.apps?.filter(a => a.source === 'owned') || []
   const sharingApps = business.apps?.filter(a => a.source === 'sharing') || []
   const pendingApps = business.apps?.filter(a => a.source === 'pending') || []
-  const otherApps = business.apps?.filter(a => !a.source || (a.source !== 'owned' && a.source !== 'sharing' && a.source !== 'pending')) || []
 
   return (
     <DetailContainer
@@ -162,77 +160,63 @@ export const ApplicationsTab = ({ business }: ApplicationsTabProps) => {
         ) : null
       }
     >
-      {ownedApps.length > 0 && (
-        <Section title="Owned Applications" icon={Smartphone} count={ownedApps.length}>
-          {ownedApps.map((app) => (
-            <Item
-              key={app.id}
-              isSelected={selectedAppId === app.id}
-              onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
-              label={app.name}
-              value={app.id}
-              subValue={app.category}
-              isID
-            />
-          ))}
-        </Section>
-      )}
+      <Section 
+        title="Owned Applications" 
+        icon={Boxes} 
+        count={ownedApps.length > 0 ? ownedApps.length : undefined}
+      >
+        {ownedApps.map((app) => (
+          <Item
+            key={app.id}
+            isSelected={selectedAppId === app.id}
+            onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
+            label={app.name}
+            value={app.id}
+            subValue={app.category}
+            isID
+          />
+        ))}
+        {ownedApps.length === 0 && <p className="text-xs text-muted-foreground italic pl-2">No owned applications</p>}
+      </Section>
 
-      {sharingApps.length > 0 && (
-        <Section title="Sharing Applications" icon={Smartphone} count={sharingApps.length}>
-          {sharingApps.map((app) => (
-            <Item
-              key={app.id}
-              isSelected={selectedAppId === app.id}
-              onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
-              label={app.name}
-              value={app.id}
-              subValue={app.category}
-              isID
-            />
-          ))}
-        </Section>
-      )}
+      <Section 
+        title="Client Applications" 
+        icon={Handshake} 
+        count={sharingApps.length > 0 ? sharingApps.length : undefined}
+      >
+        {sharingApps.map((app) => (
+          <Item
+            key={app.id}
+            isSelected={selectedAppId === app.id}
+            onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
+            label={app.name}
+            value={app.id}
+            subValue={app.category}
+            isID
+          />
+        ))}
+        {sharingApps.length === 0 && <p className="text-xs text-muted-foreground italic pl-2">No client applications</p>}
+      </Section>
 
-      {pendingApps.length > 0 && (
-        <Section title="Pending Applications" icon={Smartphone} count={pendingApps.length}>
-          {pendingApps.map((app) => (
-            <Item
-              key={app.id}
-              isSelected={selectedAppId === app.id}
-              onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
-              label={app.name}
-              value={app.id}
-              subValue={app.category}
-              isID
-              status="Pending"
-            />
-          ))}
-        </Section>
-      )}
-
-      {otherApps.length > 0 && (
-        <Section title="Connected Applications" icon={Smartphone} count={otherApps.length}>
-          {otherApps.map((app) => (
-            <Item
-              key={app.id}
-              isSelected={selectedAppId === app.id}
-              onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
-              label={app.name}
-              value={app.id}
-              subValue={app.category}
-              isID
-              imageUrl={app.icon_url}
-            />
-          ))}
-        </Section>
-      )}
-
-      {!business.apps?.length && (
-        <Section title="Connected Applications" icon={Smartphone} count={0}>
-          <p className="text-xs text-muted-foreground italic pl-2">No apps linked</p>
-        </Section>
-      )}
+      <Section 
+        title="Pending Client Applications" 
+        icon={Clock} 
+        count={pendingApps.length > 0 ? pendingApps.length : undefined}
+      >
+        {pendingApps.map((app) => (
+          <Item
+            key={app.id}
+            isSelected={selectedAppId === app.id}
+            onClick={() => setSelectedAppId(selectedAppId === app.id ? null : app.id)}
+            label={app.name}
+            value={app.id}
+            subValue={app.category}
+            isID
+            status="Pending"
+          />
+        ))}
+        {pendingApps.length === 0 && <p className="text-xs text-muted-foreground italic pl-2">No pending client applications</p>}
+      </Section>
     </DetailContainer>
   )
 }
