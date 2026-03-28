@@ -37,13 +37,13 @@ export const SystemUserTableRow: React.FC<SystemUserTableRowProps> = ({
             <TableCell className="py-5 px-6 shrink-0">
                 <Badge 
                     variant="outline" 
-                    className={`text-[9px] font-bold uppercase tracking-wider h-5 px-2 border-none ${
+                    className={`text-[9px] font-bold h-5 px-2 border ${
                         user.status === "Disabled" 
-                        ? "bg-red-500/10 text-red-500 shadow-[0_0_8px_rgba(239,68,68,0.2)]" 
-                        : "bg-emerald-500/10 text-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.2)]"
+                        ? "bg-red-500/5 text-red-500 border-red-500/20" 
+                        : "bg-emerald-500/5 text-emerald-500 border-emerald-500/20"
                     }`}
                 >
-                    {user.status || "Active"}
+                    {user.status ? user.status.charAt(0).toUpperCase() + user.status.slice(1).toLowerCase() : "Active"}
                 </Badge>
             </TableCell>
             <TableCell className="py-5 px-6 text-left">

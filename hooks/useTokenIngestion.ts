@@ -66,7 +66,8 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
             })
             const data = await res.json()
             if (!res.ok) throw new Error(data.message || "Failed to load personnel")
-            setSystemUsers(data.data ?? [])
+            const allUsers: SystemUser[] = data.data ?? []
+            setSystemUsers(allUsers.filter(u => u.status !== "Disabled"))
         } catch {
             toast.error("Identity sync failed")
         }

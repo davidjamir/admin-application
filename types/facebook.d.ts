@@ -132,7 +132,7 @@ export interface BusinessRow extends FacebookBusiness {
     category?: string; 
     link?: string; 
     icon_url?: string; 
-    source?: "owned" | "sharing" | "pending";
+    source?: "owned" | "client" | "pending";
     daily_active_users?: string | number;
     weekly_active_users?: string | number;
     monthly_active_users?: string | number;

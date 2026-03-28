@@ -49,7 +49,7 @@ export async function GET(
     clientUrl.searchParams.set("access_token", token)
     clientUrl.searchParams.set("limit", LIMIT.toString())
 
-    const appFields = "id,name,link,category,icon_url,daily_active_users,weekly_active_users,monthly_active_users,app_install_tracked"
+    const appFields = "id,name,link,category"
 
     const [detailsRes, ownedRes, clientRes, systemUsersRes, meRes, ownedAppsRes, clientAppsRes, pendingAppsRes, assetGroupsRes] = await Promise.all([
       fetch(detailsUrl.toString()),
@@ -71,13 +71,13 @@ export async function GET(
       fallbackUrl.searchParams.set("fields", "id,name") // minimal fields
       fallbackUrl.searchParams.set("access_token", token)
       const fallbackRes = await fetch(fallbackUrl.toString())
-      
+
       if (!fallbackRes.ok) {
         const errJson = await fallbackRes.json().catch(() => ({ error: { message: "Unknown Graph API error" } }))
         console.error(`[API] Fallback also failed for BM ${businessId}:`, errJson)
         throw new Error(errJson.error?.message || `Fallback failed with status ${fallbackRes.status}`)
       }
-      
+
       detailsData = await fallbackRes.json()
     } else {
       detailsData = await detailsRes.json().catch(() => ({ error: { message: "Failed to parse details JSON" } }))
@@ -87,38 +87,38 @@ export async function GET(
       console.error(`[API] Final failure for BM ${businessId}:`, detailsData.error)
       throw new Error(detailsData.error.message)
     }
-    
+
     // Graceful handling for pages: if fetch fails, return empty list instead of throwing
     const ownedData = ownedRes.ok ? await ownedRes.json().catch(() => ({ data: [] })) : { data: [] }
     const clientData = clientRes.ok ? await clientRes.json().catch(() => ({ data: [] })) : { data: [] }
     const systemUsersData = systemUsersRes.ok ? await systemUsersRes.json().catch(() => ({ data: [] })) : { data: [] }
     const meData = meRes.ok ? await meRes.json().catch(() => ({ id: "", name: "Current User" })) : { id: "", name: "Current User" }
-    
+
     // Process Apps
     if (!ownedAppsRes.ok) {
-        const err = await ownedAppsRes.json().catch(() => ({}));
-        console.error(`[API] Failed to fetch owned_apps for BM ${businessId}:`, JSON.stringify(err));
+      const err = await ownedAppsRes.json().catch(() => ({}));
+      console.error(`[API] Failed to fetch owned_apps for BM ${businessId}:`, JSON.stringify(err));
     }
     if (!clientAppsRes.ok) {
-        const err = await clientAppsRes.json().catch(() => ({}));
-        console.error(`[API] Failed to fetch client_apps for BM ${businessId}:`, JSON.stringify(err));
+      const err = await clientAppsRes.json().catch(() => ({}));
+      console.error(`[API] Failed to fetch client_apps for BM ${businessId}:`, JSON.stringify(err));
     }
     if (!pendingAppsRes.ok) {
-        const err = await pendingAppsRes.json().catch(() => ({}));
-        console.error(`[API] Failed to fetch pending_client_apps for BM ${businessId}:`, JSON.stringify(err));
+      const err = await pendingAppsRes.json().catch(() => ({}));
+      console.error(`[API] Failed to fetch pending_client_apps for BM ${businessId}:`, JSON.stringify(err));
     }
 
     const ownedAppsData = ownedAppsRes.ok ? await ownedAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
     const clientAppsData = clientAppsRes.ok ? await clientAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
     const pendingAppsData = pendingAppsRes.ok ? await pendingAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
-    
+
     const ownedApps = (ownedAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'owned' }))
-    const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'sharing' }))
+    const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'client' }))
     const pendingApps = (pendingAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'pending' }))
     const allApps = [...ownedApps, ...clientApps, ...pendingApps]
 
     const assetGroupsData = assetGroupsRes // This is now an array from the service
-    
+
     const payload = {
       ...detailsData,
       pages: [...(ownedData.data || []), ...(clientData.data || [])],

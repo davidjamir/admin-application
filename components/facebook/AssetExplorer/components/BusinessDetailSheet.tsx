@@ -45,9 +45,10 @@ interface BusinessDetailSheetProps {
   lastSync?: string
   onRecrawl?: () => void
   isRecrawling?: boolean
+  adminToken: string
 }
 
-export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, currentUser, lastSync, onRecrawl, isRecrawling }: BusinessDetailSheetProps) {
+export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, currentUser, lastSync, onRecrawl, isRecrawling, adminToken }: BusinessDetailSheetProps) {
   if (!business) return null
 
   const allBusinessUsers = [...(business.business_users?.data || [])]
@@ -189,12 +190,12 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
               </div>
             </SheetHeader>
 
-            <div className="flex-1 overflow-y-auto p-6 custom-scrollbar">
-              <TabsContent value="overview" className="m-0 focus-visible:outline-none">
+            <div className="flex-1 overflow-hidden relative">
+              <TabsContent value="overview" className="m-0 focus-visible:outline-none h-full overflow-y-auto p-6 custom-scrollbar">
                 <OverviewTab business={business} allBusinessUsersCount={allBusinessUsers.length} />
               </TabsContent>
 
-              <TabsContent value="team" className="m-0 focus-visible:outline-none flex-1 overflow-hidden">
+              <TabsContent value="team" className="m-0 focus-visible:outline-none h-full">
                 <TeamTab
                   business={business}
                   systemUsers={systemUsers}
@@ -203,19 +204,19 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
                 />
               </TabsContent>
 
-              <TabsContent value="pages" className="m-0 focus-visible:outline-none overflow-hidden h-full">
+              <TabsContent value="pages" className="m-0 focus-visible:outline-none h-full">
                 <PagesTab business={business} />
               </TabsContent>
 
-              <TabsContent value="assets" className="m-0 focus-visible:outline-none flex-1 overflow-hidden">
-                <AssetsTab business={business} />
+              <TabsContent value="assets" className="m-0 focus-visible:outline-none h-full">
+                <AssetsTab business={business} adminToken={adminToken} />
               </TabsContent>
 
-              <TabsContent value="application" className="m-0 focus-visible:outline-none">
-                <ApplicationsTab business={business} />
+              <TabsContent value="application" className="m-0 focus-visible:outline-none h-full">
+                <ApplicationsTab business={business} adminToken={adminToken} />
               </TabsContent>
 
-              <TabsContent value="ads" className="m-0 focus-visible:outline-none">
+              <TabsContent value="ads" className="m-0 focus-visible:outline-none h-full">
                 <AdsManagerTab business={business} />
               </TabsContent>
             </div>

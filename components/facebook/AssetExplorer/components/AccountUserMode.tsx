@@ -568,6 +568,7 @@ export function AccountUserMode({
         lastSync={lastSyncTime}
         isRecrawling={recrawlingIds.has(selectedBusiness?.id || "")}
         onRecrawl={() => selectedBusiness && handleRecrawlBusiness(selectedBusiness.id)}
+        adminToken={activeAccountUserToken}
       />
     </div>
   )
