@@ -124,7 +124,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers }
                           <div className="flex items-center gap-4 text-[9px] shrink-0">
                             <span className="text-muted-foreground tabular-nums">ID: {page.id}</span>
                             <button
-                              onClick={(e) => handleRemoveAsset(e, page.name, "Page")}
+                              onClick={(e) => handleRemoveAsset(e, page.name || "Unknown Page", "Page")}
                               className="p-1 border border-destructive/30 text-destructive hover:bg-red-600/10 rounded transition-all cursor-pointer shadow-sm"
                               title="Remove Permission"
                             >
@@ -158,6 +158,13 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers }
                           </div>
                           <div className="flex items-center gap-4 text-[9px] shrink-0 text-muted-foreground tabular-nums">
                             <span>ID: {acc.id} • {acc.currency}</span>
+                            <button
+                              onClick={(e) => handleRemoveAsset(e, acc.name || "Unknown Account", "Ad Account")}
+                              className="p-1 border border-destructive/30 text-destructive hover:bg-red-600/10 rounded transition-all cursor-pointer shadow-sm"
+                              title="Remove Permission"
+                            >
+                              <LogOut className="w-2.5 h-2.5" />
+                            </button>
                           </div>
                         </div>
                       ))}
@@ -183,7 +190,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers }
                           <div className="flex items-center gap-4 text-[9px] shrink-0">
                             <span className="text-muted-foreground tabular-nums">ID: {group.id}</span>
                             <button
-                              onClick={(e) => handleRemoveAsset(e, group.name, "Asset Group")}
+                              onClick={(e) => handleRemoveAsset(e, group.name || "Unknown Asset Group", "Asset Group")}
                               className="p-1 border border-destructive/30 text-destructive hover:bg-red-600/10 rounded transition-all cursor-pointer shadow-sm"
                               title="Remove Permission"
                             >

@@ -192,7 +192,7 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
 
             <div className="flex-1 overflow-hidden relative">
               <TabsContent value="overview" className="m-0 focus-visible:outline-none h-full overflow-y-auto p-6 custom-scrollbar">
-                <OverviewTab business={business} allBusinessUsersCount={allBusinessUsers.length} />
+                <OverviewTab business={business} allBusinessUsersCount={allBusinessUsers.length} key={`overview-${business.id}`} />
               </TabsContent>
 
               <TabsContent value="team" className="m-0 focus-visible:outline-none h-full">
@@ -201,23 +201,29 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
                   systemUsers={systemUsers}
                   currentUser={currentUser}
                   allBusinessUsers={allBusinessUsers}
+                  key={`team-${business.id}`}
                 />
               </TabsContent>
 
               <TabsContent value="pages" className="m-0 focus-visible:outline-none h-full">
-                <PagesTab business={business} />
+                <PagesTab business={business} key={`pages-${business.id}`} />
               </TabsContent>
 
               <TabsContent value="assets" className="m-0 focus-visible:outline-none h-full">
-                <AssetsTab business={business} adminToken={adminToken} />
+                <AssetsTab 
+                  business={business} 
+                  adminToken={adminToken} 
+                  allBusinessUsers={allBusinessUsers}
+                  key={`assets-${business.id}`} 
+                />
               </TabsContent>
 
               <TabsContent value="application" className="m-0 focus-visible:outline-none h-full">
-                <ApplicationsTab business={business} adminToken={adminToken} />
+                <ApplicationsTab business={business} adminToken={adminToken} key={`apps-${business.id}`} />
               </TabsContent>
 
               <TabsContent value="ads" className="m-0 focus-visible:outline-none h-full">
-                <AdsManagerTab business={business} />
+                <AdsManagerTab business={business} key={`ads-${business.id}`} />
               </TabsContent>
             </div>
           </Tabs>

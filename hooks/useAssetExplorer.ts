@@ -90,7 +90,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
     }
   }, [])
 
-  const fetchAccountUserAssets = useCallback(async (token: string, userId: string) => {
+  const fetchAccountUserAssets = useCallback(async (token: string, userId: string, force = false) => {
     if (!token) return
     try {
       setLoading(true)
@@ -106,7 +106,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
       
       const rows = await Promise.all(bms.map(async (bm) => {
         try {
-          const res = await fetch(`/api/facebook/business/${bm.id}?token=${token}`)
+          const res = await fetch(`/api/facebook/business/${bm.id}?token=${token}${force ? '&force=true' : ''}`)
           if (res.ok) {
             const fullData: BusinessRow = await res.json()
             const pageIds = (fullData.pages || []).map((p: FacebookPage) => p.id)
@@ -225,7 +225,7 @@ export function useAssetExplorer(adminPassword: string, isAdminVerified: boolean
       const me = await facebookService.getMe(manualToken.trim())
       setCurrentUser(me)
       toast.success(`Identity Verified: ${me.name}`)
-      await fetchAccountUserAssets(manualToken.trim(), me.id)
+      await fetchAccountUserAssets(manualToken.trim(), me.id, true) // Pass force=true here!
     } catch (err: unknown) {
       toast.error(err instanceof Error ? err.message : "Manual sync failed")
     } finally {

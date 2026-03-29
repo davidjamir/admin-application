@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
-import { Copy, Check } from "lucide-react"
+import { Facebook } from "lucide-react"
 import { toast } from "sonner"
 import { PageCardProps } from "./types"
 
@@ -8,14 +8,12 @@ export const PageCard: React.FC<PageCardProps> = ({
   page, isSelected, onClick, getHealthColor, formatExactRelative
 }) => {
   const healthColor = getHealthColor(page.lastScheduledAt)
-  const [copied, setCopied] = useState(false)
+  const [isIdHovered, setIsIdHovered] = useState(false)
 
   const handleCopyId = (e: React.MouseEvent) => {
     e.stopPropagation()
     navigator.clipboard.writeText(page.pageId)
-    setCopied(true)
     toast.success(`Page ID: ${page.pageId} copied!`)
-    setTimeout(() => setCopied(false), 2000)
   }
   
   return (
@@ -32,6 +30,16 @@ export const PageCard: React.FC<PageCardProps> = ({
           <div className="h-[42px] flex items-start">
             <span className="font-semibold text-[15px] leading-snug break-words line-clamp-2 text-black">
               {page.name}
+              <a
+                href={`https://facebook.com/${page.pageId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/fb inline-flex items-center justify-center size-5 ml-1.5 align-middle cursor-pointer border border-transparent hover:border-[#1877F2]/30 rounded-sm bg-transparent hover:bg-[#1877F2]/10 transition-all"
+                onClick={(e) => e.stopPropagation()}
+                title="View on Facebook"
+              >
+                <Facebook className="size-2.5 text-[#1877F2]" />
+              </a>
             </span>
           </div>
         </div>
@@ -46,14 +54,18 @@ export const PageCard: React.FC<PageCardProps> = ({
           >
             Scheduled: {page.queueCount || 0}
           </span>
-          <div 
-            className="flex items-center gap-1.5 hover:text-primary transition-colors cursor-pointer"
-            onClick={handleCopyId}
-          >
-            <span className="text-[10px] text-muted-foreground">
-              ID: <span className="font-medium text-foreground">{page.pageId}</span>
-            </span>
-            {copied ? <Check className="size-3 text-green-500" /> : <Copy className="size-3 text-muted-foreground/50 opacity-70" />}
+          <div className="flex items-center gap-3">
+            <div 
+              className="group/id flex items-center gap-1.5 cursor-pointer transition-colors"
+              onClick={handleCopyId}
+              onMouseEnter={() => setIsIdHovered(true)}
+              onMouseLeave={() => setIsIdHovered(false)}
+              style={{ color: isIdHovered ? healthColor : undefined }}
+            >
+              <span className="text-[10px] text-muted-foreground group-hover/id:text-inherit">
+                ID: <span className="font-medium text-foreground group-hover/id:text-inherit">{page.pageId}</span>
+              </span>
+            </div>
           </div>
         </div>
         <div className="flex items-center justify-between mt-2">

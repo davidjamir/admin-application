@@ -69,8 +69,8 @@ export interface SystemUser {
 
 export interface FacebookPage {
   id: string
-  name: string
-  access_token: string
+  name?: string
+  access_token?: string
   category?: string
   topic?: string
   category_list?: Array<{ id: string; name: string }>
@@ -80,6 +80,7 @@ export interface FacebookPage {
   emails?: string[]
   phone?: string
   tasks?: string[]
+  source?: "owned" | "client" | "asset_group"
   location?: {
     street?: string
     city?: string

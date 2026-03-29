@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 import { redis } from "@/lib/redis"
-import { facebookAssetGroupService } from "@/services/facebook-asset-group.service"
+import { FacebookPage } from "@/types/facebook"
 
 const LIMIT = 200
 
@@ -31,101 +31,94 @@ export async function GET(
 
     console.log(`[CACHE MISS] Fetching details for Business ${businessId}...`)
 
-    // 1. Fetch Business Details
-    const detailsUrl = new URL(`https://graph.facebook.com/${businessId}`)
-    const fields = 'id,name,verification_status,permitted_roles,is_promotable,sharing_eligibility_status,can_create_ad_accounts,created_time,primary_page,timezone_id,vertical,extendedcredits,owned_ad_accounts.limit(100){id,name,account_status,currency},adspixels.limit(100){id,name},whatsapp_business_accounts.limit(100){id,name,status},business_users.limit(100){id,name,email,role}';
-    detailsUrl.searchParams.set("fields", fields)
-    detailsUrl.searchParams.set("access_token", token)
-
-    // 2. Fetch Owned Pages (This is now redundant as owned_pages are included in the main details request, but keeping for now if needed for separate pagination or specific fields)
-    const ownedUrl = new URL(`https://graph.facebook.com/${businessId}/owned_pages`)
-    ownedUrl.searchParams.set("fields", "id,name,category,access_token")
-    ownedUrl.searchParams.set("access_token", token)
-    ownedUrl.searchParams.set("limit", LIMIT.toString())
-
-    // 3. Fetch Client Pages
-    const clientUrl = new URL(`https://graph.facebook.com/${businessId}/client_pages`)
-    clientUrl.searchParams.set("fields", "id,name,category,access_token")
-    clientUrl.searchParams.set("access_token", token)
-    clientUrl.searchParams.set("limit", LIMIT.toString())
-
     const appFields = "id,name,link,category"
+    const pageFields = "id,name,category,access_token"
+    const bmFields = 'id,name,verification_status,permitted_roles,is_promotable,sharing_eligibility_status,can_create_ad_accounts,created_time,primary_page,timezone_id,vertical,extendedcredits,owned_ad_accounts.limit(100){id,name,account_status,currency},adspixels.limit(100){id,name},whatsapp_business_accounts.limit(100){id,name,status},business_users.limit(100){id,name,email,role}';
 
-    const [detailsRes, ownedRes, clientRes, systemUsersRes, meRes, ownedAppsRes, clientAppsRes, pendingAppsRes, assetGroupsRes] = await Promise.all([
-      fetch(detailsUrl.toString()),
-      fetch(ownedUrl.toString()),
-      fetch(clientUrl.toString()),
-      fetch(`https://graph.facebook.com/${businessId}/system_users?fields=id,name,role,email&access_token=${token}`),
-      fetch(`https://graph.facebook.com/me?fields=id,name,email&access_token=${token}`),
-      fetch(`https://graph.facebook.com/${businessId}/owned_apps?fields=${appFields}&access_token=${token}`),
-      fetch(`https://graph.facebook.com/${businessId}/client_apps?fields=${appFields}&access_token=${token}`),
-      fetch(`https://graph.facebook.com/${businessId}/pending_client_apps?fields=${appFields}&access_token=${token}`),
-      facebookAssetGroupService.getBusinessAssetGroups(token, businessId)
-    ])
+    // Step 1: Prepare Batch Requests
+    const batchRequests: { method: string; relative_url: string; name?: string }[] = [
+      { method: "GET", relative_url: `v25.0/${businessId}?fields=${bmFields}`, name: "details" },
+      { method: "GET", relative_url: `v25.0/${businessId}/owned_pages?fields=${pageFields}&limit=${LIMIT}`, name: "owned_pages" },
+      { method: "GET", relative_url: `v25.0/${businessId}/client_pages?fields=${pageFields}&limit=${LIMIT}`, name: "client_pages" },
+      { method: "GET", relative_url: `v25.0/${businessId}/system_users?fields=id,name,role,email`, name: "system_users" },
+      { method: "GET", relative_url: `v25.0/me?fields=id,name,email`, name: "me" },
+      { method: "GET", relative_url: `v25.0/${businessId}/owned_apps?fields=${appFields}`, name: "owned_apps" },
+      { method: "GET", relative_url: `v25.0/${businessId}/client_apps?fields=${appFields}`, name: "client_apps" },
+      { method: "GET", relative_url: `v25.0/${businessId}/pending_client_apps?fields=${appFields}`, name: "pending_apps" },
+      { method: "GET", relative_url: `v25.0/${businessId}/business_asset_groups?fields=id,name,contained_pages{id,name}&limit=50`, name: "asset_groups" }
+    ]
 
-    // Fallback for details if full fields fail (e.g. permission error for specific fields)
-    let detailsData: { id: string; name: string; error?: { message: string } } & Record<string, unknown>
-    if (!detailsRes.ok) {
-      console.warn(`[API] Detailed fields failed for BM ${businessId}, trying fallback...`)
-      const fallbackUrl = new URL(`https://graph.facebook.com/${businessId}`)
-      fallbackUrl.searchParams.set("fields", "id,name") // minimal fields
-      fallbackUrl.searchParams.set("access_token", token)
-      const fallbackRes = await fetch(fallbackUrl.toString())
+    // Step 2: Execute Consolidated Batch
+    const formData = new URLSearchParams()
+    formData.append("access_token", token)
+    formData.append("batch", JSON.stringify(batchRequests))
 
-      if (!fallbackRes.ok) {
-        const errJson = await fallbackRes.json().catch(() => ({ error: { message: "Unknown Graph API error" } }))
-        console.error(`[API] Fallback also failed for BM ${businessId}:`, errJson)
-        throw new Error(errJson.error?.message || `Fallback failed with status ${fallbackRes.status}`)
-      }
+    const response = await fetch("https://graph.facebook.com", {
+      method: "POST",
+      body: formData
+    })
 
-      detailsData = await fallbackRes.json()
-    } else {
-      detailsData = await detailsRes.json().catch(() => ({ error: { message: "Failed to parse details JSON" } }))
+    const results = await response.json()
+    if (!response.ok || !Array.isArray(results)) {
+      throw new Error(`Batch request failed: ${JSON.stringify(results)}`)
     }
 
-    if (detailsData.error) {
-      console.error(`[API] Final failure for BM ${businessId}:`, detailsData.error)
-      throw new Error(detailsData.error.message)
+    // Step 3: Parse Results
+    interface BatchItem {
+      code: number;
+      body: string;
     }
+    const parse = (item: BatchItem) => (item && item.code === 200) ? JSON.parse(item.body) : { data: [] }
+    
+    const detailsData = parse(results[0])
+    const ownedData = parse(results[1])
+    const clientData = parse(results[2])
+    const systemUsersData = parse(results[3])
+    const meData = results[4]?.code === 200 ? JSON.parse(results[4].body) : { id: "", name: "Current User" }
+    const ownedAppsData = parse(results[5])
+    const clientAppsData = parse(results[6])
+    const pendingAppsData = parse(results[7])
+    const assetGroupsData = parse(results[8])
 
-    // Graceful handling for pages: if fetch fails, return empty list instead of throwing
-    const ownedData = ownedRes.ok ? await ownedRes.json().catch(() => ({ data: [] })) : { data: [] }
-    const clientData = clientRes.ok ? await clientRes.json().catch(() => ({ data: [] })) : { data: [] }
-    const systemUsersData = systemUsersRes.ok ? await systemUsersRes.json().catch(() => ({ data: [] })) : { data: [] }
-    const meData = meRes.ok ? await meRes.json().catch(() => ({ id: "", name: "Current User" })) : { id: "", name: "Current User" }
-
-    // Process Apps
-    if (!ownedAppsRes.ok) {
-      const err = await ownedAppsRes.json().catch(() => ({}));
-      console.error(`[API] Failed to fetch owned_apps for BM ${businessId}:`, JSON.stringify(err));
+    // Extract pages from nested asset groups
+    interface AssetGroup {
+      id: string;
+      name: string;
+      contained_pages?: { data: { id: string; name: string }[] };
     }
-    if (!clientAppsRes.ok) {
-      const err = await clientAppsRes.json().catch(() => ({}));
-      console.error(`[API] Failed to fetch client_apps for BM ${businessId}:`, JSON.stringify(err));
-    }
-    if (!pendingAppsRes.ok) {
-      const err = await pendingAppsRes.json().catch(() => ({}));
-      console.error(`[API] Failed to fetch pending_client_apps for BM ${businessId}:`, JSON.stringify(err));
-    }
+    const groups: AssetGroup[] = assetGroupsData.data || []
+    const seenGroupPages = new Set()
+    const assetGroupPages: FacebookPage[] = groups.flatMap((g: AssetGroup) => 
+      (g.contained_pages?.data || []).filter((p: { id: string }) => {
+        if (seenGroupPages.has(p.id)) return false
+        seenGroupPages.add(p.id)
+        return true
+      }).map((p: { id: string; name: string }) => ({ ...p, source: 'asset_group' as const }))
+    )
 
-    const ownedAppsData = ownedAppsRes.ok ? await ownedAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
-    const clientAppsData = clientAppsRes.ok ? await clientAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
-    const pendingAppsData = pendingAppsRes.ok ? await pendingAppsRes.json().catch(() => ({ data: [] })) : { data: [] }
+    // Step 5: Merge and Format Data
+    const ownedPages = (ownedData.data || []).map((p: FacebookPage) => ({ ...p, source: 'owned' as const }))
+    const clientPages = (clientData.data || []).map((p: FacebookPage) => ({ ...p, source: 'client' as const }))
 
-    const ownedApps = (ownedAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'owned' }))
-    const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'client' }))
-    const pendingApps = (pendingAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'pending' }))
+    const pagesMap = new Map<string, FacebookPage>()
+    assetGroupPages.forEach((p: FacebookPage) => pagesMap.set(p.id, p))
+    clientPages.forEach((p: FacebookPage) => pagesMap.set(p.id, p))
+    ownedPages.forEach((p: FacebookPage) => pagesMap.set(p.id, p))
+
+    const finalPages = Array.from(pagesMap.values())
+
+    const ownedApps = (ownedAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'owned' as const }))
+    const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'client' as const }))
+    const pendingApps = (pendingAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'pending' as const }))
     const allApps = [...ownedApps, ...clientApps, ...pendingApps]
-
-    const assetGroupsData = assetGroupsRes // This is now an array from the service
 
     const payload = {
       ...detailsData,
-      pages: [...(ownedData.data || []), ...(clientData.data || [])],
+      pages: finalPages,
       system_users: systemUsersData.data || [],
       currentUser: meData,
       apps: allApps,
-      business_asset_groups: { data: Array.isArray(assetGroupsData) ? assetGroupsData : [] },
+      business_asset_groups: { data: groups },
       fetchedAt: Date.now()
     }
 

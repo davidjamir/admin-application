@@ -1,5 +1,5 @@
 import React from "react"
-import { CalendarClock, Clock, Copy, History, LayoutDashboard, RefreshCcw, X } from "lucide-react"
+import { CalendarClock, Clock, Copy, Facebook, History, LayoutDashboard, RefreshCcw, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
@@ -10,6 +10,12 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
 }) => {
   const [recrawling, setRecrawling] = React.useState(false)
   const sheetColor = getHealthColor(selectedPage.lastScheduledAt)
+  const [isIdHovered, setIsIdHovered] = React.useState(false)
+
+  const handleCopyId = () => {
+    navigator.clipboard.writeText(selectedPage.pageId)
+    toast.success(`Page ID: ${selectedPage.pageId} copied!`)
+  }
 
   const handleRecrawl = async () => {
     const toastId = toast.loading("Recrawling DB...")
@@ -36,7 +42,18 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
       <div className="relative w-full sm:w-[500px] md:w-[700px] lg:w-[800px] h-full bg-background border-l shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col">
         <div className="p-6 border-b flex justify-between items-start">
           <div>
-            <h2 className="text-xl font-bold">{selectedPage.name}</h2>
+            <h2 className="text-xl font-bold flex items-center">
+              {selectedPage.name}
+              <a
+                href={`https://facebook.com/${selectedPage.pageId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group/fb inline-flex items-center justify-center size-6 ml-2 align-middle cursor-pointer border border-transparent hover:border-[#1877F2]/30 rounded-sm bg-transparent hover:bg-[#1877F2]/10 transition-all"
+                title="View on Facebook"
+              >
+                <Facebook className="size-3.5 text-[#1877F2]" />
+              </a>
+            </h2>
             <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground mt-1.5">
               {selectedPage.topic && (
                 <span 
@@ -47,7 +64,15 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
                 </span>
               )}
               <span>•</span>
-              <span>ID: {selectedPage.pageId}</span>
+              <span 
+                className="cursor-pointer transition-colors"
+                onMouseEnter={() => setIsIdHovered(true)}
+                onMouseLeave={() => setIsIdHovered(false)}
+                onClick={handleCopyId}
+                style={{ color: isIdHovered ? sheetColor : undefined }}
+              >
+                ID: <span className="font-medium">{selectedPage.pageId}</span>
+              </span>
               <span className="flex-1"></span>
               {details?.cachedAt && (
                 <>

@@ -56,11 +56,11 @@ export const DiscoveryTableRow: React.FC<DiscoveryTableRowProps> = ({
         <Button
           size="sm"
           variant="outline"
-          onClick={() => handleCopy(page.access_token, "Page Token")}
+          onClick={() => handleCopy(page.access_token || "", "Page Token")}
           className="h-7 text-[10px] px-2 font-mono border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all text-black cursor-pointer"
         >
           <Copy className="w-3 h-3 mr-1.5" />
-          EP...{page.access_token.slice(-6)}
+          EP...{(page.access_token || "").slice(-6)}
         </Button>
       </TableCell>
     </TableRow>

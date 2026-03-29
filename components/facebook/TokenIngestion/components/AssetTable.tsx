@@ -162,12 +162,12 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                     <TableCell className="py-4" onClick={e => e.stopPropagation()}>
                                         <div className="flex items-center justify-between gap-4 max-w-[200px]">
                                             <span className="text-sm font-mono text-black">
-                                                {page.access_token.slice(0, 4)}...{page.access_token.slice(-8)}
+                                                {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-8)}
                                             </span>
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                onClick={() => handleCopy(page.access_token, "Access Token")}
+                                                onClick={() => handleCopy(page.access_token || "", "Access Token")}
                                                 className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
                                             >
                                                 <Copy className="w-3 h-3 text-black" />

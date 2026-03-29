@@ -1,7 +1,7 @@
 "use client"
 
-import React, { useState } from "react"
-import { Layers, Zap, MessageSquare, Pencil, Globe, Users, Trash2, ChevronRight, Fingerprint, Loader2 } from "lucide-react"
+import React, { useState, useEffect, useCallback } from "react"
+import { Layers, Zap, MessageSquare, Pencil, Globe, Users, Trash2, ChevronRight, Fingerprint, Loader2, Plus, X, Layout, Instagram } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { BusinessRow } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
@@ -10,20 +10,48 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
 
+interface AssetGroupDetails {
+  id: string
+  name: string
+  assigned_users?: { 
+    data: { 
+      id: string; 
+      name?: string; 
+      email?: string; 
+      role?: string;
+      page_roles?: string[];
+      adaccount_roles?: string[];
+      pixel_roles?: string[];
+      offline_conversion_data_set_roles?: string[];
+      page_tasks?: string[];
+    }[] 
+  }
+  contained_pages?: { data: { id: string; name: string }[] }
+  contained_ad_accounts?: { data: { id: string; name: string; account_id: string; currency: string }[] }
+  contained_ads_pixels?: { data: { id: string; name: string }[] }
+  contained_applications?: { data: { id: string; name: string; category: string }[] }
+  contained_instagram_accounts?: { data: { id: string; username: string; name: string }[] }
+}
+
 interface AssetsTabProps {
   business: BusinessRow
   adminToken: string
+  allBusinessUsers?: { id: string; name: string; email?: string; role?: string }[]
 }
 
-export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
+export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabProps) => {
   const [selectedAssetGroupId, setSelectedAssetGroupId] = useState<string | null>(null)
   const [selectedPixelId, setSelectedPixelId] = useState<string | null>(null)
   const [selectedWhatsAppId, setSelectedWhatsAppId] = useState<string | null>(null)
+  const [assetGroupDetails, setAssetGroupDetails] = useState<AssetGroupDetails | null>(null)
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false)
+  const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
 
   const clearSelections = () => {
     setSelectedAssetGroupId(null)
     setSelectedPixelId(null)
     setSelectedWhatsAppId(null)
+    setAssetGroupDetails(null)
   }
 
   const selectedId = selectedAssetGroupId || selectedPixelId || selectedWhatsAppId
@@ -40,10 +68,51 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
   const [assetGroupToDelete, setAssetGroupToDelete] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
 
+  const [isAssignUserOpen, setIsAssignUserOpen] = useState(false)
+  const [isAddAssetOpen, setIsAddAssetOpen] = useState(false)
+  const [isProcessingAction, setIsProcessingAction] = useState(false)
+
+  const fetchDetails = useCallback(async (groupId: string, section?: 'users' | 'assets' | 'all') => {
+    try {
+      setIsLoadingDetails(true)
+      const url = `/api/facebook/business/${business.id}/asset-groups/${groupId}?token=${encodeURIComponent(adminToken)}${section ? `&section=${section}` : ''}`
+      const res = await fetch(url)
+      const data = await res.json()
+      if (data.success) {
+        setAssetGroupDetails(prev => {
+          if (!prev || section === 'all' || !section) return data.data;
+          return {
+            ...prev,
+            ...data.data,
+            // Specifically preserve arrays if the new data doesn't contain them
+            assigned_users: section === 'users' ? data.data.assigned_users : prev.assigned_users,
+            contained_pages: section === 'assets' ? data.data.contained_pages : prev.contained_pages,
+            contained_ad_accounts: section === 'assets' ? data.data.contained_ad_accounts : prev.contained_ad_accounts,
+            contained_ads_pixels: section === 'assets' ? data.data.contained_ads_pixels : prev.contained_ads_pixels,
+            contained_applications: section === 'assets' ? data.data.contained_applications : prev.contained_applications,
+            contained_instagram_accounts: section === 'assets' ? data.data.contained_instagram_accounts : prev.contained_instagram_accounts,
+          };
+        })
+      }
+    } catch (error) {
+      console.error("Error fetching asset group details:", error)
+    } finally {
+      setIsLoadingDetails(false)
+    }
+  }, [business.id, adminToken])
+
+  useEffect(() => {
+    if (selectedAssetGroupId) {
+      fetchDetails(selectedAssetGroupId)
+    } else {
+      setAssetGroupDetails(null)
+    }
+  }, [selectedAssetGroupId, fetchDetails])
+
   const copyId = () => {
     if (selectedItem?.id) {
       navigator.clipboard.writeText(selectedItem.id)
-      import('sonner').then(({ toast }) => toast.success("ID Copied"))
+      toast.success("ID Copied")
     }
   }
 
@@ -71,6 +140,42 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
       toast.error(e instanceof Error ? e.message : "Failed to rename")
     } finally {
       setIsRenaming(false)
+    }
+  }
+
+  const handleAction = async (action: string, payload: Record<string, unknown>) => {
+    if (!selectedAssetGroupId) return;
+    try {
+      setIsProcessingAction(true)
+      const isDelete = action.startsWith('remove_')
+      const finalUrl = isDelete 
+        ? `/api/facebook/business/${business.id}/asset-groups/${selectedAssetGroupId}?token=${encodeURIComponent(adminToken)}&action=${action}&userId=${payload.userId || ''}&assetId=${payload.assetId || ''}&type=${payload.type || ''}`
+        : `/api/facebook/business/${business.id}/asset-groups/${selectedAssetGroupId}?token=${encodeURIComponent(adminToken)}`
+
+      const res = await fetch(finalUrl, {
+        method: isDelete ? "DELETE" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: isDelete ? undefined : JSON.stringify({ action, ...payload })
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || `Failed to ${action}`)
+      
+      if (data.success) {
+        toast.success(`${action.replace('_', ' ')} successful`)
+        // Determine which section to reload
+        const section = action.includes('user') ? 'users' : 
+                       (action.includes('asset') || action.includes('page')) ? 'assets' : 'all';
+        fetchDetails(selectedAssetGroupId, section)
+        
+        if (action === 'add_user') setIsAssignUserOpen(false)
+        if (action === 'add_asset') setIsAddAssetOpen(false)
+        if (action === 'rename') setIsRenameDialogOpen(false)
+      }
+      
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Action failed")
+    } finally {
+      setIsProcessingAction(false)
     }
   }
 
@@ -156,25 +261,38 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
             <div className="space-y-4">
               <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                 <Zap className="w-3 h-3" />
-                Management Task
+                Management Tasks
               </h4>
               <div className="grid gap-2">
-                {[
+                {(type === "Asset Group" ? [
                   { 
-                    label: `Update ${type}`, 
-                    description: `Change settings for this ${type.toLowerCase()}`, 
+                    label: `Rename Asset Group`, 
+                    description: `Change the name of this asset group`, 
                     icon: Pencil,
-                    action: type === "Asset Group" ? () => {
+                    action: () => {
                       setNewName(selectedItem?.name || "")
                       setIsRenameDialogOpen(true)
-                    } : undefined
+                    }
                   },
-                  { label: "Assign Partners", description: "Share this asset with other businesses", icon: Globe },
-                  { label: "Manage Permissions", description: "Control who can access this asset", icon: Users }
-                ].map((task, i) => (
+                  { 
+                    label: "Assign People", 
+                    description: "Grant people access to assets in this group", 
+                    icon: Users,
+                    action: () => setIsAssignUserOpen(true)
+                  },
+                  { 
+                    label: "Add Assets", 
+                    description: "Add more assets to this group", 
+                    icon: Plus,
+                    action: () => setIsAddAssetOpen(true)
+                  }
+                ] : [
+                  { label: "Assign Partners", description: "Share this asset with other businesses", icon: Globe, action: () => toast.info("Partner assignment coming soon") },
+                  { label: "Manage Permissions", description: "Control who can access this asset", icon: Users, action: () => toast.info("Permission management coming soon") }
+                ]).map((task, i) => (
                   <button 
                     key={i} 
-                    onClick={task.action}
+                    onClick={() => task.action?.()}
                     className="p-3 w-full text-left rounded-lg border border-border/40 bg-card flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
@@ -191,6 +309,240 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
                 ))}
               </div>
             </div>
+
+            {selectedAssetGroupId && (
+              <>
+                <div className="space-y-4 pt-4 border-t border-border/40">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                      <Users className="w-3 h-3" />
+                      People ({assetGroupDetails?.assigned_users?.data?.length || 0})
+                    </h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1 px-2 hover:bg-primary/5 hover:text-primary cursor-pointer"
+                      onClick={() => setIsAssignUserOpen(true)}
+                    >
+                      <Plus className="w-3 h-3" /> Assign
+                    </Button>
+                  </div>
+                  
+                  {isLoadingDetails ? (
+                    <div className="flex flex-col items-center py-4 gap-2 opacity-50">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-[10px]">Loading people...</span>
+                    </div>
+                  ) : assetGroupDetails?.assigned_users?.data?.length ? (
+                    <div className="grid gap-1.5">
+                      {assetGroupDetails.assigned_users.data.map((user) => (
+                        <div key={user.id} className="flex flex-col rounded-lg bg-muted/30 border border-border/30 overflow-hidden">
+                          <div 
+                            onClick={() => setExpandedUserId(expandedUserId === user.id ? null : user.id)}
+                            className="flex items-start justify-between p-3 group gap-4 cursor-pointer hover:bg-primary/5 transition-colors"
+                          >
+                            <div className="flex items-start gap-3 overflow-hidden flex-1">
+                              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0 mt-0.5">
+                                {(user.name || user.id || 'U').charAt(0)}
+                              </div>
+                              <div className="flex flex-col min-w-0 space-y-0.5 flex-1 mt-0.5">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <span className="text-[11px] font-semibold truncate leading-tight group-hover:text-primary transition-colors">
+                                    {user.name || 'Unknown User'}
+                                  </span>
+                                  {(user.name?.startsWith('EM -') || user.name?.startsWith('AD -')) && (
+                                    <Badge variant="outline" className="text-[8px] h-3.5 px-1 bg-transparent text-green-600 border-green-500/20 font-medium shrink-0">
+                                      System User
+                                    </Badge>
+                                  )}
+                                </div>
+                                <span className="text-[9px] text-muted-foreground font-mono opacity-70">
+                                  ID: {user.id}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <button 
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  handleAction('remove_user', { userId: user.id })
+                                }}
+                                disabled={isProcessingAction}
+                                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-red-500/10 text-red-500/40 hover:text-red-600 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-30 shrink-0 cursor-pointer"
+                                title="Remove user from group"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                              {expandedUserId === user.id ? (
+                                <ChevronRight className="w-3.5 h-3.5 text-primary rotate-90 transition-transform" />
+                              ) : (
+                                <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/20 group-hover:text-primary transition-colors" />
+                              )}
+                            </div>
+                          </div>
+                          
+                          {expandedUserId === user.id && (
+                            <div className="px-3 pb-3 pt-1 border-t border-border/20 bg-primary/[0.02] space-y-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                              <div className="grid gap-2.5 pt-2">
+                                <div className="flex flex-col gap-1">
+                                  <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">General Role</span>
+                                  <Badge variant="secondary" className="w-fit text-[9px] h-4.5 px-1.5 bg-primary/10 text-primary border-primary/10">
+                                    {user.role ? user.role.replace(/_/g, ' ') : 'MEMBER'}
+                                  </Badge>
+                                </div>
+
+                                {user.page_roles && user.page_roles.length > 0 && (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Page Permissions</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {user.page_roles.map(r => (
+                                        <Badge key={r} variant="outline" className="text-[8px] h-4 px-1.5 border-primary/20 text-muted-foreground">
+                                          {r}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {user.adaccount_roles && user.adaccount_roles.length > 0 && (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Ad Account Permissions</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {user.adaccount_roles.map(r => (
+                                        <Badge key={r} variant="outline" className="text-[8px] h-4 px-1.5 border-primary/20 text-muted-foreground">
+                                          {r}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {user.pixel_roles && user.pixel_roles.length > 0 && (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Pixel Permissions</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {user.pixel_roles.map(r => (
+                                        <Badge key={r} variant="outline" className="text-[8px] h-4 px-1.5 border-primary/20 text-muted-foreground">
+                                          {r}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {user.offline_conversion_data_set_roles && user.offline_conversion_data_set_roles.length > 0 && (
+                                  <div className="flex flex-col gap-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Offline Data Permissions</span>
+                                    <div className="flex flex-wrap gap-1">
+                                      {user.offline_conversion_data_set_roles.map(r => (
+                                        <Badge key={r} variant="outline" className="text-[8px] h-4 px-1.5 border-primary/20 text-muted-foreground">
+                                          {r}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {user.page_tasks && user.page_tasks.length > 0 && (
+                                  <div className="flex flex-col gap-1.5 pt-1">
+                                    <span className="text-[9px] font-bold text-muted-foreground uppercase opacity-60">Page Management Tasks</span>
+                                    <div className="grid grid-cols-2 gap-1.5">
+                                      {user.page_tasks.map(task => {
+                                        const taskMap: Record<string, { label: string, color: string }> = {
+                                          'CREATE_CONTENT': { label: 'Content Creation', color: 'bg-blue-500/10 text-blue-600' },
+                                          'MESSAGING': { label: 'Inbox / Messaging', color: 'bg-indigo-500/10 text-indigo-600' },
+                                          'MODERATE': { label: 'Community Moderation', color: 'bg-purple-500/10 text-purple-600' },
+                                          'ADVERTISE': { label: 'Ads Management', color: 'bg-orange-500/10 text-orange-600' },
+                                          'ANALYZE': { label: 'Insights / Analytics', color: 'bg-emerald-500/10 text-emerald-600' },
+                                          'VIEW_MONETIZATION_INSIGHTS': { label: 'Revenue Insights', color: 'bg-amber-500/10 text-amber-600' },
+                                          'MANAGE': { label: 'Full Page Control', color: 'bg-red-500/10 text-red-600' }
+                                        };
+                                        const t = taskMap[task] || { label: task.replace(/_/g, ' '), color: 'bg-muted text-muted-foreground' };
+                                        return (
+                                          <div key={task} className={`flex items-center gap-1.5 px-2 py-1 rounded border border-transparent hover:border-current/10 transition-colors ${t.color.split(' ')[0]}`}>
+                                            <div className={`w-1 h-1 rounded-full ${t.color.split(' ')[1]}`} />
+                                            <span className={`text-[9px] font-medium leading-none ${t.color.split(' ')[1]}`}>{t.label}</span>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] text-muted-foreground italic text-center py-2">No people assigned to this group</p>
+                  )}
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-border/40">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                      <Layers className="w-3 h-3" />
+                      Assets
+                    </h4>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1 px-2 hover:bg-primary/5 hover:text-primary cursor-pointer"
+                      onClick={() => setIsAddAssetOpen(true)}
+                    >
+                      <Plus className="w-3 h-3" /> Add Assets
+                    </Button>
+                  </div>
+
+                  {isLoadingDetails ? (
+                    <div className="flex flex-col items-center py-4 gap-2 opacity-50">
+                      <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      <span className="text-[10px]">Loading assets...</span>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {[
+                        { title: 'Pages', data: assetGroupDetails?.contained_pages?.data, icon: Globe, type: 'PAGE' },
+                        { title: 'Ad Accounts', data: assetGroupDetails?.contained_ad_accounts?.data, icon: Zap, type: 'AD_ACCOUNT' },
+                        { title: 'Pixels', data: assetGroupDetails?.contained_ads_pixels?.data, icon: Fingerprint, type: 'ADS_PIXEL' },
+                        { title: 'Instagram', data: assetGroupDetails?.contained_instagram_accounts?.data, icon: Instagram, type: 'INSTAGRAM_ACCOUNT' },
+                        { title: 'Apps', data: assetGroupDetails?.contained_applications?.data, icon: Layout, type: 'APPLICATION' }
+                      ].map((cat) => cat.data?.length ? (
+                        <div key={cat.title} className="space-y-1.5">
+                          <p className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider pl-1">{cat.title}</p>
+                          <div className="grid gap-1">
+                            {cat.data.map((asset: { id: string; name?: string; username?: string }) => (
+                              <div key={asset.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/20 border border-border/30 group">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <cat.icon className="w-3.5 h-3.5 text-primary/60 shrink-0" />
+                                  <span className="text-[10px] truncate">{asset.name || asset.username || asset.id}</span>
+                                </div>
+                                <button 
+                                  onClick={() => handleAction('remove_asset', { assetId: asset.id, type: cat.type })}
+                                  disabled={isProcessingAction}
+                                  className="w-5 h-5 flex items-center justify-center rounded-md hover:bg-red-500/10 text-muted-foreground/30 hover:text-red-500 transition-colors opacity-0 group-hover:opacity-100 disabled:opacity-30"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : null)}
+                      
+                      {!assetGroupDetails?.contained_pages?.data?.length && 
+                       !assetGroupDetails?.contained_ad_accounts?.data?.length && 
+                       !assetGroupDetails?.contained_ads_pixels?.data?.length && 
+                       !assetGroupDetails?.contained_instagram_accounts?.data?.length && 
+                       !assetGroupDetails?.contained_applications?.data?.length && (
+                        <p className="text-[10px] text-muted-foreground italic text-center py-2">No assets in this group</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         ) : null
       }
@@ -224,7 +576,7 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
       </Section>
 
       <Section title="WhatsApp Business" icon={MessageSquare} count={business.whatsapp_business_accounts?.data?.length}>
-        {business.whatsapp_business_accounts?.data?.map((wa) => (
+        {business.whatsapp_business_accounts?.data?.map((wa: { id: string; name: string; status: string }) => (
           <Item
             key={wa.id}
             isSelected={selectedWhatsAppId === wa.id}
@@ -287,6 +639,142 @@ export const AssetsTab = ({ business, adminToken }: AssetsTabProps) => {
             >
               {isDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
               Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAssignUserOpen} onOpenChange={(open) => !isProcessingAction && setIsAssignUserOpen(open)}>
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader>
+            <DialogTitle>Assign People to Group</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-4">
+            <div className="space-y-2">
+              <label className="text-[11px] font-medium text-muted-foreground">Select user</label>
+              <div className="grid gap-1 max-h-[400px] overflow-y-auto pr-1">
+                {(() => {
+                  const allUsers = [
+                    ...(allBusinessUsers || business.business_users?.data || []).map(u => ({ ...u, isSystem: false })),
+                    ...(business.system_users || []).map(u => ({ 
+                      ...u, 
+                      isSystem: true, 
+                      email: (u as { email?: string }).email || 'System Account' 
+                    }))
+                  ].filter(u => {
+                    const alreadyAssigned = assetGroupDetails?.assigned_users?.data?.some(au => String(au.id) === String(u.id));
+                    return !alreadyAssigned;
+                  });
+
+                  return allUsers.map((user) => (
+                    <button
+                      key={user.id}
+                      onClick={() => handleAction('add_user', { userId: user.id, role: 'ADVERTISER' })}
+                      disabled={isProcessingAction}
+                      className="flex flex-col p-2.5 rounded-lg border border-border/40 hover:border-primary/50 bg-card text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold shrink-0 ${user.isSystem ? 'bg-green-500/10 text-green-600' : 'bg-primary/5 text-primary'}`}>
+                            {user.name.charAt(0)}
+                          </div>
+                          <div className="flex flex-col min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="text-xs font-medium truncate">{user.name}</p>
+                              {user.isSystem ? (
+                                <Badge variant="outline" className="text-[7px] h-3 px-1 bg-transparent text-green-600 border-green-500/20 font-medium shrink-0">
+                                  System User
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline" className="text-[7px] h-3 px-1 bg-transparent text-blue-600 border-blue-500/20 font-medium shrink-0">
+                                  Account User
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+                          </div>
+                        </div>
+                        <Plus className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                      </div>
+                    </button>
+                  ));
+                })()}
+                {!(
+                  (business.business_users?.data?.length || 0) + 
+                  (business.system_users?.length || 0)
+                ) && (
+                  <p className="text-xs text-muted-foreground italic text-center py-4">No team members available</p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setIsAssignUserOpen(false)} disabled={isProcessingAction}>
+              Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddAssetOpen} onOpenChange={(open) => !isProcessingAction && setIsAddAssetOpen(open)}>
+        <DialogContent className="sm:max-w-[450px]">
+          <DialogHeader>
+            <DialogTitle>Add Assets to Group</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-6 max-h-[500px] overflow-y-auto pr-2">
+            {[
+              { 
+                title: 'Pages', 
+                items: business.pages?.filter(p => !assetGroupDetails?.contained_pages?.data?.some(cp => cp.id === p.id)),
+                icon: Globe,
+                type: 'PAGE'
+              },
+              { 
+                title: 'Ad Accounts', 
+                items: business.owned_ad_accounts?.data?.filter(a => !assetGroupDetails?.contained_ad_accounts?.data?.some(ca => ca.id === a.id)),
+                icon: Zap,
+                type: 'AD_ACCOUNT'
+              },
+              { 
+                title: 'Pixels', 
+                items: business.adspixels?.data?.filter(p => !assetGroupDetails?.contained_ads_pixels?.data?.some(cp => cp.id === p.id)),
+                icon: Fingerprint,
+                type: 'ADS_PIXEL'
+              },
+              {
+                title: 'Apps',
+                items: business.apps?.filter(a => !assetGroupDetails?.contained_applications?.data?.some(ca => ca.id === a.id)),
+                icon: Layout,
+                type: 'APPLICATION'
+              }
+            ].map((section) => section.items?.length ? (
+              <div key={section.title} className="space-y-2">
+                <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <section.icon className="w-3 h-3" />
+                  {section.title}
+                </label>
+                <div className="grid gap-1">
+                  {section.items.map((item: { id: string; name?: string }) => (
+                    <button
+                      key={item.id}
+                      onClick={() => handleAction('add_asset', { assetId: item.id, type: section.type })}
+                      disabled={isProcessingAction}
+                      className="flex items-center justify-between p-2.5 rounded-lg border border-border/40 hover:border-primary/50 bg-card text-left transition-colors group cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs font-medium truncate max-w-[250px]">{item.name}</span>
+                        <span className="text-[9px] text-muted-foreground font-mono">ID: {item.id}</span>
+                      </div>
+                      <Plus className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null)}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" size="sm" onClick={() => setIsAddAssetOpen(false)} disabled={isProcessingAction}>
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
