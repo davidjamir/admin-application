@@ -11,6 +11,8 @@ const options = {
   maxIdleTimeMS: 5000,
   serverSelectionTimeoutMS: 30000,
   connectTimeoutMS: 30000,
+  // Force IPv4 DNS resolution - fixes querySrv ECONNREFUSED on Node.js v18+
+  family: 4,
 };
 
 // Vercel connection strategy

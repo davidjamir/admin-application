@@ -278,7 +278,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
             <div className="space-y-4">
               <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                 <Zap className="w-3 h-3" />
-                Management tasks
+                Management Tasks
               </h4>
               <div className="grid gap-2">
                 {(type === "Asset Group" ? [
