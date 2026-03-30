@@ -1,45 +1,146 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function POST(
+export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string, pageId: string }> }
+  { params }: { params: Promise<{ id: string; pageId: string }> }
 ) {
-  const { id, pageId } = await params
   const adminToken = req.nextUrl.searchParams.get("token")
-  if (!adminToken) return NextResponse.json({ error: "Token is required" }, { status: 400 })
+  if (!adminToken) {
+    return NextResponse.json({ success: false, error: "Token is required" }, { status: 400 })
+  }
+
+  const { id: businessId, pageId } = await params
 
   try {
-    const { userId, tasks, userType } = await req.json()
-    if (!userId) return NextResponse.json({ error: "userId is required" }, { status: 400 })
-
-    // Default tasks from user's specification
-    const pageTasks = tasks || ["MANAGE", "CREATE_CONTENT", "MODERATE", "ADVERTISE", "ANALYZE"]
+    // We query both owned_pages and client_pages to find the specific page through the Business node.
+    const url = `https://graph.facebook.com/v25.0/${pageId}/assigned_users?business=${businessId}&access_token=${adminToken}&fields=id,name,tasks,user_type`
     
-    // Prepare Graph API body
-    const body: { user: string; tasks: string[]; access_token: string; business?: string } = {
-      user: userId,
-      tasks: pageTasks,
-      access_token: adminToken
+    console.log(`[assigned_users] GET URL: ${url.replace(adminToken, "TOKEN_HIDDEN")}`)
+    
+    const res = await fetch(url)
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      console.error("[assigned_users] GET FB Error:", data.error)
+      return NextResponse.json({ 
+        success: false, 
+        error: data.error?.message || "Failed to fetch assigned users",
+        fbError: data.error
+      }, { status: res.status })
     }
 
-    // Per user specification: for system users, do not include 'business' parameter
-    if (userType !== 'system' && userType !== 'local') {
-      body.business = id
+    // Standardize the response data
+    const users = (data.data || []).map((u: { id: string; name?: string; tasks?: string[]; user_type?: string }) => ({
+      id: u.id,
+      name: u.name || "Unknown User",
+      tasks: u.tasks || [],
+      user_type: u.user_type || "USER"
+    }))
+
+    return NextResponse.json({ success: true, data: users })
+  } catch (error) {
+    console.error("[assigned_users] GET Failed:", error)
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal Server Error" 
+    }, { status: 500 })
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; pageId: string }> }
+) {
+  const adminToken = req.nextUrl.searchParams.get("token")
+  if (!adminToken) {
+    return NextResponse.json({ success: false, error: "Token is required" }, { status: 400 })
+  }
+
+  const { id: businessId, pageId } = await params
+
+  try {
+    const body = await req.json()
+    const { userIds, tasks } = body
+
+    if (!userIds || !Array.isArray(userIds) || !tasks || !Array.isArray(tasks)) {
+      return NextResponse.json({ success: false, error: "Missing required fields: userIds (array), tasks (array)" }, { status: 400 })
     }
 
-    const url = `https://graph.facebook.com/v19.0/${pageId}/assigned_users`
-    const fbRes = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
+    if (userIds.length === 0) {
+      return NextResponse.json({ success: false, error: "No users selected" }, { status: 400 })
+    }
+
+    // Prepare Batch operations
+    const operations = userIds.map((uid: string) => {
+      // Body needs to be URL encoded for standard FB batch requests (as string in 'body' field)
+      const opParams = new URLSearchParams()
+      opParams.append("user", uid)
+      opParams.append("business", businessId)
+      opParams.append("tasks", JSON.stringify(tasks))
+      
+      return {
+        method: "POST",
+        relative_url: `${pageId}/assigned_users`,
+        body: opParams.toString()
+      }
     })
 
-    const data = await fbRes.json()
-    if (data.error) throw new Error(data.error.message)
+    console.log(`[API] Executing batch assignment for ${userIds.length} users on Page ${pageId}`)
 
-    return NextResponse.json({ success: true, data })
+    const batchUrl = `https://graph.facebook.com/v25.0/`
+    const batchBody = new URLSearchParams()
+    batchBody.append("access_token", adminToken)
+    batchBody.append("batch", JSON.stringify(operations))
+
+    const fbRes = await fetch(batchUrl, {
+      method: "POST",
+      body: batchBody,
+      headers: {
+        "Accept": "application/json"
+      }
+    })
+
+    const batchResponse = await fbRes.json()
+
+    // FB Batch API returns an array where each item corresponds to an operation in the request
+    if (!Array.isArray(batchResponse)) {
+      console.error("[Batch Error] FB returned invalid response:", batchResponse)
+      return NextResponse.json({ 
+        success: false, 
+        error: batchResponse.error?.message || "Invalid Facebook API response" 
+      }, { status: 500 })
+    }
+
+    // Process individual results
+    const errors: string[] = []
+    batchResponse.forEach((res, index) => {
+      if (res.code !== 200) {
+        try {
+          const errorBody = JSON.parse(res.body || "{}")
+          const msg = errorBody.error?.message || "Unknown error"
+          console.error(`[Batch Error] User ${userIds[index]}:`, errorBody.error)
+          errors.push(`User ${userIds[index]}: ${msg}`)
+        } catch {
+          errors.push(`User ${userIds[index]}: HTTP ${res.code}`)
+        }
+      }
+    })
+
+    if (errors.length > 0) {
+      return NextResponse.json({ 
+        success: false, 
+        error: errors.join(" | "),
+        count: userIds.length - errors.length
+      }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true, count: userIds.length })
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Failed to assign user" }, { status: 500 })
+    console.error("[Assign Asset] Failed:", error)
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal Server Error" 
+    }, { status: 500 })
   }
 }
 
@@ -47,20 +148,33 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; pageId: string }> }
 ) {
-  const { pageId } = await params
   const adminToken = req.nextUrl.searchParams.get("token")
   const userId = req.nextUrl.searchParams.get("userId")
   
-  if (!adminToken || !userId) return NextResponse.json({ error: "Token and userId are required" }, { status: 400 })
+  if (!adminToken || !userId) {
+    return NextResponse.json({ success: false, error: "Token and userId are required" }, { status: 400 })
+  }
+
+  const { pageId } = await params
 
   try {
-    const url = `https://graph.facebook.com/v19.0/${pageId}/assigned_users?user=${userId}&access_token=${adminToken}`
+    // Correct DELETE endpoint per user curl: /{page_id}/assigned_users?user={user_id}&access_token={adminToken}
+    const url = `https://graph.facebook.com/v25.0/${pageId}/assigned_users?user=${userId}&access_token=${adminToken}`
+    
     const fbRes = await fetch(url, { method: "DELETE" })
     const data = await fbRes.json()
 
-    if (data.error) throw new Error(data.error.message)
-    return NextResponse.json({ success: true, data })
+    if (data.error) {
+      console.error("[assigned_users] DELETE FB Error:", data.error)
+      return NextResponse.json({ success: false, error: data.error.message }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Failed to unassign user" }, { status: 500 })
+    console.error("[assigned_users] DELETE Failed:", error)
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : "Internal Server Error" 
+    }, { status: 500 })
   }
 }

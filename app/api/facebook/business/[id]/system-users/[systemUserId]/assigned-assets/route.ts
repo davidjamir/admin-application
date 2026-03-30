@@ -32,7 +32,7 @@ export async function GET(
 
     // 2. Fetch pages via /me/accounts
     console.log(`[API] Fetching unorthodox assets for ${targetUser.name} (${targetUser.roleCode})...`)
-    const fbUrl = `https://graph.facebook.com/v21.0/me/accounts?fields=id,name,category,access_token,tasks&limit=250&access_token=${targetUser.token}`
+    const fbUrl = `https://graph.facebook.com/v25.0/me/accounts?fields=id,name,category,access_token,tasks&limit=250&access_token=${targetUser.token}`
     const fbRes = await fetch(fbUrl, { cache: force ? "no-store" : "default" })
     const fbData = await fbRes.json()
 

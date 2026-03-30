@@ -19,7 +19,7 @@ import {
   BadgeCheck,
   RefreshCw,
 } from "lucide-react"
-import { BusinessRow, SystemUser } from "@/types/facebook"
+import { BusinessRow, SystemUser, FacebookPage } from "@/types/facebook"
 import {
   Tabs,
   TabsContent,
@@ -46,22 +46,26 @@ interface BusinessDetailSheetProps {
   onRecrawl?: () => void
   isRecrawling?: boolean
   adminToken: string
+  standalonePages?: FacebookPage[]
 }
 
-export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, currentUser, lastSync, onRecrawl, isRecrawling, adminToken }: BusinessDetailSheetProps) {
+export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, currentUser, lastSync, onRecrawl, isRecrawling, adminToken, standalonePages = [] }: BusinessDetailSheetProps) {
+  const allBusinessUsers = React.useMemo(() => {
+    if (!business) return []
+    const list = [...(business.business_users?.data || [])]
+    const isCurrentUserInList = list.some(u => u.id === currentUser?.id)
+    if (currentUser && !isCurrentUserInList) {
+      list.unshift({
+        id: currentUser.id,
+        name: currentUser.name,
+        email: currentUser.email || "",
+        role: "Current Agent"
+      })
+    }
+    return list
+  }, [business, currentUser])
+
   if (!business) return null
-
-  const allBusinessUsers = [...(business.business_users?.data || [])]
-  const isCurrentUserInList = allBusinessUsers.some(u => u.id === currentUser?.id)
-
-  if (currentUser && !isCurrentUserInList) {
-    allBusinessUsers.unshift({
-      id: currentUser.id,
-      name: currentUser.name,
-      email: currentUser.email || "",
-      role: "Current Agent"
-    })
-  }
 
   return (
     <Sheet open={isOpen} onOpenChange={onClose}>
@@ -208,7 +212,15 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
               </TabsContent>
 
               <TabsContent value="pages" className="m-0 focus-visible:outline-none h-full">
-                <PagesTab business={business} key={`pages-${business.id}`} />
+                <PagesTab
+                  business={business}
+                  adminToken={adminToken}
+                  onRecrawl={onRecrawl}
+                  standalonePages={standalonePages}
+                  systemUsers={systemUsers}
+                  allBusinessUsers={allBusinessUsers}
+                  key={`pages-${business.id}`}
+                />
               </TabsContent>
 
               <TabsContent value="assets" className="m-0 focus-visible:outline-none h-full">

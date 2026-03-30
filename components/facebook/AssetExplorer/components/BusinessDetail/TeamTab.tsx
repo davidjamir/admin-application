@@ -64,33 +64,26 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
     }
   }, [business.id, adminToken])
 
-  // --- System User (system / local): tách riêng để sau có thể dùng system user token ---
+  // --- System User (system / local): now unified to use the standard assigned_pages API ---
   const fetchSystemUserAssets = useCallback(async (userId: string) => {
     setIsLoadingAssets(true)
     setSystemUserActionToken(null)
     try {
       // 1. Fetch Asset Groups (Standard)
-      const groupsRes = await fetch(`/api/facebook/business/${business.id}/users/${userId}/asset-groups?token=${adminToken}`)
-      const groupsData = await groupsRes.json()
+      const [groupsRes, pagesRes] = await Promise.all([
+        fetch(`/api/facebook/business/${business.id}/users/${userId}/asset-groups?token=${adminToken}`),
+        fetch(`/api/facebook/business/${business.id}/users/${userId}/assigned-pages?token=${adminToken}`)
+      ])
+      
+      const [groupsData, pagesData] = await Promise.all([groupsRes.json(), pagesRes.json()])
+      
       if (groupsData.success) setAssignedGroups(groupsData.data || [])
       else setAssignedGroups([])
-
-      // 2. Fetch Pages via UNORTHODOX method (me/accounts with local token)
-      const pagesRes = await fetch(`/api/facebook/business/${business.id}/system-users/${userId}/assigned-assets?force=true`)
-      const pagesData = await pagesRes.json()
       
       if (pagesData.success) {
         setAssignedPages(pagesData.data || [])
-        if (pagesData.actionToken) {
-          setSystemUserActionToken(pagesData.actionToken)
-          console.log(`[TeamTab] Set action token for ${userId} (canInteract: ${pagesData.metadata?.canInteract})`)
-        }
       } else {
-        console.warn("[TeamTab] Unorthodox fetch failed, falling back to standard...")
-        const fallbackRes = await fetch(`/api/facebook/business/${business.id}/users/${userId}/assigned-pages?token=${adminToken}`)
-        const fallbackData = await fallbackRes.json()
-        if (fallbackData.success) setAssignedPages(fallbackData.data || [])
-        else setAssignedPages([])
+        setAssignedPages([])
       }
     } catch (err) {
       console.error("[SystemUser] Failed to fetch assets:", err)

@@ -81,6 +81,7 @@ export interface FacebookPage {
   phone?: string
   tasks?: string[]
   source?: "owned" | "client" | "asset_group"
+  assigned_users_count?: number
   location?: {
     street?: string
     city?: string

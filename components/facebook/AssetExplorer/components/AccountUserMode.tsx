@@ -569,6 +569,7 @@ export function AccountUserMode({
         isRecrawling={recrawlingIds.has(selectedBusiness?.id || "")}
         onRecrawl={() => selectedBusiness && handleRecrawlBusiness(selectedBusiness.id)}
         adminToken={activeAccountUserToken}
+        standalonePages={standalonePages}
       />
     </div>
   )

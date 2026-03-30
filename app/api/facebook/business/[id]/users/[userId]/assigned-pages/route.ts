@@ -12,7 +12,7 @@ export async function GET(
   const { userId } = await params
 
   try {
-    const url = `https://graph.facebook.com/v19.0/${userId}/assigned_pages?access_token=${adminToken}&fields=id,name,category,perms&limit=100`
+    const url = `https://graph.facebook.com/v25.0/${userId}/assigned_pages?access_token=${adminToken}&fields=id,name,category,perms&limit=100`
     const fbRes = await fetch(url)
     const data = await fbRes.json()
 

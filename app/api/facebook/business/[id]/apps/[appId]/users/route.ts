@@ -27,7 +27,7 @@ export async function POST(
       body.business = id
     }
 
-    const url = `https://graph.facebook.com/v19.0/${appId}/assigned_users`
+    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users`
     const fbRes = await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -54,7 +54,7 @@ export async function DELETE(
   if (!adminToken || !userId) return NextResponse.json({ error: "Token and userId are required" }, { status: 400 })
 
   try {
-    const url = `https://graph.facebook.com/v19.0/${appId}/assigned_users?user=${userId}&access_token=${adminToken}`
+    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users?user=${userId}&access_token=${adminToken}`
     const fbRes = await fetch(url, { method: "DELETE" })
     const data = await fbRes.json()
 

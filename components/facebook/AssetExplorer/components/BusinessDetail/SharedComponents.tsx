@@ -124,10 +124,10 @@ export const Item = ({
             {isID && (
               <span
                 onClick={handleCopy}
-                className="text-[9px] text-muted-foreground font-mono transition-colors cursor-pointer hover:text-primary hover:bg-primary/5 px-1 rounded -ml-1 w-fit truncate"
+                className="text-[9px] text-muted-foreground/60 font-mono tracking-tight transition-colors cursor-pointer hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded -ml-1.5 w-fit truncate bg-muted/20"
                 title="Click to copy ID"
               >
-                ID: {value}
+                {value}
               </span>
             )}
             {!isID && (
