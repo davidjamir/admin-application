@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Flag, Zap, Users2, ShieldCheck, ChevronRight, ChevronDown, Package, Loader2, LogOut, AlertCircle } from "lucide-react"
+import { Flag, Zap, Users2, ShieldCheck, ChevronRight, ChevronDown, Package, Loader2, LogOut, AlertCircle, Plus } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { 
@@ -16,6 +16,7 @@ import { BusinessRow, FacebookPage, SystemUser } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
 import { AddPageDialog } from "./AddPageDialog"
 import { AssignUserDialog } from "./AssignUserDialog"
+import { AddToGroupDialog } from "./AddToGroupDialog"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
@@ -49,8 +50,19 @@ export const PagesTab = ({
   const [showRemovePageConfirm, setShowRemovePageConfirm] = useState(false)
   const [isRemovingPage, setIsRemovingPage] = useState(false)
 
+  // Remove from Group state
+  const [groupToRemoveFrom, setGroupToRemoveFrom] = useState<{ id: string; name: string } | null>(null)
+  const [isRemovingFromGroup, setIsRemovingFromGroup] = useState(false)
+
   const selectedPage = business.pages?.find(p => p.id === selectedPageId)
   const isReadOnly = selectedPage?.source === "asset_group"
+
+  const groupsContainingPage = React.useMemo(() => {
+    if (!selectedPageId || !business.business_asset_groups?.data) return []
+    return business.business_asset_groups.data.filter(group => 
+      group.contained_pages?.data?.some(p => p.id === selectedPageId)
+    )
+  }, [selectedPageId, business.business_asset_groups?.data])
 
   const fetchAssignedUsers = React.useCallback(async (pageId: string) => {
     setIsLoadingUsers(true)
@@ -124,6 +136,27 @@ export const PagesTab = ({
       toast.error(err instanceof Error ? err.message : "Failed to remove page")
     } finally {
       setIsRemovingPage(false)
+    }
+  }
+
+  const confirmRemoveFromGroup = async () => {
+    if (!selectedPageId || !groupToRemoveFrom) return
+    setIsRemovingFromGroup(true)
+
+    try {
+      const res = await fetch(`/api/facebook/business/${business.id}/asset-groups/${groupToRemoveFrom.id}?token=${encodeURIComponent(adminToken)}&action=remove_asset&assetId=${selectedPageId}&type=PAGE`, {
+        method: "DELETE"
+      })
+      const data = await res.json()
+      if (!res.ok || data.error) throw new Error(data.error || "Failed to remove from group")
+      
+      toast.success(`Removed from ${groupToRemoveFrom.name}`)
+      setGroupToRemoveFrom(null)
+      if (onRecrawl) onRecrawl()
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Failed to remove from group")
+    } finally {
+      setIsRemovingFromGroup(false)
     }
   }
 
@@ -202,6 +235,7 @@ export const PagesTab = ({
                       systemUsers={systemUsers}
                       allBusinessUsers={allBusinessUsers}
                       onSuccess={() => fetchAssignedUsers(selectedPage.id)}
+                      existingUserIds={assignedUsers.map(u => u.id)}
                       trigger={
                         <button className="p-3 w-full text-left rounded-lg border border-border/40 bg-card flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer">
                           <div className="flex items-center gap-3">
@@ -217,6 +251,30 @@ export const PagesTab = ({
                         </button>
                       }
                     />
+
+                    <AddToGroupDialog 
+                      business={business}
+                      pageId={selectedPage.id}
+                      pageName={selectedPage.name || "This Page"}
+                      adminToken={adminToken}
+                      onSuccess={() => {
+                          if (onRecrawl) onRecrawl()
+                      }}
+                      trigger={
+                        <button className="p-3 w-full text-left rounded-lg border border-border/40 bg-card flex items-center justify-between group hover:border-primary/30 transition-colors cursor-pointer">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded flex items-center justify-center bg-primary/5">
+                              <Package className="w-4 h-4 text-primary" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-medium">Add to Group</p>
+                              <p className="text-[10px] text-muted-foreground">Include this page in a business asset group</p>
+                            </div>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary/50 transition-colors" />
+                        </button>
+                      }
+                    />
                   </div>
                 </div>
 
@@ -224,8 +282,29 @@ export const PagesTab = ({
                   <h4 className="text-xs font-medium text-muted-foreground flex items-center justify-between px-1">
                     <div className="flex items-center gap-2">
                       <Users2 className="w-3 h-3" />
-                      People Assigned to this Page {assignedUsers.length > 0 ? `(${assignedUsers.length})` : ""}
+                      People {assignedUsers.length > 0 ? `(${assignedUsers.length})` : ""}
                     </div>
+                    {!isReadOnly && (
+                        <AssignUserDialog 
+                          business={business}
+                          pageId={selectedPage.id}
+                          pageName={selectedPage.name || "This Page"}
+                          adminToken={adminToken}
+                          systemUsers={systemUsers}
+                          allBusinessUsers={allBusinessUsers}
+                          onSuccess={() => fetchAssignedUsers(selectedPage.id)}
+                          existingUserIds={assignedUsers.map(u => u.id)}
+                          trigger={
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-5 text-[9px] gap-1 px-1.5 hover:bg-primary/5 hover:text-primary cursor-pointer border-none shadow-none text-muted-foreground/60"
+                            >
+                              <Plus className="w-2.5 h-2.5" /> Add User
+                            </Button>
+                          }
+                        />
+                    )}
                   </h4>
                   
                   <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
@@ -319,6 +398,64 @@ export const PagesTab = ({
                     )}
                   </div>
                 </div>
+
+                {groupsContainingPage.length > 0 && (
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-medium text-muted-foreground flex items-center justify-between px-1">
+                      <div className="flex items-center gap-2">
+                        <Package className="w-3 h-3" />
+                        Asset Groups ({groupsContainingPage.length})
+                      </div>
+                      {!isReadOnly && (
+                          <AddToGroupDialog 
+                            business={business}
+                            pageId={selectedPage.id}
+                            pageName={selectedPage.name || "This Page"}
+                            adminToken={adminToken}
+                            onSuccess={() => {
+                                if (onRecrawl) onRecrawl()
+                            }}
+                            trigger={
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="h-5 text-[9px] gap-1 px-1.5 hover:bg-primary/5 hover:text-primary cursor-pointer border-none shadow-none text-muted-foreground/60"
+                              >
+                                <Plus className="w-2.5 h-2.5" /> Add Group
+                              </Button>
+                            }
+                          />
+                      )}
+                    </h4>
+                    <div className="grid gap-2">
+                      {groupsContainingPage.map(group => (
+                        <div key={group.id} className="p-3 rounded-lg border border-border/40 bg-card flex items-center justify-between group">
+                          <div className="flex items-center gap-3">
+                            <div className="w-8 h-8 rounded flex items-center justify-center bg-primary/5 text-primary">
+                              <Package className="w-4 h-4" />
+                            </div>
+                            <div className="space-y-0.5">
+                              <p className="text-xs font-medium">{group.name}</p>
+                              <p className="text-[10px] text-muted-foreground font-mono">ID: {group.id}</p>
+                            </div>
+                          </div>
+                          {!isReadOnly && (
+                            <button 
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setGroupToRemoveFrom({ id: group.id, name: group.name })
+                              }}
+                              className="p-1.5 rounded-lg border border-destructive/20 text-destructive opacity-30 hover:opacity-100 hover:bg-destructive hover:text-white transition-all cursor-pointer shadow-sm"
+                              title="Remove from Group"
+                            >
+                              <LogOut className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
             
@@ -398,6 +535,45 @@ export const PagesTab = ({
                       </>
                     ) : (
                       "Remove Page"
+                    )}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            <Dialog open={!!groupToRemoveFrom} onOpenChange={(open) => !open && setGroupToRemoveFrom(null)}>
+              <DialogContent className="sm:max-w-[400px]">
+                <DialogHeader className="items-center text-center">
+                  <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+                    <AlertCircle className="w-6 h-6 text-destructive" />
+                  </div>
+                  <DialogTitle className="text-xl font-bold">Remove from Asset Group?</DialogTitle>
+                  <DialogDescription className="text-sm pt-2">
+                    Are you sure you want to remove <strong>{selectedPage?.name}</strong> from the group <strong>{groupToRemoveFrom?.name}</strong>?
+                  </DialogDescription>
+                </DialogHeader>
+                <DialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setGroupToRemoveFrom(null)}
+                    className="w-full sm:flex-1 cursor-pointer"
+                    disabled={isRemovingFromGroup}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    variant="destructive" 
+                    onClick={confirmRemoveFromGroup}
+                    className="w-full sm:flex-1 cursor-pointer font-bold"
+                    disabled={isRemovingFromGroup}
+                  >
+                    {isRemovingFromGroup ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Removing...
+                      </>
+                    ) : (
+                      "Remove"
                     )}
                   </Button>
                 </DialogFooter>

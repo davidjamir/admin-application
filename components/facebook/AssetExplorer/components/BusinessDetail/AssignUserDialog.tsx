@@ -29,6 +29,7 @@ interface AssignUserDialogProps {
   allBusinessUsers?: { id: string; name: string; email?: string; role?: string }[]
   trigger?: React.ReactNode
   onSuccess?: () => void
+  existingUserIds?: string[]
 }
 
 const PAGE_ROLES = [
@@ -76,7 +77,8 @@ export function AssignUserDialog({
   adminToken, 
   allBusinessUsers = [],
   trigger,
-  onSuccess 
+  onSuccess,
+  existingUserIds = []
 }: AssignUserDialogProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -96,8 +98,8 @@ export function AssignUserDialog({
       map.set(u.id, { id: u.id, name: u.name, email: "", type: "System User" })
     })
 
-    return Array.from(map.values())
-  }, [allBusinessUsers, business.system_users])
+    return Array.from(map.values()).filter(u => !existingUserIds.includes(u.id))
+  }, [allBusinessUsers, business.system_users, existingUserIds])
 
   const filteredUsers = unifiedUsers.filter(u => 
     u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
