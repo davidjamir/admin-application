@@ -1,53 +1,111 @@
 import { NextResponse } from "next/server"
+import { getRolesByMode } from "@/lib/facebook-permissions"
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string; assetGroupId: string }> }
 ) {
-  const { searchParams } = new URL(request.url)
-  const token = searchParams.get("token")
-  const section = searchParams.get("section") // 'users', 'assets', or null for all
-  if (!token) return NextResponse.json({ error: "Token is required" }, { status: 400 })
-
   try {
-    const { assetGroupId } = await params
+    const { id: businessId, assetGroupId } = await params
+    const { searchParams } = new URL(request.url)
+    const token = searchParams.get("token")
+
+    if (!token) {
+      return NextResponse.json({ error: "Token is required" }, { status: 400 })
+    }
+
+    const section = searchParams.get("section") || "all"
+
+    const assetEndpoints = [
+      { key: "assigned_users", endpoint: "assigned_users", fields: "id,name,page_roles,page_tasks,adaccount_roles,pixel_roles,offline_conversion_data_set_roles,instagram_roles,app_roles", extraParams: `&business=${businessId}` },
+      { key: "contained_pages", endpoint: "contained_pages", fields: "id,name" },
+      { key: "contained_ad_accounts", endpoint: "contained_ad_accounts", fields: "id,name,account_id,currency" },
+      { key: "contained_ads_pixels", endpoint: "contained_ads_pixels", fields: "id,name" },
+      { key: "contained_applications", endpoint: "contained_applications", fields: "id,name,category" },
+      { key: "contained_instagram_accounts", endpoint: "contained_instagram_accounts", fields: "id,username,name" },
+      { key: "contained_offline_conversion_data_sets", endpoint: "contained_offline_conversion_data_sets", fields: "id,name" },
+    ]
+
+    // Determine which endpoints to fetch based on section
+    let requestedEndpoints = assetEndpoints
+    if (section === "users") {
+      requestedEndpoints = [assetEndpoints[0]]
+    } else if (section === "assets") {
+      requestedEndpoints = assetEndpoints.slice(1)
+    } else if (section !== "all" && section) {
+      // Check if it's a specific key (e.g. contained_pages)
+      const specific = assetEndpoints.find(e => e.key === section)
+      if (specific) {
+        requestedEndpoints = [specific]
+      }
+    }
+
+    // Construct Batch API request
+    const batch = requestedEndpoints.map(({ endpoint, fields, extraParams = "" }) => ({
+      method: "GET",
+      relative_url: `${assetGroupId}/${endpoint}?fields=${fields}&limit=200${extraParams}`
+    }))
+
+    const batchUrl = new URL(`https://graph.facebook.com/v25.0/`)
+    const formData = new URLSearchParams()
+    formData.set("access_token", token)
+    formData.set("batch", JSON.stringify(batch))
+
+    const res = await fetch(batchUrl.toString(), {
+      method: "POST",
+      body: formData
+    })
     
-    // Construct fields based on section
-    let fields = "id,name"
-    if (!section || section === "users") {
-      fields += ",assigned_users.limit(200){id,name,email,role,page_roles,adaccount_roles,pixel_roles,offline_conversion_data_set_roles,page_tasks}"
-    }
-    if (!section || section === "assets") {
-      fields += ",contained_pages.limit(200){id,name},contained_ad_accounts.limit(200){id,name,account_id,currency},contained_ads_pixels.limit(200){id,name},contained_applications.limit(200){id,name,category},contained_instagram_accounts.limit(200){id,username,name}"
+    const batchResults = await res.json()
+
+    if (!res.ok || batchResults.error) {
+      throw new Error(batchResults.error?.message || "Failed to execute batch request")
     }
 
-    const url = new URL(`https://graph.facebook.com/v25.0/${assetGroupId}`)
-    url.searchParams.set("fields", fields)
-    url.searchParams.set("access_token", token)
+    const amalgamatedData = requestedEndpoints.reduce((acc, { key }, index) => {
+      const result = batchResults[index]
+      if (result && result.code === 200) {
+        try {
+          const body = JSON.parse(result.body)
+          let data = body.data || []
 
-    const response = await fetch(url.toString())
-    const data = await response.json()
+          if (key === "assigned_users") {
+            data = (data || [])
+              .filter((item: { id: string; name?: string; role?: string; page_roles?: string[]; page_tasks?: string[]; adaccount_roles?: string[]; pixel_roles?: string[]; offline_conversion_data_set_roles?: string[]; instagram_roles?: string[]; app_roles?: string[] }) => item.id)
+              .map((item: { id: string; name?: string; role?: string; page_roles?: string[]; page_tasks?: string[]; adaccount_roles?: string[]; pixel_roles?: string[]; offline_conversion_data_set_roles?: string[]; instagram_roles?: string[]; app_roles?: string[] }) => ({
+                id: item.id,
+                name: item.name || item.id || "",
+                page_roles: item.page_roles,
+                page_tasks: item.page_tasks,
+                adaccount_roles: item.adaccount_roles,
+                pixel_roles: item.pixel_roles,
+                offline_conversion_data_set_roles: item.offline_conversion_data_set_roles,
+                instagram_roles: item.instagram_roles,
+                app_roles: item.app_roles,
+              }))
+          }
+          acc[key] = { data }
+        } catch (e) {
+          console.error(`Error parsing batch response for ${key}:`, e)
+          acc[key] = { data: [] }
+        }
+      } else {
+        console.warn(`Batch sub-request failed for ${key}:`, result)
+        acc[key] = { data: [] }
+      }
+      return acc
+    }, {} as Record<string, { data: { id: string; name?: string; role?: string }[] }>)
 
-    if (!response.ok || data.error) {
-      throw new Error(data.error?.message || "Failed to fetch asset group details")
-    }
-
-    // Step 3: Format data to match expected combined structure
-    const combinedData = {
-      id: data.id,
-      name: data.name,
-      assigned_users: data.assigned_users || { data: [] },
-      contained_pages: data.contained_pages || { data: [] },
-      contained_ad_accounts: data.contained_ad_accounts || { data: [] },
-      contained_ads_pixels: data.contained_ads_pixels || { data: [] },
-      contained_applications: data.contained_applications || { data: [] },
-      contained_instagram_accounts: data.contained_instagram_accounts || { data: [] }
-    }
-
-    return NextResponse.json({ success: true, data: combinedData })
+    return NextResponse.json({
+      success: true,
+      data: {
+        id: assetGroupId,
+        ...amalgamatedData
+      }
+    })
   } catch (error) {
-    console.error(`[API] Error fetching asset group details:`, error)
-    return NextResponse.json({ error: error instanceof Error ? error.message : "Internal Server Error" }, { status: 500 })
+    console.error(`[API] GET error:`, error)
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
   }
 }
 
@@ -55,74 +113,101 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string; assetGroupId: string }> }
 ) {
-  const { searchParams } = new URL(request.url)
-  const token = searchParams.get("token")
-  if (!token) return NextResponse.json({ error: "Token is required" }, { status: 400 })
-
   try {
-    const resolvedParams = await params;
-    const resolvedId = resolvedParams.id;
-    const { assetGroupId } = resolvedParams;
+    const { id: businessId, assetGroupId } = await params
+    const { searchParams } = new URL(request.url)
+    const token = searchParams.get("token")
+
+    if (!token) {
+      return NextResponse.json({ error: "Token is required" }, { status: 400 })
+    }
+
     const body = await request.json()
-    const { action, name, userId, role, assetId, type } = body
+    const {
+      action,
+      userId,
+      name,
+      page_roles,
+      adaccount_roles,
+      pixel_roles,
+      offline_conversion_data_set_roles
+    } = body
 
-    // 1. Rename logic
-    if (name) {
-      const res = await fetch(`https://graph.facebook.com/v25.0/${assetGroupId}?access_token=${token}&name=${encodeURIComponent(name)}`, { method: "POST" })
+    // Rename Asset Group
+    if (name && !action) {
+      const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}`)
+
+      const formData = new URLSearchParams()
+      formData.set("name", name)
+      formData.set("access_token", token)
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        body: formData
+      })
+
       const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error?.message || "Failed to rename group")
+      if (!res.ok || data.error) {
+        throw new Error(data.error?.message || "Failed to rename asset group")
+      }
       return NextResponse.json({ success: true, data })
     }
 
-    // 2. Add User logic
+    // Add User to Asset Group
     if (action === "add_user" && userId) {
-      const url = new URL(`https://graph.facebook.com/v25.0/${assetGroupId}/assigned_users`)
-      url.searchParams.set("access_token", token)
-      url.searchParams.set("user", userId)
-      url.searchParams.set("business", resolvedId)
+      const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}/assigned_users`)
 
-      // Add granular roles if provided
-      const { page_roles, adaccount_roles, pixel_roles, offline_conversion_data_set_roles } = body
-      if (page_roles) url.searchParams.set("page_roles", JSON.stringify(page_roles))
-      if (adaccount_roles) url.searchParams.set("adaccount_roles", JSON.stringify(adaccount_roles))
-      if (pixel_roles) url.searchParams.set("pixel_roles", JSON.stringify(pixel_roles))
-      if (offline_conversion_data_set_roles) url.searchParams.set("offline_conversion_data_set_roles", JSON.stringify(offline_conversion_data_set_roles))
+      const formData = new URLSearchParams()
+      formData.set("business", businessId)
+      formData.set("user", userId)
+      formData.set("access_token", token)
 
-      // Fallback to general role if no granular roles provided
-      if (!page_roles && !adaccount_roles && !pixel_roles && !offline_conversion_data_set_roles) {
-        url.searchParams.set("role", role || "ADVERTISER")
-      }
+      // Default to basic page roles if not provided
+      const finalPageRoles = page_roles || getRolesByMode("basic")
+      formData.set("page_roles", JSON.stringify(finalPageRoles))
 
-      const res = await fetch(url.toString(), { method: "POST" })
+      // Add other granular roles if provided in the body
+      if (adaccount_roles) formData.set("adaccount_roles", JSON.stringify(adaccount_roles))
+      if (pixel_roles) formData.set("pixel_roles", JSON.stringify(pixel_roles))
+      if (offline_conversion_data_set_roles) formData.set("offline_conversion_data_set_roles", JSON.stringify(offline_conversion_data_set_roles))
+
+      const res = await fetch(url.toString(), {
+        method: "POST",
+        body: formData
+      })
+
       const data = await res.json()
-      if (!res.ok || data.error) throw new Error(data.error?.message || "Failed to add user")
+      if (!res.ok || data.error) {
+        throw new Error(data.error?.message || "Failed to add user")
+      }
       return NextResponse.json({ success: true, data })
     }
 
-    // 3. Add Asset logic
-    if (action === "add_asset" && assetId && type) {
-      const typeMap: Record<string, string> = {
-        "PAGE": "contained_pages",
-        "AD_ACCOUNT": "contained_ad_accounts",
-        "ADS_PIXEL": "contained_ads_pixels",
-        "APPLICATION": "contained_applications"
+    // Add Asset to Asset Group
+    if (action === "add_asset" && body.assetId && body.type) {
+      const edgeMap: Record<string, string> = {
+        PAGE: "contained_pages",
+        AD_ACCOUNT: "contained_ad_accounts",
+        ADS_PIXEL: "contained_ads_pixels",
+        APPLICATION: "contained_applications",
+        INSTAGRAM_ACCOUNT: "contained_instagram_accounts",
+        OFFLINE_CONVERSION_DATA_SET: "contained_offline_conversion_data_sets"
       }
 
-      const edge = typeMap[type]
+      const edge = edgeMap[body.type as string]
       if (!edge) throw new Error("Unsupported asset type")
 
-      const url = new URL(`https://graph.facebook.com/v25.0/${assetGroupId}/${edge}`)
-      url.searchParams.set("asset_id", assetId)
+      const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}/${edge}`)
+      url.searchParams.set("asset_id", body.assetId)
       url.searchParams.set("access_token", token)
-      url.searchParams.set("business", resolvedId)
 
       const res = await fetch(url.toString(), { method: "POST" })
       const data = await res.json()
-      if (data.error?.message) throw new Error(data.error.message)
+      if (!res.ok || data.error) throw new Error(data.error?.message || `Failed to add ${body.type}`)
       return NextResponse.json({ success: true, data })
     }
 
-    return NextResponse.json({ error: "Invalid action or missing parameters for POST" }, { status: 400 })
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 })
   } catch (error) {
     console.error(`[API] POST error:`, error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Internal Server Error" }, { status: 500 })
@@ -133,70 +218,79 @@ export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; assetGroupId: string }> }
 ) {
-  const { searchParams } = new URL(request.url)
-  const token = searchParams.get("token")
-  if (!token) return NextResponse.json({ error: "Token is required" }, { status: 400 })
-
   try {
-    const resolvedParams = await params;
-    const resolvedId = resolvedParams.id;
-    const { assetGroupId } = resolvedParams;
+    const { id: businessId, assetGroupId } = await params
+    const { searchParams } = new URL(request.url)
+    const token = searchParams.get("token")
     const action = searchParams.get("action")
     const userId = searchParams.get("userId")
-    const assetId = searchParams.get("assetId")
-    const type = searchParams.get("type")
 
-    // 1. Remove User logic
+    if (!token) {
+      return NextResponse.json({ error: "Token is required" }, { status: 400 })
+    }
+
+    // Logic for removing a user from the asset group
     if (action === "remove_user" && userId) {
-      const url = new URL(`https://graph.facebook.com/v25.0/${assetGroupId}/assigned_users`)
-      url.searchParams.set("access_token", token)
+      const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}/assigned_users`)
+      url.searchParams.set("business", businessId)
       url.searchParams.set("user", userId)
-      url.searchParams.set("business", resolvedId)
-
-      const res = await fetch(url.toString(), { method: "DELETE" })
-      const data = await res.json()
-      if (data.error?.message) throw new Error(data.error.message)
-      return NextResponse.json({ success: true, data })
-    }
-
-    // 2. Remove Asset logic
-    if (action === "remove_asset" && assetId && type) {
-      const typeMap: Record<string, string> = {
-        "PAGE": "contained_pages",
-        "AD_ACCOUNT": "contained_ad_accounts",
-        "ADS_PIXEL": "contained_ads_pixels",
-        "APPLICATION": "contained_applications"
-      }
-
-      const edge = typeMap[type]
-      if (!edge) throw new Error("Unsupported asset type")
-
-      const url = new URL(`https://graph.facebook.com/v25.0/${assetGroupId}/${edge}`)
-      url.searchParams.set("asset_id", assetId)
       url.searchParams.set("access_token", token)
-      url.searchParams.set("business", resolvedId)
 
       const res = await fetch(url.toString(), { method: "DELETE" })
       const data = await res.json()
-      if (data.error?.message) throw new Error(data.error.message)
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error?.message || "Failed to remove user")
+      }
       return NextResponse.json({ success: true, data })
     }
 
-    // 3. Delete whole group (if no action provided)
+    // Placeholder for other delete actions (e.g., delete_group)
     if (!action) {
+      // Delete the whole group
       const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}`)
       url.searchParams.set("access_token", token)
-
       const res = await fetch(url.toString(), { method: "DELETE" })
       const data = await res.json()
-      if (data.error?.message) throw new Error(data.error.message)
+      if (!res.ok || data.error) throw new Error(data.error?.message || "Failed to delete asset group")
       return NextResponse.json({ success: true, data })
     }
 
-    return NextResponse.json({ error: "Invalid action or missing parameters for DELETE" }, { status: 400 })
+    // Logic for removing an asset from the asset group
+    if (action === "remove_asset") {
+      const assetId = searchParams.get("assetId")
+      const type = searchParams.get("type")
+      
+      if (!assetId || !type) throw new Error("Asset ID and type are required")
+
+      const edgeMap: Record<string, string> = {
+        PAGE: "contained_pages",
+        AD_ACCOUNT: "contained_ad_accounts",
+        ADS_PIXEL: "contained_ads_pixels",
+        APPLICATION: "contained_applications",
+        INSTAGRAM_ACCOUNT: "contained_instagram_accounts",
+        OFFLINE_CONVERSION_DATA_SET: "contained_offline_conversion_data_sets"
+      }
+
+      const edge = edgeMap[type]
+      if (!edge) throw new Error("Unsupported asset type")
+
+      const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(assetGroupId)}/${edge}`)
+      url.searchParams.set("asset_id", assetId)
+      url.searchParams.set("access_token", token)
+
+      const res = await fetch(url.toString(), { method: "DELETE" })
+      const data = await res.json()
+
+      if (!res.ok || data.error) {
+        throw new Error(data.error?.message || "Failed to remove asset")
+      }
+      return NextResponse.json({ success: true, data })
+    }
+
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 })
   } catch (error) {
     console.error(`[API] DELETE error:`, error)
     return NextResponse.json({ error: error instanceof Error ? error.message : "Internal Server Error" }, { status: 500 })
   }
 }
-

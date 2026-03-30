@@ -120,8 +120,10 @@ export interface FacebookBusiness {
   };
   adspixels?: { data: { id: string; name: string }[] };
   whatsapp_business_accounts?: { data: { id: string; name: string; status: string }[] };
+  instagram_accounts?: { data: { id: string; username: string; name: string }[] };
   business_users?: { data: { id: string; name: string; email: string; role: string }[] };
   business_asset_groups?: { data: { id: string; name: string }[] };
+  offline_conversion_data_sets?: { data: { id: string; name: string }[] };
 }
 
 export interface BusinessRow extends FacebookBusiness {

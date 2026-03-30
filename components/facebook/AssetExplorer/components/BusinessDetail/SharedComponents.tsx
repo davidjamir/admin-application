@@ -6,18 +6,21 @@ import { X } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-export const Section = ({ title, icon: Icon, children, count }: { title: string; icon: React.ElementType; children: React.ReactNode; count?: number }) => (
+export const Section = ({ title, icon: Icon, children, count, action }: { title: string; icon: React.ElementType; children: React.ReactNode; count?: number; action?: React.ReactNode }) => (
   <div className="space-y-3">
     <div className="flex items-center justify-between border-b border-border/50 pb-2">
-      <div className="flex items-center gap-2">
-        <Icon className="w-4 h-4 text-primary/70" />
-        <h4 className="text-sm font-normal tracking-tight">{title}</h4>
+      <div className="flex items-center grow gap-2 overflow-hidden">
+        <Icon className="w-4 h-4 text-primary/70 shrink-0" />
+        <h4 className="text-sm font-normal tracking-tight truncate">{title}</h4>
       </div>
-      {count !== undefined && (
-        <Badge variant="secondary" className="text-[10px] font-normal h-5">
-          {count}
-        </Badge>
-      )}
+      <div className="flex items-center gap-2 shrink-0 ml-4">
+        {action}
+        {count !== undefined && (
+          <Badge variant="secondary" className="text-[10px] font-normal h-5 shrink-0 tabular-nums">
+            {count}
+          </Badge>
+        )}
+      </div>
     </div>
     <div className="grid gap-0">
       {children}

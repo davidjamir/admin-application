@@ -7,15 +7,18 @@ import { toast } from "sonner"
 import { BusinessRow, SystemUser, FacebookPage } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
 import { cn } from "@/lib/utils"
+import { AddSystemUserDialog } from "./AddSystemUserDialog"
 
 interface TeamTabProps {
   business: BusinessRow
   systemUsers: SystemUser[]
   currentUser: SystemUser | null
   allBusinessUsers: { id: string; name: string; email?: string; role?: string }[]
+  onRecrawl?: () => void
+  adminToken: string
 }
 
-export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers }: TeamTabProps) => {
+export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, onRecrawl, adminToken }: TeamTabProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [selectedUserType, setSelectedUserType] = useState<'business' | 'system' | 'local' | null>(null)
 
@@ -266,7 +269,20 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers }
         {!allBusinessUsers.length && <p className="text-xs text-muted-foreground italic pl-2">No users listed</p>}
       </Section>
 
-      <Section title="System Users" icon={ShieldCheck} count={business.system_users?.length}>
+      <Section 
+        title="System Users" 
+        icon={ShieldCheck} 
+        count={business.system_users?.length}
+        action={
+          <AddSystemUserDialog 
+            businessId={business.id} 
+            adminToken={adminToken} 
+            onSuccess={onRecrawl} 
+            existingUsers={business.system_users || []}
+            verificationStatus={business.verification_status || 'not_verified'}
+          />
+        }
+      >
         {business.system_users?.map((u) => (
           <Item
             key={u.id}

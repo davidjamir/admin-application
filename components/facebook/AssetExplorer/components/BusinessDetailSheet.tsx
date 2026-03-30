@@ -201,6 +201,8 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
                   systemUsers={systemUsers}
                   currentUser={currentUser}
                   allBusinessUsers={allBusinessUsers}
+                  onRecrawl={onRecrawl}
+                  adminToken={adminToken}
                   key={`team-${business.id}`}
                 />
               </TabsContent>
