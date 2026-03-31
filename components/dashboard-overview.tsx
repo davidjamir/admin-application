@@ -10,7 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { OverviewChart } from "@/components/overview-chart"
-import { ActivityFeed } from "@/components/activity-feed"
+import { BusinessSystemOverview } from "@/components/business-system-overview"
+import { QueueOverview } from "@/components/queue-overview"
 import { SystemVitals } from "@/components/system-vitals"
 import { CommandCenter } from "@/components/command-center"
 import { RefreshCcw, Facebook, BookOpen, FileText, Activity } from "lucide-react"
@@ -33,6 +34,11 @@ interface DashboardStats {
   sources: { name: string; count: number }[]
   channels: { name: string; count: number }[]
   chartData: Record<string, string | number>[]
+  businesses: {
+    total: number
+    users: number
+    distribution: { id: string; name: string; count: number }[]
+  }
   fetchedAt: number
 }
 
@@ -81,13 +87,13 @@ function StatCard({ title, icon: Icon, value, desc, trend, data, color }: StatCa
         style={{ borderColor: `${color.hex}44`, borderWidth: '1px' }}
       >
         <CardContent className="p-0">
-          <div className="px-6 pt-2 pb-1">
+          <div className="px-4 pt-2 pb-1">
             <div className="flex items-center justify-between mb-1">
               <div className="flex items-center gap-3">
                 <div className={`p-2 rounded-2xl ${color.bg} ${color.text} inner-glow`}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <p className="text-[13px] font-medium text-black dark:text-white capitalize tracking-tight">
+                <p className="text-[13px] font-medium text-black dark:text-white tracking-tight">
                   {title}
                 </p>
               </div>
@@ -192,11 +198,11 @@ export function DashboardOverview() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-3"
+      className="space-y-2 mt-0"
     >
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between bg-white/[0.02] p-4 rounded-3xl border border-white/5">
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white/[0.02] py-2.5 px-4 rounded-3xl border border-white/5">
         <div className="flex items-baseline gap-4">
-          <h2 className="text-4xl font-bold tracking-tight text-black dark:text-white">
+          <h2 className="text-4xl font-medium tracking-tight text-black dark:text-white">
             Dash Board
           </h2>
           <div className="flex items-center gap-2">
@@ -222,7 +228,7 @@ export function DashboardOverview() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         {[
           { 
-            title: "Facebook pages", 
+            title: "Facebook Pages", 
             icon: Facebook, 
             value: stats.summary.totalPages, 
             desc: `from ${stats.sources.length} sources`, 
@@ -231,7 +237,7 @@ export function DashboardOverview() {
             data: Array.from({ length: 10 }, () => ({ val: Math.floor(Math.random() * 20) + 40 }))
           },
           { 
-            title: "Active blogs", 
+            title: "Active Blogs", 
             icon: BookOpen, 
             value: stats.summary.activeBlogs, 
             desc: "managed domains", 
@@ -240,7 +246,7 @@ export function DashboardOverview() {
             data: Array.from({ length: 10 }, () => ({ val: Math.floor(Math.random() * 15) + 30 }))
           },
           { 
-            title: "Ad templates", 
+            title: "Ad Templates", 
             icon: FileText, 
             value: stats.summary.totalAds, 
             desc: "ready to sync", 
@@ -249,7 +255,7 @@ export function DashboardOverview() {
             data: Array.from({ length: 10 }, () => ({ val: Math.floor(Math.random() * 25) + 50 }))
           },
           { 
-            title: "Queue backlog", 
+            title: "Queue Backlog", 
             icon: Activity, 
             value: stats.summary.queueBacklog, 
             desc: "pending items", 
@@ -262,12 +268,12 @@ export function DashboardOverview() {
         ))}
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-7">
-        <motion.div variants={itemVariants} className="col-span-4">
+      <div className="grid gap-6 md:grid-cols-2">
+        <motion.div variants={itemVariants} className="col-span-1">
           <Card className="glass-pane overflow-hidden h-full border-r border-y border-l-0 border-blue-500/10">
             <CardHeader className="pb-4 pt-6 px-6 relative z-10">
-              <CardTitle className="text-2xl font-black text-black dark:text-white capitalize tracking-tighter">
-                Website posts activity
+              <CardTitle className="text-2xl font-medium text-black dark:text-white tracking-tighter">
+                Website Posts Activity
               </CardTitle>
               <CardDescription className="text-[11px] font-medium text-muted-foreground/60">
                 Article publishing activity from <span className="font-bold text-foreground/80">21 March 2026</span> to <span className="font-bold text-foreground/80">27 March 2026</span>
@@ -279,23 +285,18 @@ export function DashboardOverview() {
           </Card>
         </motion.div>
         
-        <div className="col-span-3 space-y-6">
-          <motion.div variants={itemVariants}>
-            <Card className="glass-pane h-full min-h-[450px]">
-              <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                  <CardTitle className="text-xl">Activity Log</CardTitle>
-                  <CardDescription>Recent system events and queue status</CardDescription>
-                </div>
-                <CommandCenter />
-              </CardHeader>
-              <CardContent>
-                <ActivityFeed />
-              </CardContent>
-            </Card>
+        <div className="col-span-1">
+          <motion.div variants={itemVariants} className="h-full">
+            <BusinessSystemOverview stats={stats.businesses} />
           </motion.div>
         </div>
       </div>
+
+      <QueueOverview 
+        queues={stats.queues} 
+        fetchedAt={stats.fetchedAt} 
+        onRefresh={() => fetchStats(true)} 
+      />
     </motion.div>
   )
 }

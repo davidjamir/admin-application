@@ -113,7 +113,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none ml-1">
                   <span className="font-bold text-lg tracking-tight">7 Forge Inc</span>
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Admin System</span>
+                  <span className="text-[10px] tracking-widest text-muted-foreground font-semibold">Admin System</span>
                 </div>
               </Link>
             </SidebarMenuButton>
@@ -171,7 +171,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                     <AvatarFallback className="rounded-lg bg-primary/10 text-primary">AD</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight ml-1">
-                    <span className="truncate font-semibold uppercase tracking-tight">
+                    <span className="truncate font-semibold tracking-tight">
                       {user?.name || "7 Forge Admin"}
                     </span>
                     <span className="truncate text-[10px] text-muted-foreground">

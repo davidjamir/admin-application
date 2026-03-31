@@ -26,12 +26,12 @@ export function LoadingScreen({ message = "Admin System", fullScreen = true }: L
           </div>
         </div>
         <div className="flex flex-col items-center gap-1.5 overflow-hidden">
-          <h1 className="text-2xl font-black tracking-[0.2em] text-black dark:text-white uppercase italic select-none">
+          <h1 className="text-2xl font-black tracking-[0.2em] text-black dark:text-white select-none">
             7 Forge Inc
           </h1>
           <div className="flex items-center gap-3">
             <span className="h-[1px] w-8 bg-primary/20"></span>
-            <p className="text-[10px] font-medium text-muted-foreground/40 uppercase tracking-[0.4em] italic animate-pulse">
+            <p className="text-[10px] font-medium text-muted-foreground/40 tracking-[0.4em] animate-pulse">
               {message}
             </p>
             <span className="h-[1px] w-8 bg-primary/20"></span>

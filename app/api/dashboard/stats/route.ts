@@ -31,6 +31,8 @@ export async function GET(request: Request) {
         recentQuotas,
         pageSources,
         blogChannels,
+        systemUserCount,
+        businessDistribution,
       ] = await Promise.all([
         db.collection("pages").countDocuments(),
         db.collection("blogs").countDocuments({ enabled: true }),
@@ -50,6 +52,19 @@ export async function GET(request: Request) {
         db
           .collection("blogs")
           .aggregate([{ $group: { _id: "$channel", count: { $sum: 1 } } }])
+          .toArray(),
+        db.collection("system_users").countDocuments(),
+        db
+          .collection("system_users")
+          .aggregate([
+            {
+              $group: {
+                _id: "$businessId",
+                name: { $first: "$businessName" },
+                count: { $sum: 1 },
+              },
+            },
+          ])
           .toArray(),
       ])
 
@@ -83,6 +98,15 @@ export async function GET(request: Request) {
         sources: pageSources.map((s) => ({ name: s._id || "Other", count: s.count })),
         channels: blogChannels.map((c) => ({ name: c._id || "Other", count: c.count })),
         chartData: quotaChartData,
+        businesses: {
+          total: businessDistribution.length,
+          users: systemUserCount,
+          distribution: businessDistribution.map((b) => ({
+            id: b._id || "unknown",
+            name: b.name || "Unknown BM",
+            count: b.count,
+          })),
+        },
         fetchedAt: Date.now(),
       }
 

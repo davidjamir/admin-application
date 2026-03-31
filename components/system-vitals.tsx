@@ -53,10 +53,10 @@ export function SystemVitals({ variant = "default" }: SystemVitalsProps) {
   }
 
   const vitals = [
-    { name: "mongodb", status: data?.mongodb.status || "Checking", icon: Database, color: data?.mongodb.status === "Healthy" ? "text-emerald-500" : "text-rose-500", load: data?.mongodb.load || "..." },
-    { name: "redis", status: data?.redis.status || "Checking", icon: Zap, color: data?.redis.status === "Active" ? "text-amber-500" : "text-rose-500", load: data?.redis.load || "..." },
-    { name: "fb api", status: data?.facebook.status || "Checking", icon: Globe, color: data?.facebook.status === "Online" ? "text-blue-500" : "text-rose-500", load: data?.facebook.load || "..." },
-    { name: "system", status: data?.system.status || "Checking", icon: Cpu, color: data?.system.status === "Healthy" ? "text-purple-500" : "text-rose-500", load: data?.system.load || "..." },
+    { name: "Mongodb", status: data?.mongodb.status || "Checking", icon: Database, color: data?.mongodb.status === "Healthy" ? "text-emerald-500" : "text-rose-500", load: data?.mongodb.load || "..." },
+    { name: "Redis", status: data?.redis.status || "Checking", icon: Zap, color: data?.redis.status === "Active" ? "text-amber-500" : "text-rose-500", load: data?.redis.load || "..." },
+    { name: "Fb Api", status: data?.facebook.status || "Checking", icon: Globe, color: data?.facebook.status === "Online" ? "text-blue-500" : "text-rose-500", load: data?.facebook.load || "..." },
+    { name: "System", status: data?.system.status || "Checking", icon: Cpu, color: data?.system.status === "Healthy" ? "text-purple-500" : "text-rose-500", load: data?.system.load || "..." },
   ]
 
   if (variant === "compact") {
@@ -69,7 +69,7 @@ export function SystemVitals({ variant = "default" }: SystemVitalsProps) {
               <div className={`absolute -top-0.5 -right-0.5 h-1.5 w-1.5 rounded-full ${v.color.replace('text-', 'bg-')} border border-background animate-pulse`} />
             </div>
             <div className="flex flex-col -space-y-0.5">
-              <span className={`text-[10px] font-medium ${v.color} opacity-100 leading-tight lowercase tracking-wide`}>{v.name}</span>
+              <span className={`text-[10px] font-medium ${v.color} opacity-100 leading-tight tracking-wide`}>{v.name}</span>
               <span className={`text-[10px] font-medium tabular-nums ${v.color} opacity-100 leading-tight`}>{v.load}</span>
             </div>
           </div>
@@ -83,7 +83,7 @@ export function SystemVitals({ variant = "default" }: SystemVitalsProps) {
       {vitals.map((v) => (
         <div key={v.name} className="flex flex-col items-center justify-center p-3 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors">
           <v.icon className={`h-6 w-6 ${v.color} mb-2`} />
-          <p className="text-[10px] font-bold lowercase tracking-wider text-muted-foreground">{v.name}</p>
+          <p className="text-[10px] font-bold tracking-wider text-muted-foreground">{v.name}</p>
           <div className="flex items-center gap-1.5 mt-1">
             <div className={`h-1.5 w-1.5 rounded-full ${v.color.replace('text-', 'bg-')} animate-pulse`} />
             <p className="text-[10px] font-medium">{v.load}</p>
