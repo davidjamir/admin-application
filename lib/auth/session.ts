@@ -14,6 +14,15 @@ export async function getServerSession(): Promise<SessionUser | null> {
   const token = cookieStore.get(AUTH_COOKIE_NAME)?.value;
 
   if (!token) {
+    // Development mode bypass: Auto-login as admin
+    if (process.env.NODE_ENV === "development" || process.env.DEVELOPER_MODE === "true") {
+      return {
+        id: "dev-id",
+        email: process.env.ADMIN_USER || "admin@7forge.com",
+        name: "Developer Admin",
+        role: "ADMIN",
+      };
+    }
     return null;
   }
 
