@@ -1,11 +1,11 @@
 "use client"
 
 import React, { useState, useMemo, useEffect } from "react"
-import { 
-  Users2, 
-  Loader2, 
-  Search, 
-  Check 
+import {
+  Users2,
+  Loader2,
+  Search,
+  Check
 } from "lucide-react"
 import {
   Dialog,
@@ -32,48 +32,48 @@ interface AssignUserDialogProps {
 }
 
 const PAGE_ROLES = [
-  { 
-    id: "ADMIN", 
-    label: "Admin", 
-    tasks: ["MANAGE", "CREATE_CONTENT", "MODERATE", "ADVERTISE", "ANALYZE"], 
+  {
+    id: "ADMIN",
+    label: "Admin",
+    tasks: ["MANAGE", "CREATE_CONTENT", "MODERATE", "ADVERTISE", "ANALYZE"],
     description: "Can manage admin roles, send messages, post as the Page, create ads, and view reports.",
     tags: ["Manage", "Create Content", "Moderate", "Advertise", "Analyze"]
   },
-  { 
-    id: "EDITOR", 
-    label: "Editor", 
-    tasks: ["CREATE_CONTENT", "MODERATE", "ADVERTISE", "ANALYZE"], 
+  {
+    id: "EDITOR",
+    label: "Editor",
+    tasks: ["CREATE_CONTENT", "MODERATE", "ADVERTISE", "ANALYZE"],
     description: "Can edit the Page, send messages, post as the Page, create ads, and view reports.",
     tags: ["Create Content", "Moderate", "Advertise", "Analyze"]
   },
-  { 
-    id: "MODERATOR", 
-    label: "Moderator", 
-    tasks: ["MODERATE", "ADVERTISE", "ANALYZE"], 
+  {
+    id: "MODERATOR",
+    label: "Moderator",
+    tasks: ["MODERATE", "ADVERTISE", "ANALYZE"],
     description: "Can respond to and delete comments, send messages as the Page, create ads, and view reports.",
     tags: ["Moderate", "Advertise", "Analyze"]
   },
-  { 
-    id: "ADVERTISER", 
-    label: "Advertiser", 
-    tasks: ["ADVERTISE", "ANALYZE"], 
+  {
+    id: "ADVERTISER",
+    label: "Advertiser",
+    tasks: ["ADVERTISE", "ANALYZE"],
     description: "Can create ads for the Page and view insights.",
     tags: ["Advertise", "Analyze"]
   },
-  { 
-    id: "ANALYST", 
-    label: "Analyst", 
-    tasks: ["ANALYZE"], 
+  {
+    id: "ANALYST",
+    label: "Analyst",
+    tasks: ["ANALYZE"],
     description: "Can only view reports and insights.",
     tags: ["Analyze"]
   }
 ]
 
-export function AssignUserDialog({ 
-  business, 
-  pageId, 
-  pageName, 
-  adminToken, 
+export function AssignUserDialog({
+  business,
+  pageId,
+  pageName,
+  adminToken,
   allBusinessUsers = [],
   trigger,
   onSuccess,
@@ -97,7 +97,7 @@ export function AssignUserDialog({
   // Unify all user sources (ONLY Business and FB System Users)
   const unifiedUsers = useMemo(() => {
     const map = new Map<string, { id: string; name: string; email: string; type: string }>()
-    
+
     allBusinessUsers.forEach(u => {
       map.set(u.id, { id: u.id, name: u.name, email: u.email || "", type: "Business User" })
     })
@@ -109,13 +109,13 @@ export function AssignUserDialog({
     return Array.from(map.values()).filter(u => !existingUserIds.includes(u.id))
   }, [allBusinessUsers, business.system_users, existingUserIds])
 
-  const filteredUsers = unifiedUsers.filter(u => 
-    u.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredUsers = unifiedUsers.filter(u =>
+    u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     u.id.includes(searchQuery)
   )
 
   const toggleUser = (userId: string) => {
-    setSelectedUserIds((prev: string[]) => 
+    setSelectedUserIds((prev: string[]) =>
       prev.includes(userId) ? prev.filter((id: string) => id !== userId) : [...prev, userId]
     )
   }
@@ -125,7 +125,7 @@ export function AssignUserDialog({
       toast.error("Please Select At Least One User")
       return
     }
-    
+
     const role = PAGE_ROLES.find(r => r.id === selectedRoleId)
     if (!role) return
 
@@ -189,8 +189,8 @@ export function AssignUserDialog({
               </Label>
               <div className="relative">
                 <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-2.5 h-2.5 text-muted-foreground/40" />
-                <input 
-                  type="text" 
+                <input
+                  type="text"
                   placeholder="Find teammate or ID..."
                   className="h-6 pl-6 pr-3 text-[9px] bg-muted/30 border border-border/40 rounded-md outline-none focus:ring-1 focus:ring-primary/20 w-44 transition-all"
                   value={searchQuery}
@@ -206,7 +206,7 @@ export function AssignUserDialog({
                     {filteredUsers.map((user: { id: string; name: string; email: string; type: string }) => {
                       const isSelected = selectedUserIds.includes(user.id)
                       return (
-                        <div 
+                        <div
                           key={user.id}
                           className={cn(
                             "flex items-center justify-between p-2.5 px-4 hover:bg-muted/40 transition-colors cursor-pointer group select-none",
@@ -238,8 +238,8 @@ export function AssignUserDialog({
                           </div>
                           <div className={cn(
                             "w-4 h-4 rounded border flex items-center justify-center transition-all duration-200 transform",
-                            isSelected 
-                              ? "bg-primary border-primary scale-100 opacity-100 shadow-sm" 
+                            isSelected
+                              ? "bg-primary border-primary scale-100 opacity-100 shadow-sm"
                               : "border-border/60 group-hover:border-primary/40 scale-90 opacity-40 shadow-none"
                           )}>
                             {isSelected && <Check className="w-2.5 h-2.5 text-primary-foreground" strokeWidth={4} />}
@@ -266,12 +266,12 @@ export function AssignUserDialog({
               {PAGE_ROLES.map((role) => {
                 const isSelected = selectedRoleId === role.id
                 return (
-                  <div 
+                  <div
                     key={role.id}
                     className={cn(
                       "p-2.5 px-4 rounded-xl border transition-all cursor-pointer select-none flex items-center gap-3.5",
-                      isSelected 
-                        ? "border-primary bg-primary/[0.03] shadow-sm" 
+                      isSelected
+                        ? "border-primary bg-primary/[0.03] shadow-sm"
                         : "border-border/40 hover:border-primary/30 hover:bg-muted/10"
                     )}
                     onClick={() => setSelectedRoleId(role.id)}
@@ -308,15 +308,15 @@ export function AssignUserDialog({
         </div>
 
         <div className="p-5 bg-muted/10 border-t border-border/40 flex items-center justify-end gap-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setIsOpen(false)}
             className="text-[10px] h-8 font-semibold text-muted-foreground hover:text-foreground cursor-pointer"
           >
             Cancel
           </Button>
-          <Button 
+          <Button
             disabled={isSubmitting || selectedUserIds.length === 0}
             onClick={handleAssign}
             className={cn(

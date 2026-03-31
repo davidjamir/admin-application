@@ -2,13 +2,13 @@
 
 import React from "react"
 import { Badge } from "@/components/ui/badge"
-import { X } from "lucide-react"
+import { X, ChevronRight } from "lucide-react"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
-export const Section = ({ title, icon: Icon, children, count, action }: { title: string; icon: React.ElementType; children: React.ReactNode; count?: number; action?: React.ReactNode }) => (
-  <div className="space-y-3">
-    <div className="flex items-center justify-between border-b border-border/50 pb-2">
+export const Section = ({ title, icon: Icon, children, count, action, className }: { title: string; icon: React.ElementType; children: React.ReactNode; count?: number; action?: React.ReactNode; className?: string }) => (
+  <div className={cn("space-y-3", className, className?.includes("flex-1") && "flex flex-col min-h-0")}>
+    <div className="flex items-center justify-between border-b border-border/50 pb-2 shrink-0">
       <div className="flex items-center grow gap-2 overflow-hidden">
         <Icon className="w-4 h-4 text-primary/70 shrink-0" />
         <h4 className="text-sm font-normal tracking-tight truncate">{title}</h4>
@@ -22,7 +22,7 @@ export const Section = ({ title, icon: Icon, children, count, action }: { title:
         )}
       </div>
     </div>
-    <div className="grid gap-0">
+    <div className={cn("grid gap-0", className?.includes("flex-1") && "flex-1 flex flex-col min-h-0 overflow-hidden")}>
       {children}
     </div>
   </div>
@@ -79,7 +79,9 @@ export const Item = ({
   isID,
   isSelected,
   onClick,
-  imageUrl
+  imageUrl,
+  expandableContent,
+  isExpanded
 }: {
   label: React.ReactNode;
   value: string;
@@ -89,7 +91,9 @@ export const Item = ({
   isID?: boolean;
   isSelected?: boolean;
   onClick?: () => void;
-  imageUrl?: string
+  imageUrl?: string;
+  expandableContent?: React.ReactNode;
+  isExpanded?: boolean;
 }) => {
   const handleCopy = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -98,72 +102,87 @@ export const Item = ({
   }
 
   return (
-    <div
-      onClick={onClick}
-      className={cn(
-        "group flex items-center justify-between py-1.5 px-2 rounded-xl border transition-all duration-200 cursor-pointer",
-        isSelected
-          ? "bg-primary/10 border-primary/30 shadow-sm"
-          : "bg-card hover:bg-muted/50 border-border/50 hover:border-primary/20 hover:shadow-sm"
-      )}
-    >
-      <div className="flex items-center gap-3 overflow-hidden w-full">
-        {imageUrl && (
-          <div className="w-5 h-5 rounded-lg overflow-hidden border border-border/50 shrink-0">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={imageUrl} alt={typeof label === 'string' ? label : 'Avatar'} className="w-full h-full object-cover" />
-          </div>
+    <div className="flex flex-col w-full">
+      <div
+        onClick={onClick}
+        className={cn(
+          "group flex items-center justify-between py-1.5 px-2 rounded-xl border transition-all duration-200 cursor-pointer",
+          isSelected
+            ? "bg-primary/10 border-primary/30 shadow-sm"
+            : "bg-card hover:bg-muted/50 border-border/50 hover:border-primary/20 hover:shadow-sm",
+          isExpanded && "rounded-b-none border-b-primary/20 bg-primary/[0.03]"
         )}
-        <div className="space-y-0.5 overflow-hidden flex-1">
-          <p className={cn(
-            "text-xs font-semibold truncate",
-            isSelected ? "text-primary" : "text-foreground"
-          )}>{label}</p>
-          
-          <div className="flex flex-col gap-0.5">
-            {isID && (
-              <span
-                onClick={handleCopy}
-                className="text-[9px] text-muted-foreground/60 font-mono tracking-tight transition-colors cursor-pointer hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded -ml-1.5 w-fit truncate bg-muted/20"
-                title="Click to copy ID"
-              >
-                ID: {value}
-              </span>
-            )}
-            {!isID && (
-              <span className="text-[10px] text-muted-foreground/70 truncate">{value}</span>
-            )}
+      >
+        <div className="flex items-center gap-3 overflow-hidden w-full">
+          {imageUrl && (
+            <div className="w-5 h-5 rounded-lg overflow-hidden border border-border/50 shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={imageUrl} alt={typeof label === 'string' ? label : 'Avatar'} className="w-full h-full object-cover" />
+            </div>
+          )}
+          <div className="space-y-0.5 overflow-hidden flex-1">
+            <p className={cn(
+              "text-xs font-semibold truncate",
+              isSelected ? "text-primary" : "text-foreground"
+            )}>{label}</p>
             
-            {(subValue || extraSubValue) && (
-              <div className="flex flex-col gap-0.5">
-                {subValue && (
-                  <span className="text-[10px] text-muted-foreground truncate">
-                    {subValue}
+            <div className="flex flex-col gap-0.5">
+              <div className="flex items-center justify-between gap-2 overflow-hidden w-full">
+                {isID ? (
+                  <span
+                    onClick={handleCopy}
+                    className="text-[9px] text-muted-foreground/60 font-mono tracking-tight transition-colors cursor-pointer hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded -ml-1.5 w-fit truncate bg-muted/20"
+                    title="Click to copy ID"
+                  >
+                    ID: {value}
                   </span>
+                ) : (
+                  <span className="text-[10px] text-muted-foreground/70 truncate">{value}</span>
                 )}
-                {extraSubValue && (
-                  <span className="text-[10px] text-muted-foreground truncate">
+
+                {isID && extraSubValue && (
+                  <span className="text-[9px] text-muted-foreground/60 shrink-0 truncate max-w-[180px] italic">
                     {extraSubValue}
                   </span>
                 )}
               </div>
-            )}
+              
+              {subValue && (
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {subValue}
+                </span>
+              )}
+
+              {!isID && extraSubValue && (
+                <span className="text-[10px] text-muted-foreground truncate">
+                  {extraSubValue}
+                </span>
+              )}
+            </div>
           </div>
         </div>
+        <div className="flex items-center gap-1.5 shrink-0 ml-2">
+          {status && (
+            <Badge
+              variant={status === "Active" || status === "1" || status === "Current User" ? "outline" : "secondary"}
+              className={cn(
+                "text-[8px] h-4 font-normal capitalize",
+                (status === "Active" || status === "1" || status === "Current User") && "bg-green-600/10 text-green-600 border-green-600/20"
+              )}
+            >
+              {(status === "1" ? "active" : status || "").toLowerCase()}
+            </Badge>
+          )}
+          {expandableContent && (
+            <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground/40 transition-transform duration-200", isExpanded && "rotate-90")} />
+          )}
+        </div>
       </div>
-      <div className="flex items-center gap-1.5 shrink-0 ml-2">
-        {status && (
-          <Badge
-            variant={status === "Active" || status === "1" || status === "Current User" ? "outline" : "secondary"}
-            className={cn(
-              "text-[8px] h-4 font-normal capitalize",
-              (status === "Active" || status === "1" || status === "Current User") && "bg-green-600/10 text-green-600 border-green-600/20"
-            )}
-          >
-            {(status === "1" ? "active" : status || "").toLowerCase()}
-          </Badge>
-        )}
-      </div>
+      {expandableContent && isExpanded && (
+        <div className="mx-0 px-3 pb-3 pt-2 bg-primary/[0.03] border-x border-b border-primary/20 rounded-b-xl animate-in fade-in slide-in-from-top-1 duration-200">
+          {expandableContent}
+        </div>
+      )}
     </div>
   )
 }

@@ -1,45 +1,103 @@
 import { NextRequest, NextResponse } from "next/server"
 
-export async function POST(
+export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string, appId: string }> }
+  { params }: { params: Promise<{ id: string; appId: string }> }
 ) {
-  const { id, appId } = await params
   const adminToken = req.nextUrl.searchParams.get("token")
-  if (!adminToken) return NextResponse.json({ error: "Token is required" }, { status: 400 })
+  if (!adminToken) {
+    return NextResponse.json({ success: false, error: "Token is required" }, { status: 400 })
+  }
+
+  const { id: businessId, appId } = await params
 
   try {
-    const { userId, tasks, userType } = await req.json()
-    if (!userId) return NextResponse.json({ error: "userId is required" }, { status: 400 })
-
-    // Default tasks for apps
-    const appTasks = tasks || ["DEVELOP", "MANAGE", "ADVERTISE", "ANALYZE"]
+    // Approach 1: Direct edge /{appId}/assigned_users
+    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users?business=${businessId}&access_token=${adminToken}&fields=id,name,tasks,user_type`
     
-    // Prepare Graph API body
-    const body: { user: string; tasks: string[]; access_token: string; business?: string } = {
-      user: userId,
-      tasks: appTasks,
-      access_token: adminToken
+    console.log(`[app_assigned_users] GET: ${url.replace(adminToken, "TOKEN_HIDDEN")}`)
+    
+    const res = await fetch(url)
+    const data = await res.json()
+
+    if (res.ok && data.data && data.data.length > 0) {
+      const users = data.data.map((u: { id: string; name?: string; tasks?: string[]; user_type?: string }) => ({
+        id: u.id,
+        name: u.name || "Unknown User",
+        tasks: u.tasks || [],
+        user_type: u.user_type || "USER"
+      }))
+      return NextResponse.json({ success: true, data: users })
     }
 
-    // Per user specification: for system users, do not include 'business' parameter
-    if (userType !== 'system') {
-      body.business = id
+    // Fallback: Query via business/applications with expansion
+    const businessUrl = `https://graph.facebook.com/v25.0/${businessId}/applications?access_token=${adminToken}&fields=id,name,assigned_users{id,name,tasks,user_type}`
+    const bRes = await fetch(businessUrl)
+    const bData = await bRes.json()
+
+    if (bRes.ok && bData.data) {
+      const appEntry = bData.data.find((a: { id: string; assigned_users?: { data: { id: string; name?: string; tasks?: string[]; user_type?: string }[] } }) => String(a.id) === String(appId))
+      if (appEntry && appEntry.assigned_users && appEntry.assigned_users.data) {
+        const users = appEntry.assigned_users.data.map((u: { id: string; name?: string; tasks?: string[]; user_type?: string }) => ({
+          id: u.id,
+          name: u.name || "Unknown User",
+          tasks: u.tasks || [],
+          user_type: u.user_type || "USER"
+        }))
+        return NextResponse.json({ success: true, data: users })
+      }
     }
 
-    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users`
-    const fbRes = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body)
-    })
-
-    const data = await fbRes.json()
-    if (data.error) throw new Error(data.error.message)
-
-    return NextResponse.json({ success: true, data })
+    return NextResponse.json({ success: true, data: [] })
   } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Failed to assign user" }, { status: 500 })
+    console.error("[app_assigned_users] GET Failed:", error)
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 })
+  }
+}
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string; appId: string }> }
+) {
+  const adminToken = req.nextUrl.searchParams.get("token")
+  const { id: businessId, appId } = await params
+
+  try {
+    const { userIds, tasks } = await req.json()
+
+    if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
+      return NextResponse.json({ success: false, error: "userIds array is required" }, { status: 400 })
+    }
+
+    // Facebook requires a separate request for each user to assign to an app via the BM
+    const results = await Promise.all(
+      userIds.map(async (userId) => {
+        const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users`
+        const body = {
+          business: businessId,
+          user: userId,
+          tasks: JSON.stringify(tasks || ["ANALYZE"]),
+          access_token: adminToken
+        }
+
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(body)
+        })
+        return res.json()
+      })
+    )
+
+    const errors = results.filter(r => r.error)
+    if (errors.length > 0) {
+      return NextResponse.json({ success: false, error: errors[0].error.message, details: errors }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error("[app_assigned_users] POST Failed:", error)
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 })
   }
 }
 
@@ -47,20 +105,25 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string; appId: string }> }
 ) {
-  const { appId } = await params
   const adminToken = req.nextUrl.searchParams.get("token")
   const userId = req.nextUrl.searchParams.get("userId")
-  
-  if (!adminToken || !userId) return NextResponse.json({ error: "Token and userId are required" }, { status: 400 })
+  const { id: businessId, appId } = await params
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: "userId is required" }, { status: 400 })
+  }
 
   try {
-    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users?user=${userId}&access_token=${adminToken}`
-    const fbRes = await fetch(url, { method: "DELETE" })
-    const data = await fbRes.json()
+    const url = `https://graph.facebook.com/v25.0/${appId}/assigned_users?business=${businessId}&user=${userId}&access_token=${adminToken}`
+    const res = await fetch(url, { method: "DELETE" })
+    const data = await res.json()
 
-    if (data.error) throw new Error(data.error.message)
-    return NextResponse.json({ success: true, data })
-  } catch (error) {
-    return NextResponse.json({ success: false, error: error instanceof Error ? error.message : "Failed to unassign user" }, { status: 500 })
+    if (!res.ok || data.error) {
+      return NextResponse.json({ success: false, error: data.error?.message || "Failed to unassign" }, { status: 400 })
+    }
+
+    return NextResponse.json({ success: true })
+  } catch {
+    return NextResponse.json({ success: false, error: "Internal Server Error" }, { status: 500 })
   }
 }

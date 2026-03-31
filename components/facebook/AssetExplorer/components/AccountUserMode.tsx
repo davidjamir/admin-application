@@ -2,7 +2,7 @@
 
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Loader2, RefreshCcw, Copy, Search, CheckCircle2, AlertCircle, Pencil, Plus } from "lucide-react"
+import { Loader2, RefreshCcw, Copy, Search, CheckCircle2, AlertCircle, Pencil, Plus, ClipboardPaste } from "lucide-react"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
@@ -112,6 +112,21 @@ export function AccountUserMode({
     }
   }
 
+  const handlePasteAccessToken = async () => {
+    try {
+      const text = await navigator.clipboard.readText()
+      if (text) {
+        setManualToken(text.trim())
+        toast.success("Token pasted from clipboard")
+      } else {
+        toast.error("Clipboard is empty")
+      }
+    } catch (err) {
+      toast.error("Failed to read clipboard. Please paste manually.")
+      console.error("[Paste] Error:", err)
+    }
+  }
+
   const getPageRole = (tasks?: string[]) => {
     if (!tasks) return "Unknown"
     const allTasks = ["MODERATE", "MESSAGING", "ANALYZE", "ADVERTISE", "CREATE_CONTENT", "MANAGE"]
@@ -152,21 +167,33 @@ export function AccountUserMode({
     <div className="space-y-8 animate-in fade-in duration-500">
       {/* Top Token Bar */}
       <div className="flex items-center gap-3">
-        <div className="relative flex-1 group">
-          <input
-            type="text"
-            placeholder="EAASyCcEMf0sBRA1ahCTtzRh9CgNVFSxp4TeFl... (Access Token)"
-            className="w-full h-11 px-4 py-2 rounded-xl border border-border/60 bg-background/50 text-sm font-mono focus:ring-2 focus:ring-primary/20 hover:border-primary/40 transition-all outline-none pr-12"
-            value={manualToken}
-            onChange={(e) => setManualToken(e.target.value)}
-          />
-          <div className="absolute right-1 top-1">
+        <div className="relative flex-1 group flex items-center overflow-hidden rounded-xl border border-border/60 bg-background/50 hover:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+          <div className="w-11 h-11 bg-muted/40 flex items-center justify-center border-r border-border/40 shrink-0">
             <Button
               variant="ghost"
               size="icon"
-              className="h-9 w-9 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+              className="h-8 w-8 text-slate-700 hover:text-primary transition-colors cursor-pointer"
+              onClick={handlePasteAccessToken}
+              title="Paste from clipboard"
+            >
+              <ClipboardPaste className="h-4 w-4" />
+            </Button>
+          </div>
+          <input
+            type="text"
+            placeholder="EAASyCcEMf0sBRA1ahCTtzRh9CgNVFSxp4TeFl... (Access Token)"
+            className="flex-1 h-11 px-4 py-2 bg-transparent text-sm font-mono outline-none border-none"
+            value={manualToken}
+            onChange={(e) => setManualToken(e.target.value)}
+          />
+          <div className="w-11 h-11 bg-muted/40 flex items-center justify-center border-l border-border/40 shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-slate-700 hover:text-primary transition-colors cursor-pointer"
               onClick={() => handleCopyAccessToken(manualToken)}
               disabled={!manualToken}
+              title="Copy current token"
             >
               <Copy className="h-4 w-4" />
             </Button>

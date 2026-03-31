@@ -45,7 +45,7 @@ export async function GET(
       { method: "GET", relative_url: `v25.0/${businessId}/owned_apps?fields=${appFields}`, name: "owned_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/client_apps?fields=${appFields}`, name: "client_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/pending_client_apps?fields=${appFields}`, name: "pending_apps" },
-      { method: "GET", relative_url: `v25.0/${businessId}/business_asset_groups?fields=id,name,contained_pages{id,name}&limit=50`, name: "asset_groups" }
+      { method: "GET", relative_url: `v25.0/${businessId}/business_asset_groups?fields=id,name,contained_pages{id,name},contained_applications{id,name},contained_ad_accounts{id,name}&limit=50`, name: "asset_groups" }
     ]
 
     // Step 2: Execute Consolidated Batch
@@ -85,6 +85,7 @@ export async function GET(
       id: string;
       name: string;
       contained_pages?: { data: { id: string; name: string }[] };
+      contained_applications?: { data: { id: string; name: string; category?: string }[] };
     }
     const groups: AssetGroup[] = assetGroupsData.data || []
     const seenGroupPages = new Set()
@@ -94,6 +95,16 @@ export async function GET(
         seenGroupPages.add(p.id)
         return true
       }).map((p: { id: string; name: string }) => ({ ...p, source: 'asset_group' as const }))
+    )
+    
+    // Extract apps from nested asset groups
+    const seenGroupApps = new Set()
+    const assetGroupApps = groups.flatMap((g: AssetGroup) => 
+      (g.contained_applications?.data || []).filter((app: { id: string }) => {
+        if (seenGroupApps.has(app.id)) return false
+        seenGroupApps.add(app.id)
+        return true
+      }).map((app) => ({ ...app, source: 'asset_group' as const }))
     )
 
     // Step 5: Merge and Format Data
@@ -110,7 +121,15 @@ export async function GET(
     const ownedApps = (ownedAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'owned' as const }))
     const clientApps = (clientAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'client' as const }))
     const pendingApps = (pendingAppsData.data || []).map((app: { id: string }) => ({ ...app, source: 'pending' as const }))
-    const allApps = [...ownedApps, ...clientApps, ...pendingApps]
+
+    // De-duplicate apps using a Map
+    const appsMap = new Map<string, { id: string; name?: string; category?: string; source?: string; icon_url?: string }>()
+    assetGroupApps.forEach((app: { id: string }) => appsMap.set(app.id, app))
+    pendingApps.forEach((app: { id: string }) => appsMap.set(app.id, app))
+    clientApps.forEach((app: { id: string }) => appsMap.set(app.id, app))
+    ownedApps.forEach((app: { id: string }) => appsMap.set(app.id, app))
+
+    const allApps = Array.from(appsMap.values())
 
     const payload = {
       ...detailsData,

@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback, useMemo } from "react"
-import { Users2, ShieldCheck, User, Fingerprint, Package, Flag, Layers, Layout, LogOut, Loader2, Pencil, KeyRound, Zap, ChevronRight } from "lucide-react"
+import { Users2, ShieldCheck, User, Fingerprint, Package, Flag, Layers, Layout, LogOut, Loader2, Pencil, KeyRound, Zap, ChevronRight, Copy, Clock, Globe } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "sonner"
 import { BusinessRow, SystemUser } from "@/types/facebook"
@@ -25,6 +25,7 @@ interface TeamTabProps {
 export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, onRecrawl, adminToken }: TeamTabProps) => {
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null)
   const [selectedUserType, setSelectedUserType] = useState<'business' | 'system' | 'local' | null>(null)
+  const [expandedLocalUserId, setExpandedLocalUserId] = useState<string | null>(null)
   const [assignedGroups, setAssignedGroups] = useState<{ id: string; name: string; contained_pages?: { data: unknown[] }; contained_ad_accounts?: { data: unknown[] }; contained_applications?: { data: unknown[] } }[]>([])
   const [assignedPages, setAssignedPages] = useState<{ id: string; name: string }[]>([])
   const [isLoadingAssets, setIsLoadingAssets] = useState(false)
@@ -42,7 +43,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
   const [isRevokeOpen, setIsRevokeOpen] = useState(false)
   const [isRevoking, setIsRevoking] = useState(false)
 
-  // --- Account User (business): dùng user access token thông thường ---
+  // --- Account User (business): use standard user access token ---
   const fetchBusinessUserAssets = useCallback(async (userId: string) => {
     setIsLoadingAssets(true)
     try {
@@ -94,7 +95,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
     }
   }, [business.id, adminToken])
 
-  // Helper: gọi đúng fetch theo userType hiện tại — dùng thay cho fetchAssignedAssets cũ
+  // Helper: call the correct fetch based on current userType — replacing old fetchAssignedAssets
   const refreshAssets = useCallback((userId: string, userType: typeof selectedUserType) => {
     if (!userId || !userType) return
     if (userType === 'business') {
@@ -105,13 +106,16 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
   }, [fetchBusinessUserAssets, fetchSystemUserAssets])
 
   useEffect(() => {
-    if (!selectedUserId || !selectedUserType) {
-      setAssignedGroups([])
-      setAssignedPages([])
-      return
+    // Clear old data when selection changes
+    setAssignedGroups([])
+    setAssignedPages([])
+    
+    if (selectedUserId && selectedUserType) {
+      refreshAssets(selectedUserId, selectedUserType)
+    } else if (expandedLocalUserId) {
+      refreshAssets(expandedLocalUserId, 'local')
     }
-    refreshAssets(selectedUserId, selectedUserType)
-  }, [selectedUserId, selectedUserType, refreshAssets])
+  }, [selectedUserId, selectedUserType, expandedLocalUserId, refreshAssets])
 
   const handleAssignToGroup = async (groupId: string) => {
     if (!selectedUserId) return
@@ -345,7 +349,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
 
   return (
     <DetailContainer
-      isOpen={!!selectedUserId}
+      isOpen={!!selectedUserId && selectedUserType !== 'local'}
       onClose={() => { setSelectedUserId(null); setSelectedUserType(null); }}
       detailContent={
         unifiedUser ? (
@@ -633,7 +637,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
       }
     >
 
-      <Section title="Business Users" icon={Users2} count={allBusinessUsers.length}>
+      <Section title="Business Users" icon={Users2} count={allBusinessUsers.length > 0 ? allBusinessUsers.length : undefined}>
         {allBusinessUsers.map((user) => {
           const isUserYou = user.id === currentUser?.id
           const displayRoles = isUserYou && business.permitted_roles && business.permitted_roles.length > 0
@@ -655,7 +659,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
               }}
               label={user.name + (isUserYou ? " (You)" : "")}
               value={user.id}
-              extraSubValue={formatRole(displayRoles)}
+              subValue={formatRole(displayRoles)}
               isID
               status={undefined}
             />
@@ -667,7 +671,7 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
       <Section 
         title="System Users" 
         icon={ShieldCheck} 
-        count={business.system_users?.length}
+        count={business.system_users?.length ? business.system_users.length : undefined}
         action={
           <AddSystemUserDialog 
             businessId={business.id} 
@@ -700,27 +704,114 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
         {!business.system_users?.length && <p className="text-xs text-muted-foreground italic pl-2">No system users found via FB API</p>}
       </Section>
 
-      <Section title="System User (Local DB)" icon={ShieldCheck} count={filteredSystemUsers.length}>
-        {filteredSystemUsers.map((su) => (
-          <Item
-            key={su.id}
-            isSelected={selectedUserId === su.id}
-            onClick={() => {
-              if (selectedUserId === su.id) {
-                setSelectedUserId(null)
-                setSelectedUserType(null)
-              } else {
-                setSelectedUserId(su.id)
-                setSelectedUserType('local')
+      <Section title="System User (Local DB)" icon={ShieldCheck} count={filteredSystemUsers.length > 0 ? filteredSystemUsers.length : undefined}>
+        {filteredSystemUsers.map((su) => {
+          const isExpanded = expandedLocalUserId === su.id
+          return (
+            <Item
+              key={su.id}
+              isSelected={false}
+              isExpanded={isExpanded}
+              onClick={() => setExpandedLocalUserId(isExpanded ? null : su.id)}
+              label={su.name}
+              value={su.id}
+              subValue={[formatRole(su.role || "System User"), su.appName].filter(Boolean).join(" • ")}
+              status={su.status}
+              isID
+              expandableContent={
+                <div className="space-y-3 pt-2">
+                  {/* Compact Info Row */}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px]">
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Description:</span>
+                      <span className="font-medium">{su.description || "—"}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground text-nowrap">Business name:</span>
+                      <div className="flex items-center gap-1">
+                        <Globe className="w-3 h-3 text-primary/40" />
+                        <span className="font-medium">{su.businessName || "—"}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Role code:</span>
+                      <Badge variant="outline" className="h-4 px-1 text-[9px] font-mono border-muted-foreground/20">{su.roleCode || "—"}</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-muted-foreground">Status:</span>
+                      <span className={cn("font-bold", su.status === 'Active' ? "text-green-600" : "text-amber-600")}>{su.status}</span>
+                    </div>
+                  </div>
+
+                  {/* Token & Assets Row */}
+                  <div className="flex flex-wrap items-center gap-x-8 gap-y-3">
+                    {su.token && (
+                      <div className="flex items-center gap-3 min-w-0 max-w-[400px]">
+                        <span className="text-[10px] text-muted-foreground shrink-0">Access token:</span>
+                        <div className="flex items-center gap-2 overflow-hidden">
+                          <span className="font-mono text-[9px] text-muted-foreground/70 truncate bg-muted/20 px-1.5 py-0.5 rounded border border-border/40">
+                            {su.token.substring(0, 15)}...{su.token.substring(su.token.length - 10)}
+                          </span>
+                          <button 
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(su.token!)
+                              toast.success("Token copied")
+                            }}
+                            className="p-1 hover:bg-primary/10 rounded transition-colors text-primary shrink-0"
+                            title="Copy full token"
+                          >
+                            <Copy className="w-3 h-3" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex items-center gap-3">
+                      <span className="text-[10px] text-muted-foreground shrink-0 flex items-center gap-1">
+                        <Package className="w-3 h-3" /> Assigned assets:
+                      </span>
+                      {isLoadingAssets && expandedLocalUserId === su.id ? (
+                        <Loader2 className="w-3 h-3 text-primary animate-spin" />
+                      ) : (
+                        <div className="flex items-center gap-1.5">
+                          {assignedPages.length > 0 ? (
+                            <div className="flex items-center gap-1.5">
+                              {assignedPages.slice(0, 3).map(page => (
+                                <Badge key={page.id} variant="secondary" className="h-4 px-1.5 text-[9px] font-normal bg-blue-50 text-blue-600 border-blue-100">
+                                  {page.name}
+                                </Badge>
+                              ))}
+                              {assignedPages.length > 3 && (
+                                <span className="text-[9px] text-muted-foreground italic">
+                                  + {assignedPages.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          ) : (
+                            <span className="text-[9px] text-muted-foreground italic">None found</span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Timestamps Row */}
+                  <div className="pt-2 border-t border-border/20 flex items-center gap-6 text-[9px] text-muted-foreground/50">
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      <span>Created at: {su.createdAt ? new Date(su.createdAt).toLocaleDateString() : "—"}</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Clock className="w-2.5 h-2.5" />
+                      <span>Updated at: {su.updatedAt ? new Date(su.updatedAt).toLocaleDateString() : "—"}</span>
+                    </div>
+                  </div>
+                </div>
               }
-            }}
-            label={su.name}
-            value={su.id}
-            subValue={[formatRole(su.role || "System User"), su.appName].filter(Boolean).join(" • ")}
-            status={su.status}
-            isID
-          />
-        ))}
+            />
+          )
+        })}
         {!filteredSystemUsers.length && <p className="text-xs text-muted-foreground italic pl-2">No local system users found</p>}
       </Section>
       <Dialog open={isAssignGroupOpen} onOpenChange={(open) => !isAssigning && setIsAssignGroupOpen(open)}>

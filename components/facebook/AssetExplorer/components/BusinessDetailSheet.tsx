@@ -18,6 +18,7 @@ import {
   AppWindow,
   BadgeCheck,
   RefreshCw,
+  Handshake,
 } from "lucide-react"
 import { BusinessRow, SystemUser, FacebookPage } from "@/types/facebook"
 import {
@@ -35,6 +36,7 @@ import { PagesTab } from "./BusinessDetail/PagesTab"
 import { AssetsTab } from "./BusinessDetail/AssetsTab"
 import { ApplicationsTab } from "./BusinessDetail/ApplicationsTab"
 import { AdsManagerTab } from "./BusinessDetail/AdsManagerTab"
+import { AgencyPartnersTab } from "./BusinessDetail/AgencyPartnersTab"
 
 interface BusinessDetailSheetProps {
   business: BusinessRow | null
@@ -139,45 +141,52 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
                 <TabsList variant="line" className="justify-start gap-1 bg-transparent p-0 h-auto border-b-0 w-fit">
                   <TabsTrigger
                     value="overview"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <LayoutDashboard className="w-3.5 h-3.5" />
                     Overview
                   </TabsTrigger>
                   <TabsTrigger
                     value="team"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <Users2 className="w-3.5 h-3.5" />
                     Team
                   </TabsTrigger>
                   <TabsTrigger
                     value="pages"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <Flag className="w-3.5 h-3.5" />
                     Pages
                   </TabsTrigger>
                   <TabsTrigger
                     value="assets"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <Package className="w-3.5 h-3.5" />
                     Assets
                   </TabsTrigger>
                   <TabsTrigger
                     value="application"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <AppWindow className="w-3.5 h-3.5" />
                     Applications
                   </TabsTrigger>
                   <TabsTrigger
                     value="ads"
-                    className="flex items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
                   >
                     <Megaphone className="w-3.5 h-3.5" />
                     Ads Manager
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="agency"
+                    className="w-[120px] flex justify-center items-center gap-2 px-3 py-1.5 h-8 text-[11px] font-normal transition-all hover:bg-muted/30 data-active:bg-muted/60 data-active:text-foreground data-active:shadow-none border-none rounded-md cursor-pointer"
+                  >
+                    <Handshake className="w-3.5 h-3.5" />
+                    Agency Partners
                   </TabsTrigger>
                 </TabsList>
               </div>
@@ -185,7 +194,11 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
 
             <div className="flex-1 overflow-hidden relative">
               <TabsContent value="overview" className="m-0 focus-visible:outline-none h-full overflow-y-auto p-6 custom-scrollbar">
-                <OverviewTab business={business} allBusinessUsersCount={allBusinessUsers.length} key={`overview-${business.id}`} />
+                <OverviewTab
+                  business={business}
+                  allBusinessUsers={allBusinessUsers}
+                  key={`overview-${business.id}`}
+                />
               </TabsContent>
 
               <TabsContent value="team" className="m-0 focus-visible:outline-none h-full">
@@ -212,20 +225,30 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
               </TabsContent>
 
               <TabsContent value="assets" className="m-0 focus-visible:outline-none h-full">
-                <AssetsTab 
-                  business={business} 
-                  adminToken={adminToken} 
+                <AssetsTab
+                  business={business}
+                  adminToken={adminToken}
                   allBusinessUsers={allBusinessUsers}
-                  key={`assets-${business.id}`} 
+                  key={`assets-${business.id}`}
                 />
               </TabsContent>
 
               <TabsContent value="application" className="m-0 focus-visible:outline-none h-full">
-                <ApplicationsTab business={business} adminToken={adminToken} key={`apps-${business.id}`} />
+                <ApplicationsTab
+                  business={business}
+                  adminToken={adminToken}
+                  systemUsers={systemUsers}
+                  onRecrawl={onRecrawl}
+                  key={`apps-${business.id}`}
+                />
               </TabsContent>
 
               <TabsContent value="ads" className="m-0 focus-visible:outline-none h-full">
                 <AdsManagerTab business={business} key={`ads-${business.id}`} />
+              </TabsContent>
+
+              <TabsContent value="agency" className="m-0 focus-visible:outline-none h-full">
+                <AgencyPartnersTab key={`agency-${business.id}`} />
               </TabsContent>
             </div>
           </Tabs>
