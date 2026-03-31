@@ -385,9 +385,16 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
                       ID: {unifiedUser.id}
                     </div>
                     {unifiedUser.email && (
-                      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70 italic lowercase">
+                      <div 
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground/70 italic hover:text-primary transition-colors cursor-pointer w-fit"
+                        onClick={() => {
+                          navigator.clipboard.writeText(unifiedUser.email!)
+                          toast.success("Email Copied")
+                        }}
+                        title="Click to copy email"
+                      >
                         <User className="w-3 h-3" />
-                        {unifiedUser.email}
+                        Email: {unifiedUser.email}
                       </div>
                     )}
                   </div>
@@ -648,7 +655,6 @@ export const TeamTab = ({ business, systemUsers, currentUser, allBusinessUsers, 
               }}
               label={user.name + (isUserYou ? " (You)" : "")}
               value={user.id}
-              subValue={user.email}
               extraSubValue={formatRole(displayRoles)}
               isID
               status={undefined}

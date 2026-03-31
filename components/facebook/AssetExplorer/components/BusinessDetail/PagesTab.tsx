@@ -12,7 +12,7 @@ import {
   DialogDescription, 
   DialogFooter 
 } from "@/components/ui/dialog"
-import { BusinessRow, FacebookPage, SystemUser } from "@/types/facebook"
+import { BusinessRow, FacebookPage } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
 import { AddPageDialog } from "./AddPageDialog"
 import { AssignUserDialog } from "./AssignUserDialog"
@@ -25,7 +25,6 @@ interface PagesTabProps {
   adminToken: string
   onRecrawl?: () => void
   standalonePages?: FacebookPage[]
-  systemUsers?: SystemUser[]
   allBusinessUsers?: { id: string; name: string; email?: string; role?: string }[]
 }
 
@@ -34,7 +33,6 @@ export const PagesTab = ({
   adminToken, 
   onRecrawl, 
   standalonePages = [],
-  systemUsers = [],
   allBusinessUsers = []
 }: PagesTabProps) => {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
@@ -181,8 +179,17 @@ export const PagesTab = ({
                   <Flag className="w-8 h-8 text-blue-600" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-lg font-medium tracking-tight">{selectedPage.name}</h3>
-                  <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-medium tracking-tight leading-none">{selectedPage.name}</h3>
+                  <div 
+                    className="flex items-center gap-1 text-[10px] text-muted-foreground/60 font-mono mt-1 hover:text-primary transition-colors cursor-pointer bg-muted/30 px-2 py-0.5 rounded-md w-fit group/id"
+                    onClick={() => {
+                      navigator.clipboard.writeText(selectedPage.id)
+                      toast.success("Page ID Copied")
+                    }}
+                  >
+                    ID: {selectedPage.id}
+                  </div>
+                  <div className="flex items-center gap-2 pt-1">
                     <Badge variant="outline" className="text-[10px] font-normal h-5 border-blue-200 bg-blue-50 text-blue-600 capitalize">
                       {selectedPage.source === "asset_group" ? "Asset Group Page" : "Business Page"}
                     </Badge>
@@ -232,7 +239,6 @@ export const PagesTab = ({
                       pageId={selectedPage.id}
                       pageName={selectedPage.name || "This Page"}
                       adminToken={adminToken}
-                      systemUsers={systemUsers}
                       allBusinessUsers={allBusinessUsers}
                       onSuccess={() => fetchAssignedUsers(selectedPage.id)}
                       existingUserIds={assignedUsers.map(u => u.id)}
@@ -290,7 +296,6 @@ export const PagesTab = ({
                           pageId={selectedPage.id}
                           pageName={selectedPage.name || "This Page"}
                           adminToken={adminToken}
-                          systemUsers={systemUsers}
                           allBusinessUsers={allBusinessUsers}
                           onSuccess={() => fetchAssignedUsers(selectedPage.id)}
                           existingUserIds={assignedUsers.map(u => u.id)}
@@ -344,7 +349,7 @@ export const PagesTab = ({
                                         </Badge>
                                       </div>
                                       <div 
-                                        className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-mono tracking-tighter mt-1 bg-muted/30 px-1.5 py-0.5 rounded w-fit hover:text-primary transition-colors cursor-copy"
+                                        className="flex items-center gap-1 text-[9px] text-muted-foreground/60 font-mono tracking-tighter mt-1 bg-muted/30 px-1.5 py-0.5 rounded w-fit hover:text-primary transition-colors cursor-pointer"
                                         onClick={(e) => {
                                           e.stopPropagation()
                                           navigator.clipboard.writeText(user.id)

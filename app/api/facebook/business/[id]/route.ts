@@ -33,7 +33,7 @@ export async function GET(
 
     const appFields = "id,name,link,category"
     const pageFields = "id,name,category,access_token"
-    const bmFields = 'id,name,verification_status,permitted_roles,is_promotable,sharing_eligibility_status,can_create_ad_accounts,created_time,primary_page,timezone_id,vertical,extendedcredits,owned_ad_accounts.limit(100){id,name,account_status,currency},adspixels.limit(100){id,name},whatsapp_business_accounts.limit(100){id,name,status},business_users.limit(100){id,name,email,role}';
+    const bmFields = 'id,name,verification_status,permitted_roles,is_promotable,sharing_eligibility_status,can_create_ad_accounts,created_time,primary_page,timezone_id,vertical,extendedcredits,owned_ad_accounts.limit(100){id,name,account_status,currency},adspixels.limit(100){id,name},whatsapp_business_accounts.limit(100){id,name,status}';
 
     // Step 1: Prepare Batch Requests
     const batchRequests: { method: string; relative_url: string; name?: string }[] = [
@@ -41,7 +41,7 @@ export async function GET(
       { method: "GET", relative_url: `v25.0/${businessId}/owned_pages?fields=${pageFields}&limit=${LIMIT}`, name: "owned_pages" },
       { method: "GET", relative_url: `v25.0/${businessId}/client_pages?fields=${pageFields}&limit=${LIMIT}`, name: "client_pages" },
       { method: "GET", relative_url: `v25.0/${businessId}/system_users?fields=id,name,role,email`, name: "system_users" },
-      { method: "GET", relative_url: `v25.0/me?fields=id,name,email`, name: "me" },
+      { method: "GET", relative_url: `v25.0/${businessId}/business_users?fields=id,name,email,role,status&limit=250`, name: "business_users" },
       { method: "GET", relative_url: `v25.0/${businessId}/owned_apps?fields=${appFields}`, name: "owned_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/client_apps?fields=${appFields}`, name: "client_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/pending_client_apps?fields=${appFields}`, name: "pending_apps" },
@@ -74,7 +74,7 @@ export async function GET(
     const ownedData = parse(results[1])
     const clientData = parse(results[2])
     const systemUsersData = parse(results[3])
-    const meData = results[4]?.code === 200 ? JSON.parse(results[4].body) : { id: "", name: "Current User" }
+    const businessUsersData = parse(results[4])
     const ownedAppsData = parse(results[5])
     const clientAppsData = parse(results[6])
     const pendingAppsData = parse(results[7])
@@ -115,8 +115,9 @@ export async function GET(
     const payload = {
       ...detailsData,
       pages: finalPages,
+      business_users: businessUsersData, // Result from Batch Request (results[4])
       system_users: systemUsersData.data || [],
-      currentUser: meData,
+      currentUser: { id: "", name: "" },
       apps: allApps,
       business_asset_groups: { data: groups },
       fetchedAt: Date.now()

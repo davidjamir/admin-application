@@ -12,7 +12,8 @@ export async function GET(
   const { id: businessId, pageId } = await params
 
   try {
-    // We query both owned_pages and client_pages to find the specific page through the Business node.
+    // User recommended endpoint: /{pageId}/assigned_users?business={businessId}
+    // This is the most efficient and correct way to get assignments for a single page in a BM context.
     const url = `https://graph.facebook.com/v25.0/${pageId}/assigned_users?business=${businessId}&access_token=${adminToken}&fields=id,name,tasks,user_type`
     
     console.log(`[assigned_users] GET URL: ${url.replace(adminToken, "TOKEN_HIDDEN")}`)
@@ -29,8 +30,10 @@ export async function GET(
       }, { status: res.status })
     }
 
+    const assignments = data.data || []
+
     // Standardize the response data
-    const users = (data.data || []).map((u: { id: string; name?: string; tasks?: string[]; user_type?: string }) => ({
+    const users = assignments.map((u: { id: string; name?: string; tasks?: string[]; user_type?: string }) => ({
       id: u.id,
       name: u.name || "Unknown User",
       tasks: u.tasks || [],

@@ -127,7 +127,7 @@ export const Item = ({
                 className="text-[9px] text-muted-foreground/60 font-mono tracking-tight transition-colors cursor-pointer hover:text-primary hover:bg-primary/5 px-1.5 py-0.5 rounded -ml-1.5 w-fit truncate bg-muted/20"
                 title="Click to copy ID"
               >
-                {value}
+                ID: {value}
               </span>
             )}
             {!isID && (

@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useMemo } from "react"
+import React, { useState, useMemo, useEffect } from "react"
 import { 
   Users2, 
   Loader2, 
@@ -18,14 +18,13 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
-import { BusinessRow, SystemUser } from "@/types/facebook"
+import { BusinessRow } from "@/types/facebook"
 
 interface AssignUserDialogProps {
   business: BusinessRow
   pageId: string
   pageName: string
   adminToken: string
-  systemUsers?: SystemUser[]
   allBusinessUsers?: { id: string; name: string; email?: string; role?: string }[]
   trigger?: React.ReactNode
   onSuccess?: () => void
@@ -85,6 +84,15 @@ export function AssignUserDialog({
   const [selectedUserIds, setSelectedUserIds] = useState<string[]>([])
   const [selectedRoleId, setSelectedRoleId] = useState<string>("ADMIN")
   const [searchQuery, setSearchQuery] = useState("")
+
+  // Reset state when dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      setSelectedUserIds([])
+      setSearchQuery("")
+      setSelectedRoleId("ADMIN")
+    }
+  }, [isOpen])
 
   // Unify all user sources (ONLY Business and FB System Users)
   const unifiedUsers = useMemo(() => {

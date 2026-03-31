@@ -51,19 +51,8 @@ interface BusinessDetailSheetProps {
 
 export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, currentUser, lastSync, onRecrawl, isRecrawling, adminToken, standalonePages = [] }: BusinessDetailSheetProps) {
   const allBusinessUsers = React.useMemo(() => {
-    if (!business) return []
-    const list = [...(business.business_users?.data || [])]
-    const isCurrentUserInList = list.some(u => u.id === currentUser?.id)
-    if (currentUser && !isCurrentUserInList) {
-      list.unshift({
-        id: currentUser.id,
-        name: currentUser.name,
-        email: currentUser.email || "",
-        role: "Current Agent"
-      })
-    }
-    return list
-  }, [business, currentUser])
+    return business?.business_users?.data || []
+  }, [business])
 
   if (!business) return null
 
@@ -217,7 +206,6 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
                   adminToken={adminToken}
                   onRecrawl={onRecrawl}
                   standalonePages={standalonePages}
-                  systemUsers={systemUsers}
                   allBusinessUsers={allBusinessUsers}
                   key={`pages-${business.id}`}
                 />
