@@ -1,9 +1,9 @@
 import React from "react"
 import { CalendarClock, Clock, Copy, Facebook, History, LayoutDashboard, RefreshCcw, X } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import { PageDetailSheetProps } from "./types"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
   selectedPage, onClose, details, detailsLoading, activeTab, setActiveTab, showToken, setShowToken, getHealthColor, setDetails
@@ -137,10 +137,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
 
         <div className="flex-1 overflow-y-auto p-6">
           {detailsLoading ? (
-            <div className="space-y-4">
-              <Skeleton className="h-24 w-full rounded-xl" />
-              <Skeleton className="h-40 w-full rounded-xl" />
-            </div>
+            <LoadingScreen fullScreen={false} message="Analyzing performance metrics" />
           ) : details ? (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h3 className="font-semibold mb-3 flex items-center gap-2">

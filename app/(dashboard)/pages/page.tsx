@@ -5,6 +5,7 @@ import { PageHeader } from "./components/PageHeader"
 import { PageStats } from "./components/PageStats"
 import { PageGrid } from "./components/PageGrid"
 import { PageDetailSheet } from "./components/PageDetailSheet"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export default function PagesManagementPage() {
   const {
@@ -14,6 +15,10 @@ export default function PagesManagementPage() {
     activeTab, setActiveTab, showToken, setShowToken,
     handleRefresh, handlePageClick, formatExactRelative, getHealthColor
   } = useFacebookPages()
+
+  if (loading) {
+    return <LoadingScreen />
+  }
 
   return (
     <div className="flex flex-col gap-6 relative min-h-[600px]">
@@ -28,11 +33,9 @@ export default function PagesManagementPage() {
       <PageStats 
         fetchedAt={fetchedAt}
         handleRefresh={handleRefresh}
-        loading={loading}
       />
 
       <PageGrid 
-        loading={loading}
         data={data}
         selectedPageId={selectedPage?._id.$oid}
         handlePageClick={handlePageClick}

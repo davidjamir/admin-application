@@ -8,7 +8,6 @@ export interface WebsiteHeaderProps {
 }
 
 export interface WebsiteStatsProps {
-    loading: boolean
     tab: TabKey
     setTab: (tab: TabKey) => void
     setSearch: (val: string) => void
@@ -16,7 +15,6 @@ export interface WebsiteStatsProps {
 }
 
 export interface OriginStatsChartProps {
-    loading: boolean
     originHistory: Record<string, number | string>[]
     allOriginNames: string[]
     originFilter: string
@@ -28,7 +26,6 @@ export interface NavigationTabsProps {
     setTab: (tab: TabKey) => void
     setSearch: (val: string) => void
     counts: { blogs: number; wraps: number; quotas: number }
-    loading: boolean
 }
 
 export interface TabFiltersProps {
@@ -60,21 +57,18 @@ export interface SortableTHProps {
 }
 
 export interface BlogsTableProps {
-    loading: boolean
     blogs: Blog[]
     selectedId?: string
     onSelect: (item: SelectedItem) => void
 }
 
 export interface WrapsTableProps {
-    loading: boolean
     wraps: Wrap[]
     selectedId?: string
     onSelect: (item: SelectedItem) => void
 }
 
 export interface QuotasTableProps {
-    loading: boolean
     quotas: QuotaGroup[]
     selectedId?: string
     onSelect: (item: SelectedItem) => void

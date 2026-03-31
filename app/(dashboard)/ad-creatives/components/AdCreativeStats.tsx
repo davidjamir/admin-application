@@ -2,7 +2,7 @@ import React from "react"
 import { AdCreativeStatsProps } from "./types"
 
 export const AdCreativeStats: React.FC<AdCreativeStatsProps> = ({
-  items, loading
+  items
 }) => {
   const stats = [
     { label: "Total",    value: items.length,                                color: "hsl(217,91%,50%)" },
@@ -16,7 +16,7 @@ export const AdCreativeStats: React.FC<AdCreativeStatsProps> = ({
       {stats.map(s => (
         <div key={s.label} className="flex items-center gap-3 p-3.5 rounded-xl border bg-card shadow-sm">
           <div className="text-2xl font-bold tabular-nums" style={{ color: s.color }}>
-            {loading ? "—" : s.value}
+            {s.value}
           </div>
           <div className="text-xs text-muted-foreground uppercase tracking-wider leading-tight">{s.label}</div>
         </div>

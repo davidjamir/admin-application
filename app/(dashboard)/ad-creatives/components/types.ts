@@ -9,7 +9,6 @@ export interface AdCreativeHeaderProps {
 
 export interface AdCreativeStatsProps {
   items: AdItem[]
-  loading: boolean
 }
 
 export interface AdCreativeFiltersProps {
@@ -26,7 +25,6 @@ export interface AdCreativeFiltersProps {
 }
 
 export interface AdCreativeTableProps {
-  loading: boolean
   sorted: AdItem[]
   selectedId: string | undefined
   sortKey: SortKey

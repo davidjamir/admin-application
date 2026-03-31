@@ -12,6 +12,7 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
     const [selectedPageIds, setSelectedPageIds] = useState<string[]>([])
     const [saving, setSaving] = useState(false)
     const [loadingPages, setLoadingPages] = useState(false)
+    const [loadingUsers, setLoadingUsers] = useState(false)
 
     const bmFilterOptions = useMemo(() => {
         const seen = new Set<string>()
@@ -59,6 +60,7 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
 
     const loadSystemUsers = useCallback(async (password: string) => {
         try {
+            setLoadingUsers(true)
             const res = await fetch("/api/database/systemUsers/secure-list", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -70,6 +72,8 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
             setSystemUsers(allUsers.filter(u => u.status !== "Disabled"))
         } catch {
             toast.error("Identity sync failed")
+        } finally {
+            setLoadingUsers(false)
         }
     }, [])
 
@@ -175,7 +179,7 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
     return {
         status, systemUsers, selectedBmFilter, setSelectedBmFilter,
         selectedSystemUserId, setSelectedSystemUserId, pages, setPages,
-        selectedPageIds, setSelectedPageIds, saving, loadingPages,
+        selectedPageIds, setSelectedPageIds, saving, loadingPages, loadingUsers,
         bmFilterOptions, filteredSystemUsers, selectedUser, activePart,
         handlePageSave, handleSelectThird
     }

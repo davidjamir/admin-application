@@ -112,8 +112,8 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
                   <ShieldCheck className="size-6" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none ml-1">
-                  <span className="font-bold text-lg tracking-tight">7 Forge</span>
-                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Systems Inc</span>
+                  <span className="font-bold text-lg tracking-tight">7 Forge Inc</span>
+                  <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Admin System</span>
                 </div>
               </Link>
             </SidebarMenuButton>

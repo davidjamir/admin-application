@@ -11,11 +11,9 @@ export interface PageHeaderProps {
 export interface PageStatsProps {
   fetchedAt: number | null
   handleRefresh: () => Promise<void>
-  loading: boolean
 }
 
 export interface PageGridProps {
-  loading: boolean
   data: MongoPageData[]
   selectedPageId: string | undefined
   handlePageClick: (page: MongoPageData) => void

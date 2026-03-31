@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react"
 import { BookOpen, ChevronsUpDown, ChevronUp, ChevronDown, CheckCircle2, PauseCircle } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Blog } from "@/hooks/useWebsiteManager"
 import { SortableTH } from "./SortableTH"
 import { BlogsTableProps } from "./types"
@@ -12,7 +11,7 @@ const fmtFull = (ms: number) =>
         timeStyle: "medium"
     })
 
-export const BlogsTable: React.FC<BlogsTableProps> = ({ loading, blogs, selectedId, onSelect }) => {
+export const BlogsTable: React.FC<BlogsTableProps> = ({ blogs, selectedId, onSelect }) => {
     const [sortKey, setSortKey] = useState("blogDns")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -35,7 +34,7 @@ export const BlogsTable: React.FC<BlogsTableProps> = ({ loading, blogs, selected
     }), [blogs, sortKey, sortDir])
 
     return (
-        <div className="rounded-xl border border-border/40 bg-card overflow-x-auto shadow-sm mt-3">
+        <div className="rounded-lg border border-border bg-card overflow-x-auto mt-3">
             <table className="w-full text-sm table-fixed min-w-[1120px]">
                 <thead><tr className="border-b bg-muted/40 text-black">
                     <th className="px-4 py-3 font-semibold text-left w-[50px]">#</th>
@@ -47,9 +46,7 @@ export const BlogsTable: React.FC<BlogsTableProps> = ({ loading, blogs, selected
                     <SortableTH label="Updated" col="updatedAt" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[200px]" />
                 </tr></thead>
                 <tbody>
-                    {loading ? Array.from({ length: 5 }).map((_, i) => (
-                        <tr key={i} className="border-b">{Array.from({ length: 6 }).map((_, j) => <td key={j} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td>)}</tr>
-                    )) : sorted.length === 0 ? (
+                    {sorted.length === 0 ? (
                         <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground"><BookOpen className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No blogs found</p></td></tr>
                     ) : sorted.map((b, i) => (
                         <tr key={b._id} onClick={() => onSelect({ tab: "blogs", data: b })}

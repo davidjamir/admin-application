@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import { Flag, Zap, Users2, ShieldCheck, ChevronRight, ChevronDown, Package, Loader2, LogOut, AlertCircle, Plus } from "lucide-react"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import {
@@ -314,9 +315,8 @@ export const PagesTab = ({
 
                   <div className="border border-border/40 rounded-xl overflow-hidden bg-muted/5">
                     {isLoadingUsers ? (
-                      <div className="p-12 flex flex-col items-center justify-center space-y-3">
-                        <Loader2 className="w-6 h-6 text-primary animate-spin" />
-                        <p className="text-[10px] text-muted-foreground animate-pulse font-medium">Loading Assigned People (via FB Assigned Users API)...</p>
+                      <div className="py-2">
+                        <LoadingScreen fullScreen={false} message="Fetching assigned people" />
                       </div>
                     ) : (
                       <div className="divide-y divide-border/10">

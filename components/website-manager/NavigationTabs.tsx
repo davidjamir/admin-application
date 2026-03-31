@@ -1,7 +1,7 @@
 import React from "react"
 import { NavigationTabsProps } from "./types"
 
-export const NavigationTabs: React.FC<NavigationTabsProps> = ({ tab, setTab, setSearch, counts, loading }) => {
+export const NavigationTabs: React.FC<NavigationTabsProps> = ({ tab, setTab, setSearch, counts }) => {
     const tabs = [
         { key: "blogs", label: "Blogs" },
         { key: "wraps", label: "Wraps" },
@@ -18,7 +18,7 @@ export const NavigationTabs: React.FC<NavigationTabsProps> = ({ tab, setTab, set
                 >
                     {label}
                     <span className="ml-2 text-xs bg-muted px-1.5 py-0.5 rounded-full">
-                        {loading ? "…" : counts[key]}
+                        {counts[key]}
                     </span>
                 </button>
             ))}

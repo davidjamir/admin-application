@@ -3,6 +3,7 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, RefreshCcw, Copy, Search, CheckCircle2, AlertCircle, Pencil, Plus, ClipboardPaste } from "lucide-react"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
@@ -234,12 +235,9 @@ export function AccountUserMode({
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="py-20 text-center border-none">
-                    <div className="flex flex-col items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-green-600/20" />
-                      <p className="mt-4 text-[10px] font-normal tracking-widest text-black/20 capitalize">Refreshing assets...</p>
-                    </div>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableCell colSpan={7} className="py-0 text-center border-none">
+                    <LoadingScreen fullScreen={false} message="Refreshing assets" />
                   </TableCell>
                 </TableRow>
               ) : businessRows.length > 0 ? (
@@ -476,12 +474,9 @@ export function AccountUserMode({
             </TableHeader>
             <TableBody>
               {loading ? (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={7} className="py-20 text-center border-none">
-                    <div className="flex flex-col items-center justify-center">
-                      <Loader2 className="w-8 h-8 animate-spin text-green-600/20" />
-                      <p className="mt-4 text-[10px] font-normal tracking-widest text-black/20 capitalize">Discovering pages...</p>
-                    </div>
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableCell colSpan={7} className="py-0 text-center border-none">
+                    <LoadingScreen fullScreen={false} message="Discovering pages" />
                   </TableCell>
                 </TableRow>
               ) : standalonePages.length > 0 ? (

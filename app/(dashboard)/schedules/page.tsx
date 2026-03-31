@@ -4,6 +4,7 @@ import { Database, Newspaper, Share2 } from "lucide-react"
 import { useQueues } from "@/hooks/useQueues"
 import { ScheduleHeader } from "./components/ScheduleHeader"
 import { QueueSection } from "./components/QueueSection"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export default function SchedulesPage() {
   const {
@@ -15,6 +16,10 @@ export default function SchedulesPage() {
     fetchData,
     handleCopyId
   } = useQueues()
+
+  if (loading) {
+    return <LoadingScreen />
+  }
 
   return (
     <div className="flex flex-col gap-8 h-[calc(100vh-100px)] overflow-hidden">
@@ -32,7 +37,6 @@ export default function SchedulesPage() {
           title="Crawl Queue"
           items={data?.crawlQueue}
           stats={data?.stats?.crawl}
-          loading={loading}
           icon={<Database className="size-4 text-indigo-500" />}
           onCopy={handleCopyId}
           type="crawl"
@@ -43,7 +47,6 @@ export default function SchedulesPage() {
           title="News Queue"
           items={data?.newsQueue}
           stats={data?.stats?.news}
-          loading={loading}
           icon={<Newspaper className="size-4 text-emerald-500" />}
           onCopy={handleCopyId}
           type="news"
@@ -54,7 +57,6 @@ export default function SchedulesPage() {
           title="Social Queue"
           items={data?.socialQueue}
           stats={data?.stats?.social}
-          loading={loading}
           icon={<Share2 className="size-4 text-amber-500" />}
           onCopy={handleCopyId}
           type="social"

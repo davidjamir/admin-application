@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react"
 import { Link2, ChevronsUpDown, ChevronUp, ChevronDown } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { Wrap } from "@/hooks/useWebsiteManager"
 import { SortableTH } from "./SortableTH"
 import { WrapsTableProps } from "./types"
@@ -12,7 +11,7 @@ const fmtFull = (ms: number) =>
         timeStyle: "medium"
     })
 
-export const WrapsTable: React.FC<WrapsTableProps> = ({ loading, wraps, selectedId, onSelect }) => {
+export const WrapsTable: React.FC<WrapsTableProps> = ({ wraps, selectedId, onSelect }) => {
     const [sortKey, setSortKey] = useState("wrap_host")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -35,7 +34,7 @@ export const WrapsTable: React.FC<WrapsTableProps> = ({ loading, wraps, selected
     }), [wraps, sortKey, sortDir])
 
     return (
-        <div className="rounded-xl border border-border/40 bg-card overflow-x-auto shadow-sm mt-3">
+        <div className="rounded-lg border border-border bg-card overflow-x-auto mt-3">
             <table className="w-full text-sm table-fixed min-w-[1150px]">
                 <thead><tr className="border-b bg-muted/40 text-black">
                     <th className="px-4 py-3 font-semibold text-left w-[50px]">#</th>
@@ -45,9 +44,7 @@ export const WrapsTable: React.FC<WrapsTableProps> = ({ loading, wraps, selected
                     <SortableTH label="Updated" col="updatedAt" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[250px]" />
                 </tr></thead>
                 <tbody>
-                    {loading ? Array.from({ length: 5 }).map((_, i) => (
-                        <tr key={i} className="border-b">{Array.from({ length: 4 }).map((_, j) => <td key={j} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td>)}</tr>
-                    )) : sorted.length === 0 ? (
+                    {sorted.length === 0 ? (
                         <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground"><Link2 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No wraps found</p></td></tr>
                     ) : sorted.map((w, i) => (
                         <tr key={w._id} onClick={() => onSelect({ tab: "wraps", data: w })}

@@ -2,7 +2,7 @@ import React from "react"
 import { BookOpen, Link2, BarChart3 } from "lucide-react"
 import { WebsiteStatsProps } from "./types"
 
-export const WebsiteStats: React.FC<WebsiteStatsProps> = ({ loading, tab, setTab, setSearch, counts }) => {
+export const WebsiteStats: React.FC<WebsiteStatsProps> = ({ tab, setTab, setSearch, counts }) => {
     const tabs = [
         { key: "blogs", label: "Blogs", icon: BookOpen, color: "hsl(217,91%,50%)" },
         { key: "wraps", label: "Wraps", icon: Link2, color: "hsl(142,71%,40%)" },
@@ -22,7 +22,7 @@ export const WebsiteStats: React.FC<WebsiteStatsProps> = ({ loading, tab, setTab
                     </div>
                     <div>
                         <div className="text-xl font-bold tabular-nums" style={{ color }}>
-                        {loading ? "—" : counts[key]}
+                        {counts[key]}
                         </div>
                         <div className="text-xs text-muted-foreground uppercase tracking-wider">{label}</div>
                     </div>

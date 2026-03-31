@@ -2,9 +2,10 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Loader2, Copy, RefreshCcw, Trash2, Pencil } from "lucide-react"
+import { Copy, RefreshCcw, Trash2, Pencil } from "lucide-react"
 import { SystemUser, FacebookPage } from "@/types/facebook"
 import { EmptyState } from "./EmptyState"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 interface SystemUserModeProps {
   loading: boolean
@@ -209,12 +210,9 @@ export function SystemUserMode({
               </TableHeader>
               <TableBody>
                   {loading ? (
-                      <TableRow className="hover:bg-transparent">
-                          <TableCell colSpan={6} className="py-20 text-center border-none">
-                              <div className="flex flex-col items-center justify-center">
-                                <Loader2 className="w-10 h-10 animate-spin text-green-600/20" />
-                                <p className="mt-4 text-[10px] font-normal tracking-widest text-black/20 capitalize">Establishing identity link...</p>
-                              </div>
+                      <TableRow className="hover:bg-transparent border-none">
+                          <TableCell colSpan={6} className="py-0 text-center border-none">
+                            <LoadingScreen fullScreen={false} />
                           </TableCell>
                       </TableRow>
                   ) : systemUserPages.length === 0 ? (

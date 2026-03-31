@@ -7,6 +7,7 @@ import { AdCreativeFilters } from "./components/AdCreativeFilters"
 import { AdCreativeTable } from "./components/AdCreativeTable"
 import { AdCreativeDetailPanel } from "./components/AdCreativeDetailPanel"
 import { AdCreativeAddPanel } from "./components/AdCreativeAddPanel"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export default function AdCreativesPage() {
   const {
@@ -19,6 +20,10 @@ export default function AdCreativesPage() {
     sources, domainsInUI, sorted,
     fetchData, handlePageSave, handleAddSubmit, handleDelete
   } = useAdCreatives()
+
+  if (loading) {
+    return <LoadingScreen />
+  }
 
   const panelOpen = !!selected || addOpen
 
@@ -36,7 +41,7 @@ export default function AdCreativesPage() {
           onAddOpen={() => { setSelected(null); setAddOpen(true) }}
         />
 
-        <AdCreativeStats items={items} loading={loading} />
+        <AdCreativeStats items={items} />
 
         <AdCreativeFilters 
           search={search}
@@ -52,7 +57,6 @@ export default function AdCreativesPage() {
         />
 
         <AdCreativeTable 
-          loading={loading}
           sorted={sorted}
           selectedId={selected?._id}
           sortKey={sortKey}

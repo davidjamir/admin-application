@@ -7,9 +7,9 @@ import {
 import { OriginStatsChartProps } from "./types"
 
 export const OriginStatsChart: React.FC<OriginStatsChartProps> = ({ 
-    loading, originHistory, allOriginNames, originFilter, setOriginFilter 
+    originHistory, allOriginNames, originFilter, setOriginFilter 
 }) => {
-    if (loading || originHistory.length === 0) return null
+    if (originHistory.length === 0) return null
 
     return (
         <div className="relative z-20 rounded-xl border border-border/40 bg-card shadow-sm p-5">

@@ -1,11 +1,10 @@
 import React, { useState, useMemo } from "react"
 import { BarChart3, ChevronsUpDown, ChevronUp, ChevronDown } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { QuotaGroup } from "@/hooks/useWebsiteManager"
 import { SortableTH } from "./SortableTH"
 import { QuotasTableProps } from "./types"
 
-export const QuotasTable: React.FC<QuotasTableProps> = ({ loading, quotas, selectedId, onSelect }) => {
+export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, onSelect }) => {
     const [sortKey, setSortKey] = useState("domain")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -50,9 +49,7 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ loading, quotas, selec
                     <SortableTH label="Status" col="usage" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[250px]" />
                 </tr></thead>
                 <tbody>
-                    {loading ? Array.from({ length: 5 }).map((_, i) => (
-                        <tr key={i} className="border-b">{Array.from({ length: 6 }).map((_, j) => <td key={j} className="px-4 py-4"><Skeleton className="h-4 w-full" /></td>)}</tr>
-                    )) : sorted.length === 0 ? (
+                    {sorted.length === 0 ? (
                         <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No quotas found</p></td></tr>
                     ) : sorted.map((g, i) => {
                         const pct = g.latest.limit > 0 ? Math.round((g.latest.count / g.latest.limit) * 100) : 0

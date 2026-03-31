@@ -1,6 +1,6 @@
 "use client"
 
-import { RefreshCcw } from "lucide-react"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { Blog, Wrap, QuotaGroup, useWebsiteManager } from "@/hooks/useWebsiteManager"
 import { WebsiteHeader } from "@/components/website-manager/WebsiteHeader"
 import { WebsiteStats } from "@/components/website-manager/WebsiteStats"
@@ -21,12 +21,9 @@ export default function WebsiteManagerPage() {
         counts, filteredCounts, originList, allChannels, todayStr
     } = useWebsiteManager()
 
-    if (!mounted) {
+    if (!mounted || loading) {
         return (
-            <div className="flex flex-col gap-5 p-6 h-full items-center justify-center min-h-[400px]">
-                <RefreshCcw className="w-8 h-8 text-green-600 animate-spin opacity-20" />
-                <p className="text-xs text-muted-foreground animate-pulse">Initializing dashboard...</p>
-            </div>
+            <LoadingScreen />
         )
     }
 
@@ -45,7 +42,6 @@ export default function WebsiteManagerPage() {
             />
 
             <WebsiteStats
-                loading={loading}
                 tab={tab}
                 setTab={setTab}
                 setSearch={setSearch}
@@ -53,7 +49,6 @@ export default function WebsiteManagerPage() {
             />
 
             <OriginStatsChart
-                loading={loading}
                 originHistory={originHistory}
                 allOriginNames={allOriginNames}
                 originFilter={originFilter}
@@ -65,7 +60,6 @@ export default function WebsiteManagerPage() {
                 setTab={setTab}
                 setSearch={setSearch}
                 counts={filteredCounts}
-                loading={loading}
             />
 
             <TabFilters
@@ -86,7 +80,6 @@ export default function WebsiteManagerPage() {
 
             {tab === "blogs" && (
                 <BlogsTable
-                    loading={loading}
                     blogs={filteredBlogs}
                     selectedId={selected?.tab === "blogs" ? (selected.data as Blog)._id : undefined}
                     onSelect={setSelected}
@@ -94,7 +87,6 @@ export default function WebsiteManagerPage() {
             )}
             {tab === "wraps" && (
                 <WrapsTable
-                    loading={loading}
                     wraps={filteredWraps}
                     selectedId={selected?.tab === "wraps" ? (selected.data as Wrap)._id : undefined}
                     onSelect={setSelected}
@@ -102,7 +94,6 @@ export default function WebsiteManagerPage() {
             )}
             {tab === "quotas" && (
                 <QuotasTable
-                    loading={loading}
                     quotas={filteredGroups}
                     selectedId={selected?.tab === "quotas" ? (selected.data as QuotaGroup).domain : undefined}
                     onSelect={setSelected}

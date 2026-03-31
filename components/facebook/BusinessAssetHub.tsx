@@ -4,12 +4,9 @@ import { useState } from "react"
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Key, 
-  Users, 
-  Layers, 
-  Briefcase
-} from "lucide-react"
+import { Key, Users, Layers, Briefcase } from "lucide-react"
+import { LoadingScreen } from "@/components/ui/loading-screen"
+import { useTokenIngestion } from "@/hooks/useTokenIngestion"
 
 import TokenIngestion from "./TokenIngestion"
 import SystemUserHub from "./SystemUserHub"
@@ -21,6 +18,12 @@ export default function BusinessAssetHub() {
   const [activeTab, setActiveTab] = useState<TabKey>("tokens")
   const [isAdminVerified] = useState(true) // Always verified
   const [adminPassword] = useState("bypass") // Placeholder password
+
+  const { loadingUsers } = useTokenIngestion(adminPassword, isAdminVerified)
+
+  if (loadingUsers) {
+    return <LoadingScreen />
+  }
 
   return (
     <div className="w-full space-y-6 p-1 animate-in fade-in duration-700">

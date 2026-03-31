@@ -1,20 +1,19 @@
 import React from "react"
 import { Clock } from "lucide-react"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
-import { Skeleton } from "@/components/ui/skeleton"
 import { QueueSectionProps } from "./types"
 import { Metric } from "./Metric"
 import { QueueItemRecord } from "./QueueItemRecord"
 import { AlertCircle, Layers, Share2, Database } from "lucide-react"
 
-export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats, loading, icon, onCopy, type }) => {
+export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats, icon, onCopy, type }) => {
   return (
     <div className="flex flex-col h-full min-h-0 text-black">
-      <Card className="flex flex-col h-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
+      <Card className="flex flex-col h-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">
         <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800/50 shrink-0 bg-slate-50/30 dark:bg-slate-900/20">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800 shadow-sm`}>
+              <div className={`p-2.5 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800`}>
                 {icon}
               </div>
               <div>
@@ -54,17 +53,13 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats,
         
         <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white dark:bg-slate-950/20">
           <div className="flex flex-col gap-2.5">
-            {loading ? (
-              <div className="space-y-4">
-                {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-28 w-full rounded-2xl opacity-50" />)}
-              </div>
-            ) : items && items.length > 0 ? (
+            {items && items.length > 0 ? (
               items.map((item) => (
                 <QueueItemRecord key={item._id} item={item} type={type} onCopy={() => onCopy(item.itemId)} />
               ))
             ) : (
               <div className="py-24 text-center flex flex-col items-center justify-center gap-5">
-                <div className="size-20 rounded-full bg-white/50 dark:bg-slate-900/50 flex items-center justify-center shadow-inner border border-slate-100 dark:border-slate-800">
+                <div className="size-20 rounded-full bg-white/50 dark:bg-slate-900/50 flex items-center justify-center border border-slate-100 dark:border-slate-800">
                     <Clock className="size-10 text-slate-300 dark:text-slate-700" />
                 </div>
                 <div className="flex flex-col gap-1.5">

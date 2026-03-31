@@ -13,7 +13,6 @@ export interface QueueSectionProps {
   items?: QueueItem[]
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   stats?: { total: number; [key: string]: any }
-  loading: boolean
   icon: React.ReactNode
   onCopy: (id: string) => void
   type: string

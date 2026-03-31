@@ -2,11 +2,10 @@ import React from "react"
 import { 
     CheckCircle2, ChevronDown, ChevronsUpDown, ChevronUp, ImagePlay, Layers, PauseCircle 
 } from "lucide-react"
-import { Skeleton } from "@/components/ui/skeleton"
 import { AdCreativeTableProps } from "./types"
 
 export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
-  loading, sorted, selectedId, sortKey, sortDir, handleSort, onOpenDetail, totalCount
+  sorted, selectedId, sortKey, sortDir, handleSort, onOpenDetail, totalCount
 }) => {
   const getSourceStyle = (source: string) => {
     const s = (source || "").toLowerCase();
@@ -31,16 +30,7 @@ export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
           </tr>
         </thead>
         <tbody>
-          {loading ? (
-            Array.from({ length: 6 }).map((_, i) => (
-              <tr key={i} className="border-b">
-                <td className="px-4 py-5"><Skeleton className="h-4 w-4" /></td>
-                {Array.from({ length: 5 }).map((_, j) => (
-                  <td key={j} className="px-4 py-5"><Skeleton className="h-4 w-full" /></td>
-                ))}
-              </tr>
-            ))
-          ) : sorted.length === 0 ? (
+          {sorted.length === 0 ? (
             <tr>
               <td colSpan={6} className="px-4 py-16 text-center text-muted-foreground">
                 <ImagePlay className="w-10 h-10 mx-auto mb-2 opacity-25" />
@@ -77,11 +67,9 @@ export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
           )}
         </tbody>
       </table>
-      {!loading && (
-        <div className="px-4 py-2 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between italic">
-          <div className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> Showing {sorted.length} of {totalCount}</div>
-        </div>
-      )}
+      <div className="px-4 py-2 border-t bg-muted/20 text-xs text-muted-foreground flex items-center justify-between italic">
+        <div className="flex items-center gap-1.5"><Layers className="w-3 h-3" /> Showing {sorted.length} of {totalCount}</div>
+      </div>
     </div>
   )
 }

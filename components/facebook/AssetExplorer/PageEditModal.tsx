@@ -15,6 +15,7 @@ import { facebookService } from "@/services/facebook.service"
 import { toast } from "sonner"
 import { Loader2, Pencil } from "lucide-react"
 import { usePageEdit } from "@/hooks/usePageEdit"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import { LocationFields } from "./components/PageEdit/LocationFields"
 import { ContactFields } from "./components/PageEdit/ContactFields"
 import { AboutField, DescriptionField } from "./components/PageEdit/AboutDescriptionFields"
@@ -88,10 +89,7 @@ export default function PageEditModal({ isOpen, onClose, onSuccess, page, adminT
 
         <div className="flex-1 overflow-y-auto px-6 py-4">
           {loading ? (
-            <div className="py-24 flex flex-col items-center justify-center gap-4">
-              <Loader2 className="w-10 h-10 animate-spin text-primary" />
-              <p className="text-xs font-medium text-muted-foreground animate-pulse">Loading information...</p>
-            </div>
+            <LoadingScreen fullScreen={false} message="Fetching page information" />
           ) : pageInfo ? (
             <form id="edit-page-form" onSubmit={handleSave} className="space-y-6">
               <div className="flex flex-col gap-6">

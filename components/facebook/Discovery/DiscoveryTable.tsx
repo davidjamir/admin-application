@@ -1,5 +1,5 @@
-import React from "react"
-import { Loader2, Layers } from "lucide-react"
+import { Layers } from "lucide-react"
+import { LoadingScreen } from "@/components/ui/loading-screen"
 import {
   Table,
   TableBody,
@@ -42,13 +42,11 @@ export const DiscoveryTable: React.FC<DiscoveryTableProps> = ({
         </TableHeader>
         <TableBody>
           {loadingPages ? (
-            Array.from({ length: 4 }).map((_, i) => (
-              <TableRow key={i}>
-                <TableCell colSpan={6} className="py-8 text-center">
-                  <Loader2 className="w-6 h-6 animate-spin mx-auto text-muted-foreground opacity-20" />
-                </TableCell>
-              </TableRow>
-            ))
+            <TableRow>
+              <TableCell colSpan={6} className="py-0 text-center border-none">
+                <LoadingScreen fullScreen={false} />
+              </TableCell>
+            </TableRow>
           ) : pages.length === 0 ? (
             <TableRow>
               <TableCell colSpan={6} className="py-20 text-center">
