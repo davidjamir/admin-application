@@ -11,6 +11,7 @@ export function useSystemUserHub(adminPassword: string, isAdminVerified: boolean
     const [crawling, setCrawling] = useState(false)
     const [saving, setSaving] = useState(false)
     const [selectedBmFilter, setSelectedBmFilter] = useState("all")
+    const [selectedStatusFilter, setSelectedStatusFilter] = useState("all")
     const [search, setSearch] = useState("")
     const [recrawlingIds, setRecrawlingIds] = useState<Set<string>>(new Set())
     const [deletingUser, setDeletingUser] = useState<SystemUser | null>(null)
@@ -263,13 +264,15 @@ export function useSystemUserHub(adminPassword: string, isAdminVerified: boolean
 
     const filteredUsers = useMemo(() => systemUsers.filter(u => {
         const matchesBm = selectedBmFilter === "all" || (u.businessId ?? "").trim() === selectedBmFilter
+        const matchesStatus = selectedStatusFilter === "all" || (u.status ?? "Active") === selectedStatusFilter
         const matchesSearch = u.name.toLowerCase().includes(search.toLowerCase()) || u.id.includes(search)
-        return matchesBm && matchesSearch
-    }), [systemUsers, selectedBmFilter, search])
+        return matchesBm && matchesStatus && matchesSearch
+    }), [systemUsers, selectedBmFilter, selectedStatusFilter, search])
 
     return {
         isSheetOpen, setIsSheetOpen, status, systemUsers, loadingUsers,
         crawling, saving, selectedBmFilter, setSelectedBmFilter,
+        selectedStatusFilter, setSelectedStatusFilter,
         search, setSearch, recrawlingIds, deletingUser, setDeletingUser,
         editingUser, setEditingUser, addForm, setAddForm, editForm, setEditForm,
         loadSystemUsers, handleCrawl, handleSave, handleRecrawl, confirmDelete,

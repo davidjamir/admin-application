@@ -16,6 +16,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
     const {
         isSheetOpen, setIsSheetOpen, status, loadingUsers,
         crawling, saving, selectedBmFilter, setSelectedBmFilter,
+        selectedStatusFilter, setSelectedStatusFilter,
         search, setSearch, recrawlingIds, deletingUser, setDeletingUser,
         editingUser, setEditingUser, addForm, setAddForm, editForm, setEditForm,
         loadSystemUsers, handleSave, handleRecrawl, confirmDelete,
@@ -37,6 +38,8 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                     onRefresh={() => void loadSystemUsers(adminPassword)}
                     isSheetOpen={isSheetOpen}
                     setIsSheetOpen={setIsSheetOpen}
+                    selectedStatusFilter={selectedStatusFilter}
+                    setSelectedStatusFilter={setSelectedStatusFilter}
                 />
 
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>

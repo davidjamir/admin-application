@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useCallback } from "react"
-import { Layers, Zap, MessageSquare, Pencil, Globe, Users, Trash2, ChevronRight, Fingerprint, Loader2, Plus, Layout, Instagram, Database } from "lucide-react"
+import { Layers, Zap, MessageSquare, Pencil, Globe, Users, Trash2, ChevronRight, Fingerprint, Loader2, Plus, Layout, Instagram, Database, Search, SearchX } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { BusinessRow } from "@/types/facebook"
 import { Section, DetailContainer, Item } from "./SharedComponents"
@@ -50,6 +50,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [isLoadingAssets, setIsLoadingAssets] = useState(false)
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
+  const [assetSearchQuery, setAssetSearchQuery] = useState("")
   
   const totalAssetsCount = (assetGroupDetails?.contained_pages?.data?.length || 0) +
                         (assetGroupDetails?.contained_ad_accounts?.data?.length || 0) +
@@ -830,46 +831,84 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isAddAssetOpen} onOpenChange={(open) => !isProcessingAction && setIsAddAssetOpen(open)}>
+      <Dialog open={isAddAssetOpen} onOpenChange={(open) => {
+        if (!isProcessingAction) {
+          setIsAddAssetOpen(open)
+          if (!open) setAssetSearchQuery("")
+        }
+      }}>
         <DialogContent className="sm:max-w-[450px]">
           <DialogHeader>
             <DialogTitle>Add Assets to Group</DialogTitle>
           </DialogHeader>
-          <div className="py-2 space-y-6 max-h-[500px] overflow-y-auto pr-2">
+          <div className="px-5 pb-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/30" />
+              <Input
+                placeholder="Search by name, username or ID..."
+                className="pl-10 h-10 text-xs bg-muted/30 border-border/40 focus:ring-1 focus:ring-primary/20 transition-all font-medium"
+                value={assetSearchQuery}
+                onChange={(e) => setAssetSearchQuery(e.target.value)}
+                autoFocus
+              />
+              {assetSearchQuery && (
+                <button
+                  onClick={() => setAssetSearchQuery("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 flex items-center justify-center text-muted-foreground/50 hover:text-foreground transition-colors cursor-pointer"
+                >
+                  <SearchX className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className="py-2 space-y-6 max-h-[450px] overflow-y-auto custom-scrollbar px-5">
             {[
               { 
                 title: 'Pages', 
-                items: business.pages?.filter(p => !assetGroupDetails?.contained_pages?.data?.some(cp => cp.id === p.id)),
+                items: business.pages
+                  ?.filter(p => !assetGroupDetails?.contained_pages?.data?.some(cp => cp.id === p.id))
+                  ?.filter(p => (p.name || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || p.id.includes(assetSearchQuery)),
                 icon: Globe,
                 type: 'PAGE'
               },
               { 
                 title: 'Ad Accounts', 
-                items: business.owned_ad_accounts?.data?.filter(a => !assetGroupDetails?.contained_ad_accounts?.data?.some(ca => ca.id === a.id)),
+                items: business.owned_ad_accounts?.data
+                  ?.filter(a => !assetGroupDetails?.contained_ad_accounts?.data?.some(ca => ca.id === a.id))
+                  ?.filter(a => (a.name || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || a.id.includes(assetSearchQuery)),
                 icon: Zap,
                 type: 'AD_ACCOUNT'
               },
               { 
                 title: 'Pixels', 
-                items: business.adspixels?.data?.filter(p => !assetGroupDetails?.contained_ads_pixels?.data?.some(cp => cp.id === p.id)),
+                items: business.adspixels?.data
+                  ?.filter(p => !assetGroupDetails?.contained_ads_pixels?.data?.some(cp => cp.id === p.id))
+                  ?.filter(p => (p.name || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || p.id.includes(assetSearchQuery)),
                 icon: Fingerprint,
                 type: 'ADS_PIXEL'
               },
               {
                 title: 'Instagram',
-                items: business.instagram_accounts?.data?.filter(i => !assetGroupDetails?.contained_instagram_accounts?.data?.some(ci => ci.id === i.id)),
+                items: business.instagram_accounts?.data
+                  ?.filter(i => !assetGroupDetails?.contained_instagram_accounts?.data?.some(ci => ci.id === i.id))
+                  ?.filter(i => (i.name || i.username || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || i.id.includes(assetSearchQuery)),
                 icon: Instagram,
                 type: 'INSTAGRAM_ACCOUNT'
               },
               { 
                 title: 'Apps', 
-                items: business.apps?.filter(a => !assetGroupDetails?.contained_applications?.data?.some(ca => ca.id === a.id)),
+                items: business.apps
+                  ?.filter(a => !assetGroupDetails?.contained_applications?.data?.some(ca => ca.id === a.id))
+                  ?.filter(a => (a.name || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || a.id.includes(assetSearchQuery)),
                 icon: Layout,
                 type: 'APPLICATION'
               },
               {
                 title: 'Offline Data Sets',
-                items: business.offline_conversion_data_sets?.data?.filter((o: { id: string; name?: string }) => !assetGroupDetails?.contained_offline_conversion_data_sets?.data?.some(co => co.id === o.id)),
+                items: business.offline_conversion_data_sets?.data
+                  ?.filter((o: { id: string; name?: string }) => !assetGroupDetails?.contained_offline_conversion_data_sets?.data?.some(co => co.id === o.id))
+                  ?.filter((o: { id: string; name?: string }) => (o.name || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || o.id.includes(assetSearchQuery)),
                 icon: Fingerprint,
                 type: 'OFFLINE_CONVERSION_DATA_SET'
               }
@@ -877,7 +916,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
               <div key={section.title} className="space-y-2">
                 <label className="text-[10px] font-bold text-muted-foreground tracking-wide flex items-center gap-2 capitalize">
                   <section.icon className="w-3 h-3" />
-                  {section.title}
+                  {section.title} {section.items.length > 0 && `(${section.items.length})`}
                 </label>
                 <div className="grid gap-1">
                   {section.items.map((item: { id: string; name?: string; username?: string }) => (
@@ -902,6 +941,19 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                 </div>
               </div>
             ) : null)}
+
+            {assetSearchQuery && ![
+              business.pages?.filter(p => !assetGroupDetails?.contained_pages?.data?.some(cp => cp.id === p.id)),
+              business.owned_ad_accounts?.data?.filter(a => !assetGroupDetails?.contained_ad_accounts?.data?.some(ca => ca.id === a.id)),
+              business.adspixels?.data?.filter(p => !assetGroupDetails?.contained_ads_pixels?.data?.some(cp => cp.id === p.id)),
+              business.instagram_accounts?.data?.filter(i => !assetGroupDetails?.contained_instagram_accounts?.data?.some(ci => ci.id === i.id)),
+              business.apps?.filter(a => !assetGroupDetails?.contained_applications?.data?.some(ca => ca.id === a.id)),
+              business.offline_conversion_data_sets?.data?.filter((o: { id: string; name?: string }) => !assetGroupDetails?.contained_offline_conversion_data_sets?.data?.some(co => co.id === o.id))
+            ].some(list => list?.some(item => ((item as { name?: string }).name || (item as { username?: string }).username || "").toLowerCase().includes(assetSearchQuery.toLowerCase()) || item.id.includes(assetSearchQuery))) && (
+              <p className="text-center text-[11px] text-muted-foreground italic py-8">
+                No matching assets found for &ldquo;{assetSearchQuery}&rdquo;
+              </p>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" size="sm" className="cursor-pointer" onClick={() => setIsAddAssetOpen(false)} disabled={isProcessingAction}>

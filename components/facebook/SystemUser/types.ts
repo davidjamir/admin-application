@@ -14,6 +14,8 @@ export interface HubFiltersProps {
     onRefresh: () => void
     isSheetOpen: boolean
     setIsSheetOpen: (val: boolean) => void
+    selectedStatusFilter: string
+    setSelectedStatusFilter: (val: string) => void
 }
 
 export interface AddUserSheetProps {

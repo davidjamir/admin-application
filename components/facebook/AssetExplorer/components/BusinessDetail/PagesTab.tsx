@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
-import { Flag, Zap, Users2, ShieldCheck, ChevronRight, ChevronDown, Package, Loader2, LogOut, AlertCircle, Plus } from "lucide-react"
+import { Flag, Zap, Users2, ShieldCheck, ChevronRight, ChevronDown, Package, Loader2, LogOut, AlertCircle, Plus, Search, SearchX } from "lucide-react"
 import { LoadingScreen } from "@/components/ui/loading-screen"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -37,6 +37,12 @@ export const PagesTab = ({
   allBusinessUsers = []
 }: PagesTabProps) => {
   const [selectedPageId, setSelectedPageId] = useState<string | null>(null)
+  const [searchOwned, setSearchOwned] = useState("")
+  const [showOwnedSearch, setShowOwnedSearch] = useState(false)
+  const [searchClient, setSearchClient] = useState("")
+  const [showClientSearch, setShowClientSearch] = useState(false)
+  const [searchAssetGroup, setSearchAssetGroup] = useState("")
+  const [showAssetGroupSearch, setShowAssetGroupSearch] = useState(false)
   const [assignedUsers, setAssignedUsers] = useState<{ id: string; name: string; tasks: string[]; user_type: string }[]>([])
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
@@ -162,6 +168,10 @@ export const PagesTab = ({
   const ownedPages = business.pages?.filter(p => !p.source || p.source === "owned") || []
   const clientPages = business.pages?.filter(p => p.source === "client") || []
   const assetGroupPages = business.pages?.filter(p => p.source === "asset_group") || []
+
+  const filteredOwnedPages = ownedPages.filter(p => (p.name || "").toLowerCase().includes(searchOwned.toLowerCase()))
+  const filteredClientPages = clientPages.filter(p => (p.name || "").toLowerCase().includes(searchClient.toLowerCase()))
+  const filteredAssetGroupPages = assetGroupPages.filter(p => (p.name || "").toLowerCase().includes(searchAssetGroup.toLowerCase()))
 
   const formatTask = (task: string) => {
     return task.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
@@ -594,15 +604,45 @@ export const PagesTab = ({
           icon={ShieldCheck}
           count={ownedPages.length > 0 ? ownedPages.length : undefined}
           action={
-            <AddPageDialog
-              businessId={business.id}
-              adminToken={adminToken}
-              onSuccess={onRecrawl}
-              standalonePages={standalonePages}
-            />
+            <div className="flex items-center gap-1">
+              {ownedPages.length > 20 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-7 w-7 p-0 rounded-lg shrink-0 cursor-pointer",
+                    showOwnedSearch ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"
+                  )}
+                  onClick={() => {
+                    setShowOwnedSearch(!showOwnedSearch)
+                    if (showOwnedSearch) setSearchOwned("")
+                  }}
+                >
+                  {showOwnedSearch ? <SearchX className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
+                </Button>
+              )}
+              <AddPageDialog
+                businessId={business.id}
+                adminToken={adminToken}
+                onSuccess={onRecrawl}
+                standalonePages={standalonePages}
+              />
+            </div>
           }
         >
-          {ownedPages.map((page: FacebookPage) => (
+          {showOwnedSearch && (
+            <div className="px-2 pb-2">
+              <input
+                type="text"
+                placeholder="Search owned pages..."
+                className="w-full bg-muted/40 border-border/50 text-[11px] h-8 rounded-lg px-3 outline-none focus:ring-1 focus:ring-primary/30 transition-all font-medium placeholder:text-muted-foreground/50"
+                value={searchOwned}
+                onChange={(e) => setSearchOwned(e.target.value)}
+                autoFocus
+              />
+            </div>
+          )}
+          {filteredOwnedPages.map((page: FacebookPage) => (
             <Item
               key={page.id}
               isSelected={selectedPageId === page.id}
@@ -616,8 +656,40 @@ export const PagesTab = ({
         </Section>
 
         {clientPages.length > 0 && (
-          <Section title="Shared / Client Pages" icon={Users2} count={clientPages.length > 0 ? clientPages.length : undefined}>
-            {clientPages.map((page: FacebookPage) => (
+          <Section
+            title="Shared / Client Pages"
+            icon={Users2}
+            count={clientPages.length > 0 ? clientPages.length : undefined}
+            action={clientPages.length > 20 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-7 w-7 p-0 rounded-lg shrink-0 cursor-pointer",
+                  showClientSearch ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"
+                )}
+                onClick={() => {
+                  setShowClientSearch(!showClientSearch)
+                  if (showClientSearch) setSearchClient("")
+                }}
+              >
+                {showClientSearch ? <SearchX className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
+              </Button>
+            ) : undefined}
+          >
+            {showClientSearch && (
+              <div className="px-2 pb-2">
+                <input
+                  type="text"
+                  placeholder="Search shared pages..."
+                  className="w-full bg-muted/40 border-border/50 text-[11px] h-8 rounded-lg px-3 outline-none focus:ring-1 focus:ring-primary/30 transition-all font-medium placeholder:text-muted-foreground/50"
+                  value={searchClient}
+                  onChange={(e) => setSearchClient(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            )}
+            {filteredClientPages.map((page: FacebookPage) => (
               <Item
                 key={page.id}
                 isSelected={selectedPageId === page.id}
@@ -632,13 +704,45 @@ export const PagesTab = ({
         )}
 
         {assetGroupPages.length > 0 && (
-          <Section title="Asset Group Pages" icon={Package} count={assetGroupPages.length > 0 ? assetGroupPages.length : undefined}>
+          <Section
+            title="Asset Group Pages"
+            icon={Package}
+            count={assetGroupPages.length > 0 ? assetGroupPages.length : undefined}
+            action={assetGroupPages.length > 20 ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-7 w-7 p-0 rounded-lg shrink-0 cursor-pointer",
+                  showAssetGroupSearch ? "text-primary bg-primary/10" : "text-muted-foreground hover:bg-muted"
+                )}
+                onClick={() => {
+                  setShowAssetGroupSearch(!showAssetGroupSearch)
+                  if (showAssetGroupSearch) setSearchAssetGroup("")
+                }}
+              >
+                {showAssetGroupSearch ? <SearchX className="w-3.5 h-3.5" /> : <Search className="w-3.5 h-3.5" />}
+              </Button>
+            ) : undefined}
+          >
             <div className="mb-2 px-2 py-1.5 rounded-md bg-muted/30 border border-border/50">
               <p className="text-[10px] text-muted-foreground leading-snug">
                 These assets are shared via Business Asset Groups. You have read-only access to their information.
               </p>
             </div>
-            {assetGroupPages.map((page: FacebookPage) => (
+            {showAssetGroupSearch && (
+              <div className="px-2 pb-2">
+                <input
+                  type="text"
+                  placeholder="Search asset group pages..."
+                  className="w-full bg-muted/40 border-border/50 text-[11px] h-8 rounded-lg px-3 outline-none focus:ring-1 focus:ring-primary/30 transition-all font-medium placeholder:text-muted-foreground/50"
+                  value={searchAssetGroup}
+                  onChange={(e) => setSearchAssetGroup(e.target.value)}
+                  autoFocus
+                />
+              </div>
+            )}
+            {filteredAssetGroupPages.map((page: FacebookPage) => (
               <Item
                 key={page.id}
                 isSelected={selectedPageId === page.id}

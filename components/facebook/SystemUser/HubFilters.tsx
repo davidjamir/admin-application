@@ -13,7 +13,8 @@ import { HubFiltersProps } from "./types"
 
 export const HubFilters: React.FC<HubFiltersProps> = ({
     search, setSearch, selectedBmFilter, setSelectedBmFilter, 
-    bmFilterOptions, loadingUsers, onRefresh, setIsSheetOpen
+    bmFilterOptions, loadingUsers, onRefresh, setIsSheetOpen,
+    selectedStatusFilter, setSelectedStatusFilter
 }) => {
     return (
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 py-2">
@@ -41,6 +42,21 @@ export const HubFilters: React.FC<HubFiltersProps> = ({
                         {bmFilterOptions.map((bm) => (
                             <SelectItem key={bm.id} value={bm.id} className="py-2.5 cursor-pointer">{bm.name}</SelectItem>
                         ))}
+                    </SelectContent>
+                </Select>
+
+                <Select
+                    value={selectedStatusFilter}
+                    onValueChange={setSelectedStatusFilter}
+                    disabled={bmFilterOptions.length === 0}
+                >
+                    <SelectTrigger className="!h-12 min-w-[160px] px-4 bg-background/50 border-border/50 text-sm font-semibold rounded-xl hover:border-primary/30 transition-all text-black">
+                        <SelectValue placeholder={bmFilterOptions.length === 0 ? "No Data" : "All Status"} />
+                    </SelectTrigger>
+                    <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl w-[var(--radix-select-trigger-width)]">
+                        <SelectItem value="all" className="py-2.5 cursor-pointer text-black">All Status</SelectItem>
+                        <SelectItem value="Active" className="py-2.5 cursor-pointer text-black">Active</SelectItem>
+                        <SelectItem value="Disabled" className="py-2.5 cursor-pointer text-black">Disabled</SelectItem>
                     </SelectContent>
                 </Select>
 
