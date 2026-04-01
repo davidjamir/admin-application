@@ -71,7 +71,7 @@ export function BusinessSystemOverview({ stats }: BusinessSystemOverviewProps) {
             
             <div className="space-y-1.5 max-h-[220px] overflow-y-auto pr-1 custom-scrollbar">
               {stats.distribution.length > 0 ? (
-                stats.distribution.map((bm, i) => (
+                stats.distribution.map((bm) => (
                   <div key={bm.id} className="group flex items-center justify-between p-2.5 rounded-xl hover:bg-white/[0.03] border border-transparent hover:border-white/5 transition-all duration-300">
                     <div className="flex items-center gap-3 min-w-0">
                       <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 flex items-center justify-center border border-white/5 shrink-0">
