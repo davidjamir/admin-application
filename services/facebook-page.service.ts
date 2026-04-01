@@ -5,7 +5,7 @@ const LIMIT = 200
 export const facebookPageService = {
   async getPages(token: string): Promise<FacebookPage[]> {
     const url = new URL("https://graph.facebook.com/me/accounts")
-    url.searchParams.set("fields", "id,name,access_token,category,tasks")
+    url.searchParams.set("fields", "id,name,access_token,category,tasks,business")
     url.searchParams.set("access_token", token)
     url.searchParams.set("limit", LIMIT.toString())
 

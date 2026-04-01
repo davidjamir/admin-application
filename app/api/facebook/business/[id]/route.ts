@@ -142,8 +142,8 @@ export async function GET(
       fetchedAt: Date.now()
     }
 
-    // Cache for 1 hour
-    await redis.set(cacheKey, payload, { ex: 3600 })
+    // Cache for 24 hours
+    await redis.set(cacheKey, payload, { ex: 86400 })
 
     return NextResponse.json(payload)
   } catch (error: unknown) {

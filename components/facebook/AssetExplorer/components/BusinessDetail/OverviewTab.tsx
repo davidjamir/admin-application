@@ -33,8 +33,10 @@ const LabelWithIcon = ({ icon: Icon, children, colorClass }: { icon: React.Eleme
 const ScrollableList = ({ children, count, maxItems = 5, className, isFlexible }: { children: React.ReactNode, count: number, maxItems?: number, className?: string, isFlexible?: boolean }) => (
   <div className={cn(
     "space-y-0 relative",
-    (count > maxItems || isFlexible) && cn("overflow-y-auto pr-1 custom-scrollbar", className || "max-h-[300px]"),
-    isFlexible && "flex-1 min-h-[220px]" // Min height for ~5 items
+    className,
+    (count > maxItems || isFlexible) && "overflow-y-auto pr-1 custom-scrollbar",
+    !className && (count > maxItems || isFlexible) && "max-h-[300px]",
+    isFlexible && "flex-1 min-h-[220px]"
   )}>
     {children}
   </div>
@@ -49,22 +51,36 @@ const SectionFooter = ({ count, type, tabName }: { count: number, type: string, 
   )
 }
 
+const LoadingBlock = () => (
+  <div className="space-y-2 p-2">
+    {[1, 2, 3].map(i => (
+      <div key={i} className="h-10 bg-muted/20 rounded-xl w-full animate-pulse" />
+    ))}
+  </div>
+)
+
+const EmptyBlock = ({ message = "No items found" }: { message?: string }) => (
+  <div className="flex flex-col items-center justify-center py-6 opacity-40">
+    <div className="text-[10px] italic font-normal tracking-tight">{message}</div>
+  </div>
+)
+
 export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) => {
   // Full Asset Lists
-  const allPages = business.pages || []
-  const pagesCount = allPages.length
+  const allPages = (business.pages || []).filter(Boolean)
+  const pagesCount = business._isPlaceholder ? (business._expectedPagesCount || 0) : allPages.length
   
-  const allAdAccounts = business.owned_ad_accounts?.data || []
+  const allAdAccounts = (business.owned_ad_accounts?.data || []).filter(Boolean)
   const adAccountsCount = allAdAccounts.length
 
-  const allSystemUsers = business.system_users || []
-  const allBizUsers = allBusinessUsers || []
-  const totalTeamCount = allSystemUsers.length + allBizUsers.length
+  const allSystemUsers = (business.system_users || []).filter(Boolean)
+  const allBizUsers = (allBusinessUsers || []).filter(Boolean)
+  const totalTeamCount = (business._isPlaceholder && allSystemUsers.length === 0) ? (business.business_users?.data?.length || 0) : (allSystemUsers.length + allBizUsers.length)
 
-  const allApps = business.apps || []
-  const appsCount = allApps.length
+  const allApps = (business.apps || []).filter(Boolean)
+  const appsCount = business._isPlaceholder ? (business._expectedAppsCount || 0) : allApps.length
 
-  const allGroups = business.business_asset_groups?.data || []
+  const allGroups = (business.business_asset_groups?.data || []).filter(Boolean)
   const groupsCount = allGroups.length
 
   // Ecosystem Status
@@ -129,20 +145,22 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
             icon={CreditCard} 
             count={adAccountsCount > 0 ? adAccountsCount : undefined}
           >
-            <ScrollableList count={adAccountsCount} className="max-h-[200px]">
-              {allAdAccounts.length > 0 ? (
+            <ScrollableList count={adAccountsCount} className="max-h-[200px] border border-border/10 rounded-lg min-h-[80px] flex flex-col">
+              {business._isPlaceholder && (business.owned_ad_accounts?.data?.length || 0) === 0 ? (
+                <LoadingBlock />
+              ) : allAdAccounts.length > 0 ? (
                 allAdAccounts.map(acc => (
                   <Item 
                     key={acc.id}
                     label={acc.name}
                     value={acc.id}
                     subValue={`${acc.currency} • Spent: ${acc.amount_spent || "0"}`}
-                    status={acc.account_status.toString()}
+                    status={acc.account_status?.toString()}
                     isID
                   />
                 ))
               ) : (
-                <p className="text-[10px] text-muted-foreground italic px-2">No ad accounts found</p>
+                <EmptyBlock message="No ad accounts found" />
               )}
             </ScrollableList>
             <SectionFooter count={adAccountsCount} type="ad accounts" tabName="Ads" />
@@ -152,7 +170,7 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
             title="Agency Partners" 
             icon={Handshake}
           >
-            <p className="text-[10px] text-muted-foreground italic px-2">No agency partners identified yet</p>
+             <EmptyBlock message="No agency partners identified yet" />
           </Section>
 
           <Section 
@@ -160,19 +178,21 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
             icon={Flag} 
             count={pagesCount > 0 ? pagesCount : undefined}
           >
-            <ScrollableList count={pagesCount} maxItems={11} className="max-h-[500px] border border-border/20 rounded-lg">
-              {allPages.length > 0 ? (
+            <ScrollableList count={pagesCount} maxItems={11} className="max-h-[500px] border border-border/20 rounded-lg min-h-[100px] flex flex-col">
+              {business._isPlaceholder && allPages.length === 0 && pagesCount > 0 ? (
+                <LoadingBlock />
+              ) : allPages.length > 0 ? (
                 allPages.map(page => (
                   <Item 
                     key={page.id}
-                    label={page.name}
+                    label={page.name || "Unnamed Page"}
                     value={page.id}
                     isID
                     extraSubValue={page.source ? `Source: ${page.source}` : undefined}
                   />
                 ))
               ) : (
-                <p className="text-[10px] text-muted-foreground italic px-2">No pages found</p>
+                <EmptyBlock message="No pages found in this business" />
               )}
             </ScrollableList>
             <SectionFooter count={pagesCount} type="pages" tabName="Pages" />
@@ -209,47 +229,55 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
             }
           >
             <ScrollableList count={totalTeamCount} maxItems={4} className="max-h-[220px]">
-              {/* System Users (from FB API) */}
-              {allSystemUsers.length > 0 && allSystemUsers.map(u => (
-                <Item 
-                  key={u.id}
-                  label={
-                    <div className="flex items-center gap-2 truncate">
-                      <KeyRound className="w-3 h-3 text-amber-600 shrink-0" />
-                      <span className="font-bold truncate">{u.name}</span>
-                      <Badge variant="outline" className="text-[8px] h-4 font-normal border-slate-200 bg-slate-50 text-slate-500 shrink-0 capitalize">
-                        System user
-                      </Badge>
-                      <Badge variant="outline" className="text-[8px] h-4 font-normal border-green-200 bg-green-50 text-green-600 shrink-0 capitalize">
-                        {formatRole(u.role || "Admin")}
-                      </Badge>
-                    </div>
-                  }
-                  value={u.id}
-                  isID
-                />
-              ))}
-              {/* Business Users (People from FB API) */}
-              {allBizUsers.length > 0 && allBizUsers.map(u => (
-                <Item 
-                  key={u.id}
-                  label={
-                    <div className="flex items-center gap-2 truncate">
-                      <User className="w-3 h-3 text-blue-600 shrink-0" />
-                      <span className="font-medium truncate">{u.name}</span>
-                      <Badge variant="outline" className="text-[8px] h-4 font-normal border-slate-200 bg-slate-50 text-slate-500 shrink-0 capitalize">
-                        Account user
-                      </Badge>
-                      <Badge variant="outline" className="text-[8px] h-4 font-normal border-green-200 bg-green-50 text-green-600 shrink-0 capitalize">
-                        {formatRole(u.role || "User")}
-                      </Badge>
-                    </div>
-                  }
-                  value={u.id}
-                  extraSubValue={u.email}
-                  isID
-                />
-              ))}
+              {business._isPlaceholder ? (
+                <LoadingBlock />
+              ) : totalTeamCount > 0 ? (
+                <>
+                  {/* System Users (from FB API) */}
+                  {allSystemUsers.length > 0 && allSystemUsers.map(u => (
+                    <Item 
+                      key={u.id}
+                      label={
+                        <div className="flex items-center gap-2 truncate">
+                          <KeyRound className="w-3 h-3 text-amber-600 shrink-0" />
+                          <span className="font-bold truncate">{u.name}</span>
+                          <Badge variant="outline" className="text-[8px] h-4 font-normal border-slate-200 bg-slate-50 text-slate-500 shrink-0 capitalize">
+                            System user
+                          </Badge>
+                          <Badge variant="outline" className="text-[8px] h-4 font-normal border-green-200 bg-green-50 text-green-600 shrink-0 capitalize">
+                            {formatRole(u.role || "Admin")}
+                          </Badge>
+                        </div>
+                      }
+                      value={u.id}
+                      isID
+                    />
+                  ))}
+                  {/* Business Users (People from FB API) */}
+                  {allBizUsers.length > 0 && allBizUsers.map(u => (
+                    <Item 
+                      key={u.id}
+                      label={
+                        <div className="flex items-center gap-2 truncate">
+                          <User className="w-3 h-3 text-blue-600 shrink-0" />
+                          <span className="font-medium truncate">{u.name}</span>
+                          <Badge variant="outline" className="text-[8px] h-4 font-normal border-slate-200 bg-slate-50 text-slate-500 shrink-0 capitalize">
+                            Account user
+                          </Badge>
+                          <Badge variant="outline" className="text-[8px] h-4 font-normal border-green-200 bg-green-50 text-green-600 shrink-0 capitalize">
+                            {formatRole(u.role || "User")}
+                          </Badge>
+                        </div>
+                      }
+                      value={u.id}
+                      extraSubValue={u.email}
+                      isID
+                    />
+                  ))}
+                </>
+              ) : (
+                <EmptyBlock message="No team members found" />
+              )}
             </ScrollableList>
             <SectionFooter count={totalTeamCount} type="team members" tabName="Team" />
           </Section>
@@ -260,7 +288,9 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
             count={groupsCount > 0 ? groupsCount : undefined}
           >
             <ScrollableList count={groupsCount} className="max-h-[220px]">
-              {allGroups.length > 0 ? (
+              {business._isPlaceholder ? (
+                <LoadingBlock />
+              ) : allGroups.length > 0 ? (
                 allGroups.map(group => (
                   <Item 
                     key={group.id}
@@ -270,7 +300,7 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
                   />
                 ))
               ) : (
-                <p className="text-[10px] text-muted-foreground italic px-2 py-4">No asset groups found</p>
+                <EmptyBlock message="No asset groups found" />
               )}
             </ScrollableList>
             <SectionFooter count={groupsCount} type="asset groups" tabName="Assets" />
@@ -283,11 +313,13 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
           >
             {/* Applications is fixed-height in this version to act as the primary height anchor */}
             <ScrollableList count={appsCount} maxItems={10} className="max-h-[460px] border border-border/20 rounded-lg">
-              {allApps.length > 0 ? (
+              {business._isPlaceholder ? (
+                <LoadingBlock />
+              ) : allApps.length > 0 ? (
                 allApps.map(app => (
                   <Item 
                     key={app.id}
-                    label={app.name}
+                    label={app.name || "Unnamed App"}
                     value={app.id}
                     imageUrl={app.icon_url}
                     isID
@@ -295,7 +327,7 @@ export const OverviewTab = ({ business, allBusinessUsers }: OverviewTabProps) =>
                   />
                 ))
               ) : (
-                <p className="text-[10px] text-muted-foreground italic px-2 py-4 text-center">No linked applications found</p>
+                <EmptyBlock message="No linked applications found" />
               )}
             </ScrollableList>
             <SectionFooter count={appsCount} type="applications" tabName="Applications" />

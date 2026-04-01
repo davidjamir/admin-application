@@ -22,6 +22,24 @@ export const facebookBusinessService = {
     return data.data ?? []
   },
 
+  async getBusinessCounts(
+    token: string,
+    businessId: string,
+    force = false
+  ): Promise<{ pages: number; apps: number }> {
+    const url = new URL(`/api/facebook/business/${businessId}/counts`, window.location.origin)
+    url.searchParams.set("token", token)
+    if (force) url.searchParams.set("force", "true")
+
+    const res = await fetch(url.toString())
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({ error: "Failed to fetch counts" }))
+      throw new Error(errorData.error || "Failed to fetch business counts")
+    }
+
+    return (await res.json()) as { pages: number; apps: number }
+  },
+
   async getBusinessDetails(token: string, businessId: string): Promise<Partial<FacebookBusiness>> {
     const url = new URL(`https://graph.facebook.com/${businessId}`)
     url.searchParams.set("fields", "id,name,verification_status,is_promotable,sharing_eligibility_status,can_create_ad_accounts")

@@ -89,6 +89,7 @@ export interface FacebookPage {
     zip?: string
     country?: string
   }
+  business?: { id: string; name: string }
 }
 
 export interface FacebookBusiness {
@@ -167,6 +168,10 @@ export interface BusinessRow extends FacebookBusiness {
       contained_offline_conversion_data_sets?: { data: { id: string; name: string }[] };
     }> 
   }
+  // Meta-data for lazy loading
+  _isPlaceholder?: boolean
+  _expectedPagesCount?: number
+  _expectedAppsCount?: number
 }
 
 export interface BusinessPageRow extends FacebookPage {

@@ -325,12 +325,12 @@ export function AccountUserMode({
                     </TableCell>
                     <TableCell className="px-6 text-center">
                       <span className="text-sm text-black font-medium tabular-nums">
-                        {bm.apps?.length || 0}
+                        {bm._expectedAppsCount !== undefined ? bm._expectedAppsCount : (bm.apps?.length || 0)}
                       </span>
                     </TableCell>
                     <TableCell className="px-6 text-center">
                       <span className="text-sm text-black font-medium tabular-nums">
-                        {bm.pages?.length || 0}
+                        {bm._expectedPagesCount !== undefined ? bm._expectedPagesCount : (bm.pages?.length || 0)}
                       </span>
                     </TableCell>
                   </TableRow>

@@ -193,6 +193,25 @@ export function BusinessDetailSheet({ business, isOpen, onClose, systemUsers, cu
             </SheetHeader>
 
             <div className="flex-1 overflow-hidden relative">
+              {business._isPlaceholder && (
+                <div className="absolute inset-0 z-50 bg-card/60 backdrop-blur-[2px] flex flex-col items-center justify-center p-6 animate-in fade-in duration-300">
+                  <div className="flex flex-col items-center gap-4 text-center">
+                    <div className="relative">
+                      <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+                      <div className="relative p-4 bg-primary/10 rounded-full">
+                        <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <h3 className="text-sm font-semibold text-foreground">Synchronizing Business Data</h3>
+                      <p className="text-[11px] text-muted-foreground max-w-[200px]">
+                        We&apos;re fetching the latest assets and permissions for <strong>{business.name}</strong>.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
               <TabsContent value="overview" className="m-0 focus-visible:outline-none h-full overflow-y-auto p-6 custom-scrollbar">
                 <OverviewTab
                   business={business}
