@@ -35,9 +35,26 @@ export async function POST(req: Request) {
     }
 
     const fbName = fbUser.name
-    const nameParts = fbName.split("-").map(p => p.trim())
+
+    // Step 1: Transform names by split-by-space replacement (exact word match)
+    const nameMap: Record<string, string> = {
+      "NB": "NBA",
+      "NF": "NFL",
+      "NH": "NHL",
+      "ML": "MLB",
+      "Mu": "Music",
+      "Mus": "Music",
+      "Musi": "Music",
+      "Mo": "Movie",
+      "Mov": "Movie",
+      "Movi": "Movie",
+      "Storer": "Store"
+    }
+
+    const transformedName = fbName.split(" ").map(word => nameMap[word] || word).join(" ")
+    const nameParts = transformedName.split("-").map(p => p.trim())
     
-    // Parse name: Code Role - Tên BM - Note
+    // Parse name: Code Role - Tên BM - Category
     let roleCode = ""
     let role = "Admin"
     let businessName = ""
@@ -53,34 +70,20 @@ export async function POST(req: Request) {
     }
     if (nameParts.length >= 3) {
       const rawNote = nameParts[2]
-      const expansionMap: Record<string, string> = {
-        "NB": "NBA",
-        "ML": "MLB",
-        "NH": "NHL",
-        "NF": "NFL",
-        "Mu": "Music",
-        "Mus": "Music",
-        "Musi": "Music",
-        "Mo": "Movie",
-        "Mov": "Movie",
-        "Movi": "Movie"
-      }
-
+      // Preserve numbers and use previously transformed parts, split by comma for deduplication
       category = rawNote.split(",")
-        .map(p => {
-          const part = p.trim().replace(/\s*\d+$/, "")
-          return expansionMap[part] || part
-        })
+        .map(p => p.trim())
         .filter((v, i, a) => v && a.indexOf(v) === i)
         .join(", ")
     }
 
     const updateData: Record<string, string | Date> = {
-      name: fbName,
+      name: transformedName,
       roleCode,
       role,
       updatedAt: new Date(),
     }
+
 
     // Preserve businessId as requested, only update businessName if parsed
     if (businessName) {
