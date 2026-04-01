@@ -1,6 +1,6 @@
 import { FacebookBusiness, FacebookPage } from "@/types/facebook"
 
-const LIMIT = 200
+const LIMIT = 500
 
 export const facebookBusinessService = {
   async getBusinesses(token: string): Promise<FacebookBusiness[]> {

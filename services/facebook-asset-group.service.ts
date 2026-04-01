@@ -1,6 +1,6 @@
 import { getRolesByMode } from "@/lib/facebook-permissions"
 
-const LIMIT = 200
+const LIMIT = 500
 
 export const facebookAssetGroupService = {
   async getBusinessAssetGroups(

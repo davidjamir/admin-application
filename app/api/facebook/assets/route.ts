@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { redis } from "@/lib/redis"
 
-const LIMIT = 200
+const LIMIT = 500
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)

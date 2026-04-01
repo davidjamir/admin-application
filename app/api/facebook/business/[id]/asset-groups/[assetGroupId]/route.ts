@@ -43,7 +43,7 @@ export async function GET(
     // Construct Batch API request
     const batch = requestedEndpoints.map(({ endpoint, fields, extraParams = "" }) => ({
       method: "GET",
-      relative_url: `${assetGroupId}/${endpoint}?fields=${fields}&limit=200${extraParams}`
+      relative_url: `${assetGroupId}/${endpoint}?fields=${fields}&limit=500${extraParams}`
     }))
 
     const batchUrl = new URL(`https://graph.facebook.com/v25.0/`)

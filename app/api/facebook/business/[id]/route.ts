@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { redis } from "@/lib/redis"
 import { FacebookPage } from "@/types/facebook"
 
-const LIMIT = 200
+const LIMIT = 500
 
 export async function GET(
   request: Request,
