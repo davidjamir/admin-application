@@ -2,10 +2,9 @@ import React from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Copy, RefreshCcw, Trash2, Pencil } from "lucide-react"
+import { Copy, RefreshCcw, Trash2, Pencil, Loader2 } from "lucide-react"
 import { SystemUser, FacebookPage } from "@/types/facebook"
 import { EmptyState } from "./EmptyState"
-import { LoadingScreen } from "@/components/ui/loading-screen"
 
 interface SystemUserModeProps {
   loading: boolean
@@ -145,7 +144,10 @@ export function SystemUserMode({
       {/* Bulk Actions Header */}
       <div className="flex items-center justify-between pt-4 pb-2 border-t border-border/20">
           <div className="flex items-center gap-4">
-              <h3 className="text-lg tracking-tighter text-black">All Pages</h3>
+              <div className="flex items-center gap-3">
+                <h3 className="text-lg tracking-tighter text-black">All Pages</h3>
+                {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
+              </div>
               <div className="flex items-center gap-3 text-[10px] text-black/40 tracking-wider">
                   <span>pages: {systemUserPages.length}</span>
                   <span>selected: {selectedPageIds.length}</span>
@@ -209,19 +211,7 @@ export function SystemUserMode({
                   </TableRow>
               </TableHeader>
               <TableBody>
-                  {loading ? (
-                      <TableRow className="hover:bg-transparent border-none">
-                          <TableCell colSpan={6} className="py-0 text-center border-none">
-                            <LoadingScreen fullScreen={false} />
-                          </TableCell>
-                      </TableRow>
-                  ) : systemUserPages.length === 0 ? (
-                      <TableRow className="hover:bg-transparent">
-                          <TableCell colSpan={6} className="py-20 text-center border-none">
-                              <EmptyState mode="System User" />
-                          </TableCell>
-                      </TableRow>
-                  ) : (
+                  {systemUserPages.length > 0 ? (
                       systemUserPages.map((page, index) => (
                           <TableRow 
                               key={page.id} 
@@ -259,6 +249,21 @@ export function SystemUserMode({
                               </TableCell>
                           </TableRow>
                       ))
+                  ) : loading ? (
+                      <TableRow className="hover:bg-transparent border-none">
+                          <TableCell colSpan={6} className="py-20 text-center border-none border-t-0">
+                               <div className="flex flex-col items-center justify-center gap-3 opacity-50">
+                                  <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                                  <span className="text-xs text-muted-foreground animate-pulse tracking-tight">Fetching pages...</span>
+                              </div>
+                          </TableCell>
+                      </TableRow>
+                  ) : (
+                      <TableRow className="hover:bg-transparent">
+                          <TableCell colSpan={6} className="py-20 text-center border-none">
+                              <EmptyState mode="System User" />
+                          </TableCell>
+                      </TableRow>
                   )}
               </TableBody>
           </Table>

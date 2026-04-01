@@ -45,7 +45,7 @@ export async function GET(
       { method: "GET", relative_url: `v25.0/${businessId}/owned_apps?fields=${appFields}`, name: "owned_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/client_apps?fields=${appFields}`, name: "client_apps" },
       { method: "GET", relative_url: `v25.0/${businessId}/pending_client_apps?fields=${appFields}`, name: "pending_apps" },
-      { method: "GET", relative_url: `v25.0/${businessId}/business_asset_groups?fields=id,name,contained_pages{id,name},contained_applications{id,name},contained_ad_accounts{id,name}&limit=50`, name: "asset_groups" }
+      { method: "GET", relative_url: `v25.0/${businessId}/business_asset_groups?fields=id,name,contained_pages.limit(500){id,name},contained_applications.limit(500){id,name},contained_ad_accounts.limit(500){id,name}&limit=50`, name: "asset_groups" }
     ]
 
     // Step 2: Execute Consolidated Batch

@@ -50,6 +50,25 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
   const [isLoadingUsers, setIsLoadingUsers] = useState(false)
   const [isLoadingAssets, setIsLoadingAssets] = useState(false)
   const [expandedUserId, setExpandedUserId] = useState<string | null>(null)
+  
+  const totalAssetsCount = (assetGroupDetails?.contained_pages?.data?.length || 0) +
+                        (assetGroupDetails?.contained_ad_accounts?.data?.length || 0) +
+                        (assetGroupDetails?.contained_ads_pixels?.data?.length || 0) +
+                        (assetGroupDetails?.contained_instagram_accounts?.data?.length || 0) +
+                        (assetGroupDetails?.contained_applications?.data?.length || 0) +
+                        (assetGroupDetails?.contained_offline_conversion_data_sets?.data?.length || 0);
+
+  const assetBreakdown = [
+    { label: 'pages', count: assetGroupDetails?.contained_pages?.data?.length || 0 },
+    { label: 'ad accounts', count: assetGroupDetails?.contained_ad_accounts?.data?.length || 0 },
+    { label: 'pixels', count: assetGroupDetails?.contained_ads_pixels?.data?.length || 0 },
+    { label: 'instagram', count: assetGroupDetails?.contained_instagram_accounts?.data?.length || 0 },
+    { label: 'apps', count: assetGroupDetails?.contained_applications?.data?.length || 0 },
+    { label: 'offline data sets', count: assetGroupDetails?.contained_offline_conversion_data_sets?.data?.length || 0 },
+  ]
+    .filter(item => item.count > 0)
+    .map(item => `${item.count} ${item.label}${item.count > 1 ? '' : ''}`) // Keeping singular/plural logic simple as user used "pages", "app"
+    .join(', ');
 
   const clearSelections = () => {
     setSelectedAssetGroupId(null)
@@ -333,7 +352,8 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                       <Users className="w-3 h-3" />
-                      People ({assetGroupDetails?.assigned_users?.data?.length || 0})
+                      People {assetGroupDetails?.assigned_users?.data?.length ? `(${assetGroupDetails.assigned_users.data.length})` : ''}
+                      {isLoadingUsers && <Loader2 className="w-3 h-3 animate-spin text-primary/40 shrink-0" />}
                     </h4>
                     <Button 
                       variant="ghost" 
@@ -345,10 +365,9 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                     </Button>
                   </div>
                   
-                  {isLoadingUsers ? (
+                  {isLoadingUsers && !assetGroupDetails?.assigned_users?.data?.length ? (
                     <div className="flex flex-col items-center py-4 gap-2 opacity-50">
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-[10px]">Loading people...</span>
                     </div>
                   ) : assetGroupDetails?.assigned_users?.data?.length ? (
                     <div className="grid gap-1.5">
@@ -559,7 +578,8 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                   <div className="flex items-center justify-between">
                     <h4 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
                       <Layers className="w-3 h-3" />
-                      Assets
+                      Assets {assetBreakdown ? `(${assetBreakdown})` : ''}
+                      {isLoadingAssets && <Loader2 className="w-3 h-3 animate-spin text-primary/40 shrink-0" />}
                     </h4>
                     <Button 
                       variant="ghost" 
@@ -571,10 +591,9 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                     </Button>
                   </div>
 
-                  {isLoadingAssets ? (
+                  {isLoadingAssets && !totalAssetsCount ? (
                     <div className="flex flex-col items-center py-4 gap-2 opacity-50">
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
-                      <span className="text-[10px]">Loading assets...</span>
                     </div>
                   ) : (
                     <div className="space-y-4">
@@ -587,7 +606,9 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
                         { title: 'Offline Data Sets', data: assetGroupDetails?.contained_offline_conversion_data_sets?.data, icon: Database, type: 'OFFLINE_CONVERSION_DATA_SET' }
                       ].map((cat) => cat.data?.length ? (
                         <div key={cat.title} className="space-y-1.5">
-                          <p className="text-[9px] font-bold text-muted-foreground tracking-wide pl-1 capitalize">{cat.title.toLowerCase()}</p>
+                          <p className="text-[9px] font-bold text-muted-foreground tracking-wide pl-1 capitalize">
+                            {cat.title.toLowerCase()} {cat.data?.length ? `(${cat.data.length})` : ''}
+                          </p>
                           <div className="grid gap-1">
                             {cat.data.map((asset: { id: string; name?: string; username?: string }) => (
                               <div 
@@ -640,7 +661,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
         ) : null
       }
     >
-      <Section title="Asset Groups" icon={Layers} count={business.business_asset_groups?.data?.length}>
+      <Section title="Asset Groups" icon={Layers} count={business.business_asset_groups?.data?.length || undefined}>
         {business.business_asset_groups?.data?.map((group) => (
           <Item
             key={group.id}
@@ -654,7 +675,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
         {!business.business_asset_groups?.data?.length && <p className="text-xs text-muted-foreground italic pl-2">No asset groups found</p>}
       </Section>
 
-      <Section title="Tracking Pixels" icon={Zap} count={business.adspixels?.data?.length}>
+      <Section title="Tracking Pixels" icon={Zap} count={business.adspixels?.data?.length || undefined}>
         {business.adspixels?.data?.map((pix) => (
           <Item
             key={pix.id}
@@ -668,7 +689,7 @@ export const AssetsTab = ({ business, adminToken, allBusinessUsers }: AssetsTabP
         {!business.adspixels?.data?.length && <p className="text-xs text-muted-foreground italic pl-2">No pixels found</p>}
       </Section>
 
-      <Section title="WhatsApp Business" icon={MessageSquare} count={business.whatsapp_business_accounts?.data?.length}>
+      <Section title="WhatsApp Business" icon={MessageSquare} count={business.whatsapp_business_accounts?.data?.length || undefined}>
         {business.whatsapp_business_accounts?.data?.map((wa: { id: string; name: string; status: string }) => (
           <Item
             key={wa.id}

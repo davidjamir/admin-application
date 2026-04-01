@@ -3,7 +3,6 @@
 import React, { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Loader2, RefreshCcw, Copy, Search, CheckCircle2, AlertCircle, Pencil, Plus, ClipboardPaste } from "lucide-react"
-import { LoadingScreen } from "@/components/ui/loading-screen"
 import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
@@ -215,7 +214,10 @@ export function AccountUserMode({
       {/* Business Table */}
       <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-normal tracking-tighter text-black">Businesses</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-normal tracking-tighter text-black">Businesses</h2>
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
+          </div>
           <div className="text-[10px] text-black/40 tracking-wider">
             items: {businessRows.length}
           </div>
@@ -229,18 +231,12 @@ export function AccountUserMode({
                 <TableHead className="text-sm font-bold text-black px-6">Business Name</TableHead>
                 <TableHead className="text-sm font-bold text-black px-6 text-center">Status</TableHead>
                 <TableHead className="text-sm font-bold text-black px-6 text-center">Role</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6 text-center">Assigned Pages</TableHead>
+                <TableHead className="text-sm font-bold text-black px-6 text-center">Total Apps</TableHead>
                 <TableHead className="text-sm font-bold text-black px-6 text-center">Total Pages</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableCell colSpan={7} className="py-0 text-center border-none">
-                    <LoadingScreen fullScreen={false} message="Refreshing assets" />
-                  </TableCell>
-                </TableRow>
-              ) : businessRows.length > 0 ? (
+              {businessRows.length > 0 ? (
                 businessRows.map((bm, index) => (
                   <TableRow
                     key={bm.id}
@@ -329,7 +325,7 @@ export function AccountUserMode({
                     </TableCell>
                     <TableCell className="px-6 text-center">
                       <span className="text-sm text-black font-medium tabular-nums">
-                        {bm.assignedPageIds?.length || 0}
+                        {bm.apps?.length || 0}
                       </span>
                     </TableCell>
                     <TableCell className="px-6 text-center">
@@ -339,6 +335,15 @@ export function AccountUserMode({
                     </TableCell>
                   </TableRow>
                 ))
+              ) : loading ? (
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableCell colSpan={7} className="py-20 text-center border-none border-t-0">
+                    <div className="flex flex-col items-center justify-center gap-3 opacity-50">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="text-xs text-muted-foreground animate-pulse tracking-tight">Refreshing businesses...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={7} className="py-20 text-center border-none">
@@ -357,7 +362,10 @@ export function AccountUserMode({
       {/* Pages Outside Business Table */}
       <div className="space-y-4 pb-8">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-normal tracking-tighter text-black">Pages Outside Business</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-lg font-normal tracking-tighter text-black">Pages Outside Business</h2>
+            {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
+          </div>
           <div className="flex items-center gap-4 text-[10px] text-black/40 tracking-wider">
             <div className="flex items-center gap-2">
               <Button
@@ -473,13 +481,7 @@ export function AccountUserMode({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {loading ? (
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableCell colSpan={7} className="py-0 text-center border-none">
-                    <LoadingScreen fullScreen={false} message="Discovering pages" />
-                  </TableCell>
-                </TableRow>
-              ) : standalonePages.length > 0 ? (
+              {standalonePages.length > 0 ? (
                 standalonePages.map((page, index) => (
                   <TableRow
                     key={page.id}
@@ -566,6 +568,15 @@ export function AccountUserMode({
                     </TableCell>
                   </TableRow>
                 ))
+              ) : loading ? (
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableCell colSpan={7} className="py-20 text-center border-none border-t-0">
+                    <div className="flex flex-col items-center justify-center gap-3 opacity-50">
+                      <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                      <span className="text-xs text-muted-foreground animate-pulse tracking-tight">Discovering pages...</span>
+                    </div>
+                  </TableCell>
+                </TableRow>
               ) : (
                 <TableRow>
                   <TableCell colSpan={7} className="py-10 text-center">

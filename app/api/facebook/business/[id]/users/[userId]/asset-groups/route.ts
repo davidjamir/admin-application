@@ -16,7 +16,7 @@ export async function GET(
     // FB Graph API endpoint for assigned business asset groups
     // GET https://graph.facebook.com/v25.0/{user_id}/assigned_business_asset_groups
     const url = new URL(`https://graph.facebook.com/v25.0/${encodeURIComponent(userId)}/assigned_business_asset_groups`)
-    url.searchParams.set("fields", "id,name,contained_pages{id,name},contained_ad_accounts{id,name},contained_applications{id,name}")
+    url.searchParams.set("fields", "id,name,contained_pages.limit(500){id,name},contained_ad_accounts.limit(500){id,name},contained_applications.limit(500){id,name}")
     url.searchParams.set("access_token", token)
     url.searchParams.set("limit", "100")
 
