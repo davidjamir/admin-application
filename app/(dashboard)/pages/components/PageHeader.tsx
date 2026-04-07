@@ -1,5 +1,5 @@
 import React from "react"
-import { Filter, Search } from "lucide-react"
+import { Search } from "lucide-react"
 import { PageHeaderProps } from "./types"
 
 export const PageHeader: React.FC<PageHeaderProps> = ({

@@ -44,7 +44,6 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SessionUser } from "@/lib/auth/session"
-import { cn } from "@/lib/utils"
 
 // Sample navigation data
 const navItems = [
@@ -99,9 +98,8 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
-  const { isMobile, state } = useSidebar()
+  const { isMobile } = useSidebar()
   const pathname = usePathname()
-  const isCollapsed = state === "collapsed"
 
   return (
     <Sidebar collapsible="icon" {...props}>

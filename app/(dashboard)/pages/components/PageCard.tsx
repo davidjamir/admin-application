@@ -28,9 +28,9 @@ export const PageCard: React.FC<PageCardProps> = ({
       <CardHeader className="pb-1 pt-4 px-5 flex flex-row items-start justify-between space-y-0">
         <div className="flex flex-col w-[85%]">
           <div className="h-[42px] flex items-start">
-            <span className="font-semibold text-[15px] leading-snug break-words line-clamp-2 text-black flex items-center flex-wrap gap-y-1">
+            <span className="font-semibold text-[15px] leading-snug break-words line-clamp-2 text-black">
               {page.name}
-              <span className="inline-flex items-center gap-1 ml-2 flex-shrink-0">
+              <span className="inline-flex items-center gap-1 ml-2 flex-shrink-0 align-middle">
                 <a
                   href={`https://facebook.com/${page.pageId}`}
                   target="_blank"
