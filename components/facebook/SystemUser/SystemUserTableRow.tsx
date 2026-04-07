@@ -7,13 +7,16 @@ import { toast } from "sonner"
 import { SystemUserTableRowProps } from "./types"
 
 export const SystemUserTableRow: React.FC<SystemUserTableRowProps> = ({
-    user, isRecrawling, onRecrawl, onDelete, onEdit
+    index, user, isRecrawling, onRecrawl, onDelete, onEdit
 }) => {
     return (
         <TableRow 
             className="group border-border/30 hover:bg-muted/30 transition-all duration-300 cursor-pointer"
             onClick={() => onEdit(user)}
         >
+            <TableCell className="py-5 px-6 text-sm text-black tracking-tight w-10 text-center">
+                {index + 1}
+            </TableCell>
             <TableCell className="py-5 px-6">
                 <div className="flex items-center gap-4">
                     <span className="text-sm text-black w-[140px] truncate">{user.id}</span>

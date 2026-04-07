@@ -19,6 +19,7 @@ export const SystemUserTable: React.FC<SystemUserTableProps> = ({
             <Table>
                 <TableHeader className="bg-muted/50">
                     <TableRow className="hover:bg-transparent border-border/50">
+                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-center w-10">#</TableHead>
                         <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset ID</TableHead>
                         <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset Identity</TableHead>
                         <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Status</TableHead>
@@ -31,7 +32,7 @@ export const SystemUserTable: React.FC<SystemUserTableProps> = ({
                 <TableBody>
                     {users.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={7} className="py-24 text-center">
+                            <TableCell colSpan={8} className="py-24 text-center">
                                 <div className="flex flex-col items-center gap-4 opacity-20">
                                     <Briefcase className="w-12 h-12" />
                                     <div className="space-y-1">
@@ -42,9 +43,10 @@ export const SystemUserTable: React.FC<SystemUserTableProps> = ({
                             </TableCell>
                         </TableRow>
                     ) : (
-                        users.map((user) => (
+                        users.map((user, idx) => (
                             <SystemUserTableRow 
                                 key={user.id} 
+                                index={idx}
                                 user={user} 
                                 isRecrawling={recrawlingIds.has(user.id)}
                                 onRecrawl={onRecrawl}

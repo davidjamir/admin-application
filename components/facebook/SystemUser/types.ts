@@ -48,6 +48,7 @@ export interface SystemUserTableProps {
 }
 
 export interface SystemUserTableRowProps {
+    index: number
     user: SystemUser
     isRecrawling: boolean
     onRecrawl: (user: SystemUser) => void

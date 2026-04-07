@@ -74,34 +74,35 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-transparent border-border/50">
-                            <TableHead className="w-14 text-center py-4">
-                                <Checkbox
-                                    checked={isAllSelected}
-                                    onCheckedChange={(checked) => {
-                                        if (checked) setSelectedPageIds(pages.map(p => p.id))
-                                        else setSelectedPageIds([])
-                                    }}
-                                    disabled={pages.length === 0}
-                                    className="border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                                />
-                            </TableHead>
-                            <TableHead className="text-left text-xs font-extrabold tracking-wider text-black">Asset ID</TableHead>
-                            <TableHead className="text-left text-xs font-extrabold tracking-wider text-black">Asset Identity</TableHead>
-                            <TableHead className="text-left text-xs font-extrabold tracking-wider text-black">Category</TableHead>
-                            <TableHead className="text-left text-xs font-extrabold tracking-wider text-black">Topic</TableHead>
-                            <TableHead className="text-right text-xs font-extrabold tracking-wider pr-6 text-black">Access Token</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black w-10 py-4">#</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Asset ID</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Asset Identity</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Category</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Topic</TableHead>
+                        <TableHead className="text-right text-xs font-extrabold tracking-wider text-black py-4">Access Token</TableHead>
+                        <TableHead className="w-14 text-center py-4">
+                            <Checkbox
+                                checked={isAllSelected}
+                                onCheckedChange={(checked) => {
+                                    if (checked) setSelectedPageIds(pages.map(p => p.id))
+                                    else setSelectedPageIds([])
+                                }}
+                                disabled={pages.length === 0}
+                                className="border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                            />
+                        </TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {loadingPages ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="py-10 text-center">
+                                <TableCell colSpan={7} className="py-10 text-center">
                                     <Loader2 className="w-6 h-6 animate-spin mx-auto text-primary/20" />
                                 </TableCell>
                             </TableRow>
                         ) : pages.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={6} className="py-24 text-center">
+                                <TableCell colSpan={7} className="py-24 text-center">
                                     <div className="flex flex-col items-center gap-4 opacity-20">
                                         <Layers className="w-12 h-12" />
                                         <div className="space-y-1">
@@ -112,7 +113,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            pages.map((page) => (
+                            pages.map((page, idx) => (
                                 <TableRow
                                     key={page.id}
                                     className={cn(
@@ -124,56 +125,59 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                         setSelectedPageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
                                     }}
                                 >
-                                    <TableCell className="text-center py-4" onClick={e => e.stopPropagation()}>
-                                        <Checkbox
-                                            checked={selectedPageIds.includes(page.id)}
-                                            onCheckedChange={(checked) => {
-                                                setSelectedPageIds(prev => checked ? [...prev, page.id] : prev.filter(id => id !== page.id))
-                                            }}
-                                            className="border-border/60"
-                                        />
-                                    </TableCell>
-                                    <TableCell className="py-4">
-                                        <div className="flex items-center justify-between gap-4 max-w-[180px]">
-                                            <span className="text-sm font-mono text-black">{page.id}</span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Asset ID") }}
-                                                className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
-                                            >
-                                                <Copy className="w-3 h-3 text-black" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className="py-4">
-                                        <span className="text-sm leading-tight text-black transition-colors group-hover:text-primary">{page.name}</span>
-                                    </TableCell>
-                                    <TableCell className="py-4">
-                                        <span className="text-sm font-medium text-black">
-                                            {page.category || "-"}
+                                <TableCell className="text-center py-4 text-sm text-black tracking-tight w-10">
+                                    {idx + 1}
+                                </TableCell>
+                                <TableCell className="py-4">
+                                    <div className="flex items-center justify-between gap-4 max-w-[180px]">
+                                        <span className="text-sm font-mono text-black">{page.id}</span>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Asset ID") }}
+                                            className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
+                                        >
+                                            <Copy className="w-3 h-3 text-black" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="py-4">
+                                    <span className="text-sm leading-tight text-black transition-colors group-hover:text-primary">{page.name}</span>
+                                </TableCell>
+                                <TableCell className="py-4">
+                                    <span className="text-sm font-medium text-black">
+                                        {page.category || "-"}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="py-4">
+                                    <span className="text-sm font-medium text-black">
+                                        {page.topic || "-"}
+                                    </span>
+                                </TableCell>
+                                <TableCell className="py-4" onClick={e => e.stopPropagation()}>
+                                    <div className="flex items-center justify-between gap-4 max-w-[200px]">
+                                        <span className="text-sm font-mono text-black">
+                                            {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-8)}
                                         </span>
-                                    </TableCell>
-                                    <TableCell className="py-4">
-                                        <span className="text-sm font-medium text-black">
-                                            {page.topic || "-"}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell className="py-4" onClick={e => e.stopPropagation()}>
-                                        <div className="flex items-center justify-between gap-4 max-w-[200px]">
-                                            <span className="text-sm font-mono text-black">
-                                                {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-8)}
-                                            </span>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                onClick={() => handleCopy(page.access_token || "", "Access Token")}
-                                                className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
-                                            >
-                                                <Copy className="w-3 h-3 text-black" />
-                                            </Button>
-                                        </div>
-                                    </TableCell>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            onClick={() => handleCopy(page.access_token || "", "Access Token")}
+                                            className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
+                                        >
+                                            <Copy className="w-3 h-3 text-black" />
+                                        </Button>
+                                    </div>
+                                </TableCell>
+                                <TableCell className="text-center py-4" onClick={e => e.stopPropagation()}>
+                                    <Checkbox
+                                        checked={selectedPageIds.includes(page.id)}
+                                        onCheckedChange={(checked) => {
+                                            setSelectedPageIds(prev => checked ? [...prev, page.id] : prev.filter(id => id !== page.id))
+                                        }}
+                                        className="border-border/60"
+                                    />
+                                </TableCell>
                                 </TableRow>
                             ))
                         )}

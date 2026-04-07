@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { SessionUser } from "@/lib/auth/session"
+import { cn } from "@/lib/utils"
 
 // Sample navigation data
 const navItems = [
@@ -98,8 +99,9 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 }
 
 export function AppSidebar({ user, ...props }: AppSidebarProps) {
-  const { isMobile } = useSidebar()
+  const { isMobile, state } = useSidebar()
   const pathname = usePathname()
+  const isCollapsed = state === "collapsed"
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -107,13 +109,13 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
-              <Link href="/">
-                <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-blue-600 text-primary-foreground shadow-lg shadow-primary/20">
-                  <ShieldCheck className="size-6" />
+              <Link href="/" className="flex items-center w-full justify-start gap-3">
+                <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-blue-600 text-primary-foreground shadow-lg shadow-primary/20 shrink-0 transition-all duration-200 group-data-[collapsible=icon]:size-8">
+                  <ShieldCheck className="size-6 transition-all duration-200 group-data-[collapsible=icon]:size-5" />
                 </div>
-                <div className="flex flex-col gap-0.5 leading-none ml-1">
-                  <span className="font-bold text-lg tracking-tight">7 Forge Inc</span>
-                  <span className="text-[10px] tracking-widest text-muted-foreground font-semibold">Admin System</span>
+                <div className="flex flex-col gap-0.5 leading-none transition-all duration-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:hidden">
+                  <span className="font-bold text-lg tracking-tight truncate">7 Forge Inc</span>
+                  <span className="text-[10px] tracking-widest text-muted-foreground font-semibold truncate">Admin System</span>
                 </div>
               </Link>
             </SidebarMenuButton>

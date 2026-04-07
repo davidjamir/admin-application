@@ -42,6 +42,18 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
                     setSelectedStatusFilter={setSelectedStatusFilter}
                 />
 
+                <div className="flex items-center gap-1 text-xs text-muted-foreground ml-1">
+                    <span>Showing</span>
+                    <span className="font-bold text-black">{filteredUsers.length}</span>
+                    <span>users</span>
+                    <span className="mx-1">•</span>
+                    <span className="font-bold text-emerald-600">{filteredUsers.filter(u => u.status !== "Disabled").length}</span>
+                    <span>Active</span>
+                    <span className="mx-1">•</span>
+                    <span className="font-bold text-red-600">{filteredUsers.filter(u => u.status === "Disabled").length}</span>
+                    <span>Disabled</span>
+                </div>
+
                 <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
                     <AddUserSheet 
                         isSheetOpen={isSheetOpen}

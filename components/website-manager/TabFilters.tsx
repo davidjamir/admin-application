@@ -5,6 +5,7 @@ import { TabFiltersProps } from "./types"
 export const TabFilters: React.FC<TabFiltersProps> = ({
     tab, search, setSearch, originFilter, setOriginFilter, originList,
     channelFilter, setChannelFilter, channelList,
+    statusFilter, setStatusFilter,
     dateFilter, setDateFilter, dateList, todayStr
 }) => {
     return (
@@ -32,6 +33,19 @@ export const TabFilters: React.FC<TabFiltersProps> = ({
                                 if (d === todayStr) label = "Today"
                                 return <option key={d} value={d}>{label}</option>
                             })}
+                        </select>
+                    </div>
+                )}
+                {tab === "blogs" && statusFilter && setStatusFilter && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        <select
+                            value={statusFilter}
+                            onChange={e => setStatusFilter(e.target.value)}
+                            className="px-2 py-2 rounded-lg border border-border/40 bg-card text-sm focus:outline-none cursor-pointer focus:ring-2 focus:ring-primary/30 w-[140px] shadow-sm"
+                        >
+                            <option value="all">All Status</option>
+                            <option value="enabled">Enabled</option>
+                            <option value="disabled">Disabled</option>
                         </select>
                     </div>
                 )}

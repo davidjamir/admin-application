@@ -36,6 +36,7 @@ export function useWebsiteManager() {
     const [search, setSearch] = useState("")
     const [originFilter, setOriginFilter] = useState("all")
     const [channelFilter, setChannelFilter] = useState("all")
+    const [statusFilter, setStatusFilter] = useState("all")
     const [dateFilter, setDateFilter] = useState("all")
     const [hasInitializedDate, setHasInitializedDate] = useState(false)
     const [selected, setSelected] = useState<SelectedItem | null>(null)
@@ -79,8 +80,11 @@ export function useWebsiteManager() {
         const matchChannel = channelFilter === "all" 
             || (channelFilter === "Empty Channel" && !b.channel)
             || b.channel === channelFilter
-        return matchSearch && matchOrigin && matchChannel
-    }), [blogs, search, originFilter, channelFilter])
+        const matchStatus = statusFilter === "all"
+            || (statusFilter === "enabled" && b.enabled)
+            || (statusFilter === "disabled" && !b.enabled)
+        return matchSearch && matchOrigin && matchChannel && matchStatus
+    }), [blogs, search, originFilter, channelFilter, statusFilter])
 
     const filteredWraps = useMemo(() => wraps.filter(w => {
         const matchSearch = !search || w.wrap_host.toLowerCase().includes(search.toLowerCase()) || w.target_host.toLowerCase().includes(search.toLowerCase()) || w.prefix.toLowerCase().includes(search.toLowerCase())
@@ -192,8 +196,9 @@ export function useWebsiteManager() {
     return {
         blogs, wraps, allSubdomainGroups, loading, refreshing, fetchedAt, tab, setTab,
         search, setSearch, originFilter, setOriginFilter, channelFilter, setChannelFilter,
-        dateFilter, setDateFilter, selected, setSelected, mounted, fetchData, copyToClipboard,
-        filteredBlogs, filteredWraps, filteredGroups, allOriginNames, allDates, originHistory,
-        counts, filteredCounts, originList, allChannels, todayStr
+        statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
+        mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
+        allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
+        allChannels, todayStr
     }
 }

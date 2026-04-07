@@ -16,7 +16,8 @@ export default function PagesManagementPage() {
     handleRefresh, handlePageClick, formatExactRelative, getHealthColor
   } = useFacebookPages()
 
-  if (loading) {
+  // Only show full screen loading for the very first load when there's no data yet
+  if (loading && data.length === 0 && !searchQuery && categoryFilter === "All") {
     return <LoadingScreen />
   }
 
@@ -37,6 +38,7 @@ export default function PagesManagementPage() {
 
       <PageGrid 
         data={data}
+        loading={loading}
         selectedPageId={selectedPage?._id.$oid}
         handlePageClick={handlePageClick}
         getHealthColor={getHealthColor}

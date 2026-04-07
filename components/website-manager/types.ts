@@ -38,6 +38,8 @@ export interface TabFiltersProps {
     channelFilter?: string
     setChannelFilter?: (val: string) => void
     channelList?: string[]
+    statusFilter?: string
+    setStatusFilter?: (val: string) => void
     dateFilter?: string
     setDateFilter?: (val: string) => void
     dateList?: string[]

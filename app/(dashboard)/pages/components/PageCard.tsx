@@ -1,6 +1,6 @@
 import React, { useState } from "react"
 import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
-import { Facebook } from "lucide-react"
+import { Facebook, MessageSquare } from "lucide-react"
 import { toast } from "sonner"
 import { PageCardProps } from "./types"
 
@@ -28,18 +28,30 @@ export const PageCard: React.FC<PageCardProps> = ({
       <CardHeader className="pb-1 pt-4 px-5 flex flex-row items-start justify-between space-y-0">
         <div className="flex flex-col w-[85%]">
           <div className="h-[42px] flex items-start">
-            <span className="font-semibold text-[15px] leading-snug break-words line-clamp-2 text-black">
+            <span className="font-semibold text-[15px] leading-snug break-words line-clamp-2 text-black flex items-center flex-wrap gap-y-1">
               {page.name}
-              <a
-                href={`https://facebook.com/${page.pageId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group/fb inline-flex items-center justify-center size-5 ml-1.5 align-middle cursor-pointer border border-transparent hover:border-[#1877F2]/30 rounded-sm bg-transparent hover:bg-[#1877F2]/10 transition-all"
-                onClick={(e) => e.stopPropagation()}
-                title="View on Facebook"
-              >
-                <Facebook className="size-2.5 text-[#1877F2]" />
-              </a>
+              <span className="inline-flex items-center gap-1 ml-2 flex-shrink-0">
+                <a
+                  href={`https://facebook.com/${page.pageId}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="size-5 inline-flex items-center justify-center rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2]/20 transition-all"
+                  onClick={(e) => e.stopPropagation()}
+                  title="View on Facebook"
+                >
+                  <Facebook className="size-2.5 text-[#1877F2]" />
+                </a>
+                <a
+                  href={`https://www.facebook.com/profile.php?id=${page.pageId}&sk=reviews`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="size-5 inline-flex items-center justify-center rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 transition-all font-bold"
+                  onClick={(e) => e.stopPropagation()}
+                  title="View Reviews"
+                >
+                  <MessageSquare className="size-2.5 text-indigo-500" />
+                </a>
+              </span>
             </span>
           </div>
         </div>

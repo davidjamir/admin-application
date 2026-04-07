@@ -16,9 +16,10 @@ export default function WebsiteManagerPage() {
     const {
         loading, refreshing, fetchedAt, tab, setTab,
         search, setSearch, originFilter, setOriginFilter, channelFilter, setChannelFilter,
-        dateFilter, setDateFilter, selected, setSelected, mounted, fetchData, copyToClipboard,
-        filteredBlogs, filteredWraps, filteredGroups, allOriginNames, allDates, originHistory,
-        counts, filteredCounts, originList, allChannels, todayStr
+        statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
+        mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
+        allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
+        allChannels, todayStr
     } = useWebsiteManager()
 
     if (!mounted || loading) {
@@ -72,6 +73,8 @@ export default function WebsiteManagerPage() {
                 channelFilter={channelFilter}
                 setChannelFilter={setChannelFilter}
                 channelList={allChannels}
+                statusFilter={statusFilter}
+                setStatusFilter={setStatusFilter}
                 dateFilter={dateFilter}
                 setDateFilter={setDateFilter}
                 dateList={["all", ...allDates]}

@@ -26,7 +26,6 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           />
         </div>
         <div className="flex items-center gap-2">
-          <Filter className="h-4 w-4 text-muted-foreground hidden sm:block" />
           <select
             className="flex h-9 w-full sm:w-[160px] rounded-md border border-input bg-card px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring cursor-pointer text-black"
             value={categoryFilter}

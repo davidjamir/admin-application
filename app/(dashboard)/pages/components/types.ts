@@ -15,6 +15,7 @@ export interface PageStatsProps {
 
 export interface PageGridProps {
   data: MongoPageData[]
+  loading: boolean
   selectedPageId: string | undefined
   handlePageClick: (page: MongoPageData) => void
   getHealthColor: (ts: number) => string
