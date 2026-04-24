@@ -36,6 +36,8 @@ export function useWebsiteManager() {
     const [search, setSearch] = useState("")
     const [originFilter, setOriginFilter] = useState("all")
     const [channelFilter, setChannelFilter] = useState("all")
+    const [wrapChannelFilter, setWrapChannelFilter] = useState("all")
+    const [quotaChannelFilter, setQuotaChannelFilter] = useState("all")
     const [statusFilter, setStatusFilter] = useState("all")
     const [dateFilter, setDateFilter] = useState("all")
     const [hasInitializedDate, setHasInitializedDate] = useState(false)
@@ -86,11 +88,46 @@ export function useWebsiteManager() {
         return matchSearch && matchOrigin && matchChannel && matchStatus
     }), [blogs, search, originFilter, channelFilter, statusFilter])
 
-    const filteredWraps = useMemo(() => wraps.filter(w => {
-        const matchSearch = !search || w.wrap_host.toLowerCase().includes(search.toLowerCase()) || w.target_host.toLowerCase().includes(search.toLowerCase()) || w.prefix.toLowerCase().includes(search.toLowerCase())
-        const matchOrigin = originFilter === "all" || getOrigin(w.target_host) === originFilter
-        return matchSearch && matchOrigin
-    }), [wraps, search, originFilter])
+    // Advanced mapping logic
+    const blogMaps = useMemo(() => {
+        const dnsMap = new Map<string, string>()
+        const wrapMap = new Map<string, string>()
+        const originMap = new Map<string, string>()
+
+        blogs.forEach(b => {
+            const chan = b.channel || ""
+            if (b.blogDns) {
+                dnsMap.set(b.blogDns, chan)
+                const origin = getOrigin(b.blogDns)
+                if (!originMap.has(origin)) originMap.set(origin, chan)
+            }
+            if (b.wrapDomain) {
+                wrapMap.set(b.wrapDomain, chan)
+                const hostOnly = b.wrapDomain.split('/')[0]
+                if (!wrapMap.has(hostOnly)) wrapMap.set(hostOnly, chan)
+            }
+        })
+        return { dnsMap, wrapMap, originMap }
+    }, [blogs])
+
+    const getChannelForWrap = useCallback((w: Wrap) => {
+        const full = `${w.wrap_host}/${w.prefix}`
+        if (blogMaps.wrapMap.has(full)) return blogMaps.wrapMap.get(full) || ""
+        if (blogMaps.wrapMap.has(w.wrap_host)) return blogMaps.wrapMap.get(w.wrap_host) || ""
+        if (blogMaps.dnsMap.has(w.target_host)) return blogMaps.dnsMap.get(w.target_host) || ""
+        const targetOrigin = getOrigin(w.target_host)
+        if (blogMaps.originMap.has(targetOrigin)) return blogMaps.originMap.get(targetOrigin) || ""
+        return ""
+    }, [blogMaps])
+
+    const getChannelForQuota = useCallback((domain: string) => {
+        if (blogMaps.dnsMap.has(domain)) return blogMaps.dnsMap.get(domain) || ""
+        if (blogMaps.wrapMap.has(domain)) return blogMaps.wrapMap.get(domain) || ""
+        const domainOrigin = getOrigin(domain)
+        if (blogMaps.originMap.has(domainOrigin)) return blogMaps.originMap.get(domainOrigin) || ""
+        return ""
+    }, [blogMaps])
+
 
     const originQuotas = useMemo(() => quotas.filter(q => q.type === "origin"), [quotas])
 
@@ -114,6 +151,28 @@ export function useWebsiteManager() {
         })
         return groups
     }, [quotas])
+
+    const wrapChannelMap = useMemo(() => {
+        const map = new Map<string, string>()
+        wraps.forEach(w => map.set(w._id, getChannelForWrap(w)))
+        return map
+    }, [wraps, getChannelForWrap])
+
+    const quotaChannelMap = useMemo(() => {
+        const map = new Map<string, string>()
+        allSubdomainGroups.forEach(g => map.set(g.domain, getChannelForQuota(g.domain)))
+        return map
+    }, [allSubdomainGroups, getChannelForQuota])
+
+    const filteredWraps = useMemo(() => wraps.filter(w => {
+        const matchSearch = !search || w.wrap_host.toLowerCase().includes(search.toLowerCase()) || w.target_host.toLowerCase().includes(search.toLowerCase()) || w.prefix.toLowerCase().includes(search.toLowerCase())
+        const matchOrigin = originFilter === "all" || getOrigin(w.target_host) === originFilter
+        const wrapChannel = wrapChannelMap.get(w._id) ?? ""
+        const matchChannel = wrapChannelFilter === "all"
+            || (wrapChannelFilter === "Empty Channel" && !wrapChannel)
+            || wrapChannel === wrapChannelFilter
+        return matchSearch && matchOrigin && matchChannel
+    }), [wraps, search, originFilter, wrapChannelFilter, wrapChannelMap])
 
     const allOriginNames = useMemo(() => {
         const fromOrigins = originQuotas.map(q => q.domain)
@@ -166,9 +225,13 @@ export function useWebsiteManager() {
                 if (!g) return false
                 const matchSearch = g.domain.toLowerCase().includes(search.toLowerCase()) || g.type.toLowerCase().includes(search.toLowerCase())
                 const matchOrigin = isFromOrigin(g.domain, originFilter)
-                return matchSearch && matchOrigin
+                const quotaChannel = quotaChannelMap.get(g.domain) ?? ""
+                const matchChannel = quotaChannelFilter === "all"
+                    || (quotaChannelFilter === "Empty Channel" && !quotaChannel)
+                    || quotaChannel === quotaChannelFilter
+                return matchSearch && matchOrigin && matchChannel
             })
-    }, [allSubdomainGroups, search, originFilter, dateFilter])
+    }, [allSubdomainGroups, search, originFilter, dateFilter, quotaChannelFilter, quotaChannelMap])
 
     const counts = useMemo(() => ({
         blogs: blogs.length,
@@ -189,6 +252,20 @@ export function useWebsiteManager() {
         return ["all", ...channels, "Empty Channel"]
     }, [blogs])
 
+    const allWrapChannels = useMemo(() => {
+        const channels = Array.from(new Set(
+            wraps.map(w => wrapChannelMap.get(w._id) ?? "").filter(Boolean)
+        )).sort()
+        return ["all", ...channels, "Empty Channel"]
+    }, [wraps, wrapChannelMap])
+
+    const allQuotaChannels = useMemo(() => {
+        const channels = Array.from(new Set(
+            allSubdomainGroups.map(g => quotaChannelMap.get(g.domain) ?? "").filter(Boolean)
+        )).sort()
+        return ["all", ...channels, "Empty Channel"]
+    }, [allSubdomainGroups, quotaChannelMap])
+
     const todayStr = useMemo(() =>
         new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).replace(/-/g, ""),
         [])
@@ -196,9 +273,10 @@ export function useWebsiteManager() {
     return {
         blogs, wraps, allSubdomainGroups, loading, refreshing, fetchedAt, tab, setTab,
         search, setSearch, originFilter, setOriginFilter, channelFilter, setChannelFilter,
+        wrapChannelFilter, setWrapChannelFilter, quotaChannelFilter, setQuotaChannelFilter,
         statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
         mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
         allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
-        allChannels, todayStr
+        allChannels, allWrapChannels, allQuotaChannels, wrapChannelMap, quotaChannelMap, todayStr
     }
 }

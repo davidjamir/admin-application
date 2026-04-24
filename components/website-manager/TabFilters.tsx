@@ -5,6 +5,8 @@ import { TabFiltersProps } from "./types"
 export const TabFilters: React.FC<TabFiltersProps> = ({
     tab, search, setSearch, originFilter, setOriginFilter, originList,
     channelFilter, setChannelFilter, channelList,
+    wrapChannelFilter, setWrapChannelFilter, wrapChannelList,
+    quotaChannelFilter, setQuotaChannelFilter, quotaChannelList,
     statusFilter, setStatusFilter,
     dateFilter, setDateFilter, dateList, todayStr
 }) => {
@@ -57,6 +59,32 @@ export const TabFilters: React.FC<TabFiltersProps> = ({
                             className="px-2 py-2 rounded-lg border border-border/40 bg-card text-sm focus:outline-none cursor-pointer focus:ring-2 focus:ring-primary/30 w-[180px] shadow-sm"
                         >
                             {channelList.map(c => (
+                                <option key={c} value={c}>{c === "all" ? "All Channels" : c}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+                {tab === "wraps" && wrapChannelFilter !== undefined && setWrapChannelFilter && wrapChannelList && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        <select
+                            value={wrapChannelFilter}
+                            onChange={e => setWrapChannelFilter(e.target.value)}
+                            className="px-2 py-2 rounded-lg border border-border/40 bg-card text-sm focus:outline-none cursor-pointer focus:ring-2 focus:ring-primary/30 w-[180px] shadow-sm"
+                        >
+                            {wrapChannelList.map(c => (
+                                <option key={c} value={c}>{c === "all" ? "All Channels" : c}</option>
+                            ))}
+                        </select>
+                    </div>
+                )}
+                {tab === "quotas" && quotaChannelFilter !== undefined && setQuotaChannelFilter && quotaChannelList && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        <select
+                            value={quotaChannelFilter}
+                            onChange={e => setQuotaChannelFilter(e.target.value)}
+                            className="px-2 py-2 rounded-lg border border-border/40 bg-card text-sm focus:outline-none cursor-pointer focus:ring-2 focus:ring-primary/30 w-[180px] shadow-sm"
+                        >
+                            {quotaChannelList.map(c => (
                                 <option key={c} value={c}>{c === "all" ? "All Channels" : c}</option>
                             ))}
                         </select>

@@ -38,6 +38,12 @@ export interface TabFiltersProps {
     channelFilter?: string
     setChannelFilter?: (val: string) => void
     channelList?: string[]
+    wrapChannelFilter?: string
+    setWrapChannelFilter?: (val: string) => void
+    wrapChannelList?: string[]
+    quotaChannelFilter?: string
+    setQuotaChannelFilter?: (val: string) => void
+    quotaChannelList?: string[]
     statusFilter?: string
     setStatusFilter?: (val: string) => void
     dateFilter?: string
@@ -68,12 +74,14 @@ export interface WrapsTableProps {
     wraps: Wrap[]
     selectedId?: string
     onSelect: (item: SelectedItem) => void
+    channelMap: Map<string, string>
 }
 
 export interface QuotasTableProps {
     quotas: QuotaGroup[]
     selectedId?: string
     onSelect: (item: SelectedItem) => void
+    channelMap: Map<string, string>
 }
 
 export interface DetailsPanelProps {
@@ -82,4 +90,6 @@ export interface DetailsPanelProps {
     onCopy: (text: string, label: string) => void
     allDates: string[]
     dateFilter: string
+    wrapChannelMap: Map<string, string>
+    quotaChannelMap: Map<string, string>
 }

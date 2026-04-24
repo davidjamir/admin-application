@@ -16,10 +16,11 @@ export default function WebsiteManagerPage() {
     const {
         loading, refreshing, fetchedAt, tab, setTab,
         search, setSearch, originFilter, setOriginFilter, channelFilter, setChannelFilter,
+        wrapChannelFilter, setWrapChannelFilter, quotaChannelFilter, setQuotaChannelFilter,
         statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
         mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
         allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
-        allChannels, todayStr
+        allChannels, allWrapChannels, allQuotaChannels, wrapChannelMap, quotaChannelMap, todayStr
     } = useWebsiteManager()
 
     if (!mounted || loading) {
@@ -73,6 +74,12 @@ export default function WebsiteManagerPage() {
                 channelFilter={channelFilter}
                 setChannelFilter={setChannelFilter}
                 channelList={allChannels}
+                wrapChannelFilter={wrapChannelFilter}
+                setWrapChannelFilter={setWrapChannelFilter}
+                wrapChannelList={allWrapChannels}
+                quotaChannelFilter={quotaChannelFilter}
+                setQuotaChannelFilter={setQuotaChannelFilter}
+                quotaChannelList={allQuotaChannels}
                 statusFilter={statusFilter}
                 setStatusFilter={setStatusFilter}
                 dateFilter={dateFilter}
@@ -93,6 +100,7 @@ export default function WebsiteManagerPage() {
                     wraps={filteredWraps}
                     selectedId={selected?.tab === "wraps" ? (selected.data as Wrap)._id : undefined}
                     onSelect={setSelected}
+                    channelMap={wrapChannelMap}
                 />
             )}
             {tab === "quotas" && (
@@ -100,6 +108,7 @@ export default function WebsiteManagerPage() {
                     quotas={filteredGroups}
                     selectedId={selected?.tab === "quotas" ? (selected.data as QuotaGroup).domain : undefined}
                     onSelect={setSelected}
+                    channelMap={quotaChannelMap}
                 />
             )}
 
@@ -109,6 +118,8 @@ export default function WebsiteManagerPage() {
                 onCopy={copyToClipboard}
                 allDates={allDates}
                 dateFilter={dateFilter}
+                wrapChannelMap={wrapChannelMap}
+                quotaChannelMap={quotaChannelMap}
             />
         </div>
     )

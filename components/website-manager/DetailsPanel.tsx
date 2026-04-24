@@ -48,12 +48,21 @@ const BlogDetails = ({ b, onCopy }: { b: Blog, onCopy: (text: string, label: str
     </div>
 )
 
-const WrapDetails = ({ w, onCopy }: { w: Wrap, onCopy: (text: string, label: string) => void }) => (
+const WrapDetails = ({ w, onCopy, channel }: { w: Wrap, onCopy: (text: string, label: string) => void, channel?: string }) => (
     <div className="p-5 space-y-4">
+        <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border/40">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Channel</div>
+                <div className="font-medium text-sm truncate">{channel || "—"}</div>
+            </div>
+            <div className="p-3 rounded-lg bg-muted/50 border border-border/40">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Prefix</div>
+                <div className="font-medium text-sm truncate">{w.prefix}</div>
+            </div>
+        </div>
         <div className="rounded-lg border bg-muted/50 divide-y">
             {[
                 { l: "Wrap Host", v: w.wrap_host },
-                { l: "Prefix", v: w.prefix },
                 { l: "Target Host", v: w.target_host },
             ].map(({ l, v }) => (
                 <div key={l} className="flex items-center justify-between px-3 py-3 gap-3">
@@ -89,7 +98,7 @@ const WrapDetails = ({ w, onCopy }: { w: Wrap, onCopy: (text: string, label: str
     </div>
 )
 
-const QuotaDetails = ({ g, allDates, dateFilter }: { g: QuotaGroup, allDates: string[], dateFilter: string }) => {
+const QuotaDetails = ({ g, allDates, dateFilter, channel }: { g: QuotaGroup, allDates: string[], dateFilter: string, channel?: string }) => {
     const qt = g.latest
     const pct = qt.limit > 0 ? Math.round((qt.count / qt.limit) * 100) : 0
     const barColor = pct >= 90 ? "hsl(0,85%,45%)" : pct >= 70 ? "hsl(38,92%,50%)" : "hsl(142,71%,40%)"
@@ -107,6 +116,10 @@ const QuotaDetails = ({ g, allDates, dateFilter }: { g: QuotaGroup, allDates: st
 
     return (
         <div className="p-5 space-y-4">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border/40 mb-2">
+                <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Channel</div>
+                <div className="font-bold text-sm truncate">{channel || "—"}</div>
+            </div>
             <div className="grid grid-cols-3 gap-2">
                 <div className="p-3 rounded-lg border text-center bg-card shadow-sm border-border/60">
                     <div className="text-[10px] text-black font-bold uppercase tracking-wider mb-1">Posts</div>
@@ -157,7 +170,7 @@ const QuotaDetails = ({ g, allDates, dateFilter }: { g: QuotaGroup, allDates: st
     )
 }
 
-export const DetailsPanel: React.FC<DetailsPanelProps> = ({ selected, onClose, onCopy, allDates, dateFilter }) => {
+export const DetailsPanel: React.FC<DetailsPanelProps> = ({ selected, onClose, onCopy, allDates, dateFilter, wrapChannelMap, quotaChannelMap }) => {
     if (!selected) return null
     const { tab, data } = selected
 
@@ -175,8 +188,8 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({ selected, onClose, o
             </div>
             <div className="flex-1 overflow-y-auto">
                 {tab === "blogs" && <BlogDetails b={data as Blog} onCopy={onCopy} />}
-                {tab === "wraps" && <WrapDetails w={data as Wrap} onCopy={onCopy} />}
-                {tab === "quotas" && <QuotaDetails g={data as QuotaGroup} allDates={allDates} dateFilter={dateFilter} />}
+                {tab === "wraps" && <WrapDetails w={data as Wrap} onCopy={onCopy} channel={wrapChannelMap.get((data as Wrap)._id)} />}
+                {tab === "quotas" && <QuotaDetails g={data as QuotaGroup} allDates={allDates} dateFilter={dateFilter} channel={quotaChannelMap.get((data as QuotaGroup).domain)} />}
             </div>
         </div>
     )

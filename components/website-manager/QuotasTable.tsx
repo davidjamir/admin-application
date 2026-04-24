@@ -4,7 +4,7 @@ import { QuotaGroup } from "@/hooks/useWebsiteManager"
 import { SortableTH } from "./SortableTH"
 import { QuotasTableProps } from "./types"
 
-export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, onSelect }) => {
+export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, onSelect, channelMap }) => {
     const [sortKey, setSortKey] = useState("domain")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("asc")
 
@@ -42,8 +42,9 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, on
             <table className="w-full text-xs table-fixed min-w-[1120px]">
                 <thead><tr className="border-b bg-muted/40">
                     <th className="px-4 py-4 font-bold text-sm text-left w-[50px] text-black">#</th>
-                    <SortableTH label="Domain" col="domain" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[350px]" />
-                    <SortableTH label="Last Active" col="date" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[150px]" />
+                    <SortableTH label="Domain" col="domain" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[300px]" />
+                    <SortableTH label="Channel" col="channel" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
+                    <SortableTH label="Last Active" col="date" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
                     <SortableTH label="Posts" col="count" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[85px]" />
                     <SortableTH label="Limit" col="limit" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[85px]" />
                     <SortableTH label="Status" col="usage" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[250px]" />
@@ -58,8 +59,9 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, on
                             <tr key={g.domain} onClick={() => onSelect({ tab: "quotas", data: g })}
                                 className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${selectedId === g.domain ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
                                 <td className="px-4 py-4 text-black text-sm w-[50px]">{i + 1}</td>
-                                <td className="px-4 py-4 w-[350px] text-black text-sm"><div className="truncate">{g.domain}</div><div className="text-[10px] lowercase">{g.type}</div></td>
-                                <td className="px-4 py-4 text-center w-[150px] text-black text-sm whitespace-nowrap">{g.latest.date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}</td>
+                                <td className="px-4 py-4 w-[300px] text-black text-sm"><div className="truncate">{g.domain}</div><div className="text-[10px] lowercase">{g.type}</div></td>
+                                <td className="px-4 py-4 text-black truncate w-[120px] text-sm">{channelMap.get(g.domain) || ""}</td>
+                                <td className="px-4 py-4 text-center w-[120px] text-black text-sm whitespace-nowrap">{g.latest.date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}</td>
                                 <td className="px-4 py-4 text-center w-[85px] text-black text-sm tabular-nums">{g.latest.count}</td>
                                 <td className="px-4 py-4 text-center text-black text-sm tabular-nums w-[85px]">{g.latest.limit}</td>
                                 <td className="px-4 py-4 w-[250px]">
