@@ -11,6 +11,9 @@ export interface PageHeaderProps {
 export interface PageStatsProps {
   fetchedAt: number | null
   handleRefresh: () => Promise<void>
+  pageCount: number | null
+  categoryFilter: string
+  searchQuery: string
 }
 
 export interface PageGridProps {

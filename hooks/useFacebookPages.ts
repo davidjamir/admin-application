@@ -32,6 +32,9 @@ export interface PageDetails {
 
 export function useFacebookPages() {
   const [data, setData] = useState<MongoPageData[]>([])
+  const [totalPages, setTotalPages] = useState<number | null>(null)
+  const [appliedCategoryFilter, setAppliedCategoryFilter] = useState("All")
+  const [appliedSearchQuery, setAppliedSearchQuery] = useState("")
   const [loading, setLoading] = useState(true)
   const [categoryFilter, setCategoryFilter] = useState("All")
   const [availableCategories, setAvailableCategories] = useState<string[]>(["All"])
@@ -47,19 +50,26 @@ export function useFacebookPages() {
 
   const fetchData = useCallback(async (forceRecrawl = false) => {
     setLoading(true)
+    setTotalPages(null)
     try {
+      const requestedCategoryFilter = categoryFilter
+      const requestedSearchQuery = searchQuery
       const url = new URL("/api/pages", window.location.origin)
-      if (categoryFilter !== "All") url.searchParams.append("category", categoryFilter)
-      if (searchQuery) url.searchParams.append("search", searchQuery)
+      if (requestedCategoryFilter !== "All") url.searchParams.append("category", requestedCategoryFilter)
+      if (requestedSearchQuery) url.searchParams.append("search", requestedSearchQuery)
       if (forceRecrawl) url.searchParams.append("forceRecrawl", "true")
 
       const res = await fetch(url.toString())
       const json = await res.json()
-      setData(json.data)
+      const pages = Array.isArray(json.data) ? json.data : []
+      setData(pages)
+      setTotalPages(typeof json.total === "number" ? json.total : pages.length)
+      setAppliedCategoryFilter(requestedCategoryFilter)
+      setAppliedSearchQuery(requestedSearchQuery)
       
       // Update available categories when viewing all
-      if (categoryFilter === "All" && !searchQuery && json.data) {
-        const uniqueCats = Array.from(new Set(json.data.map((p: MongoPageData) => p.topic).filter(Boolean))) as string[]
+      if (categoryFilter === "All" && !searchQuery) {
+        const uniqueCats = Array.from(new Set(pages.map((p: MongoPageData) => p.topic).filter(Boolean))) as string[]
         setAvailableCategories(["All", ...uniqueCats.sort()])
       }
 
@@ -73,6 +83,7 @@ export function useFacebookPages() {
   }, [categoryFilter, searchQuery])
 
   useEffect(() => {
+    setTotalPages(null)
     const timeoutId = setTimeout(() => fetchData(), 300)
     return () => clearTimeout(timeoutId)
   }, [fetchData])
@@ -154,7 +165,8 @@ export function useFacebookPages() {
   }
 
   return {
-    data, loading, categoryFilter, setCategoryFilter,
+    data, totalPages, appliedCategoryFilter, appliedSearchQuery,
+    loading, categoryFilter, setCategoryFilter,
     availableCategories, searchQuery, setSearchQuery, fetchedAt,
     selectedPage, setSelectedPage, details, setDetails, detailsLoading,
     activeTab, setActiveTab, showToken, setShowToken,

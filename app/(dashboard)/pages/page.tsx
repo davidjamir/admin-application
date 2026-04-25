@@ -9,7 +9,8 @@ import { LoadingScreen } from "@/components/ui/loading-screen"
 
 export default function PagesManagementPage() {
   const {
-    data, loading, categoryFilter, setCategoryFilter,
+    data, totalPages, appliedCategoryFilter, appliedSearchQuery,
+    loading, categoryFilter, setCategoryFilter,
     availableCategories, searchQuery, setSearchQuery, fetchedAt,
     selectedPage, setSelectedPage, details, setDetails, detailsLoading,
     activeTab, setActiveTab, showToken, setShowToken,
@@ -34,6 +35,9 @@ export default function PagesManagementPage() {
       <PageStats 
         fetchedAt={fetchedAt}
         handleRefresh={handleRefresh}
+        pageCount={totalPages}
+        categoryFilter={appliedCategoryFilter}
+        searchQuery={appliedSearchQuery}
       />
 
       <PageGrid 
