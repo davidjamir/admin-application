@@ -158,11 +158,23 @@ export default function BloggerAccountsPage() {
         </Select>
       </div>
 
+      <div className="flex items-center justify-between px-1">
+        <p className="text-sm font-medium tracking-tight text-black">
+          Showing{" "}
+          <span className="font-bold tabular-nums">{filteredAccounts.length}</span>{" "}
+          {filteredAccounts.length === 1 ? "account" : "accounts"} in{" "}
+          <span className="font-bold">
+            {statusFilter === "All" ? "All statuses" : statusFilter}
+          </span>
+        </p>
+      </div>
+
       <div className="bg-card/40 border border-border/50 rounded-2xl overflow-hidden backdrop-blur-xl shadow-sm">
         <Table>
           <TableHeader className="bg-muted/20">
             <TableRow className="hover:bg-transparent border-border/50">
-              <TableHead className="py-5 font-bold text-black/70 text-xs px-8 w-[25%]">Account</TableHead>
+              <TableHead className="py-5 font-bold text-black/70 text-xs pl-8 w-[56px]">#</TableHead>
+              <TableHead className="py-5 font-bold text-black/70 text-xs w-[25%]">Account</TableHead>
               <TableHead className="py-5 font-bold text-black/70 text-xs w-[100px]">Status</TableHead>
               <TableHead className="py-5 font-bold text-black/70 text-xs w-[80px]">Version</TableHead>
               <TableHead className="py-5 font-bold text-black/70 text-xs w-[140px]">Access Token</TableHead>
@@ -175,7 +187,8 @@ export default function BloggerAccountsPage() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i} className="border-border/40">
-                  <TableCell className="px-8 py-5"><Skeleton className="h-10 w-48 rounded-lg" /></TableCell>
+                  <TableCell className="pl-8 py-5"><Skeleton className="h-5 w-5 rounded-lg" /></TableCell>
+                  <TableCell className="py-5"><Skeleton className="h-10 w-48 rounded-lg" /></TableCell>
                   <TableCell className="py-5"><Skeleton className="h-8 w-20 rounded-lg" /></TableCell>
                   <TableCell className="py-5"><Skeleton className="h-8 w-16 rounded-lg" /></TableCell>
                   <TableCell className="py-5"><Skeleton className="h-8 w-32 rounded-lg" /></TableCell>
@@ -186,7 +199,7 @@ export default function BloggerAccountsPage() {
               ))
             ) : filteredAccounts.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="h-64 text-center">
+                <TableCell colSpan={8} className="h-64 text-center">
                   <div className="flex flex-col items-center justify-center gap-2">
                     <Mail className="w-10 h-10 text-muted-foreground/30" />
                     <p className="text-muted-foreground font-medium tracking-tight">No accounts registered yet</p>
@@ -194,13 +207,16 @@ export default function BloggerAccountsPage() {
                 </TableCell>
               </TableRow>
             ) : (
-              filteredAccounts.map((account) => (
+              filteredAccounts.map((account, index) => (
                 <TableRow
                   key={account._id}
                   className="group hover:bg-muted/20 border-border/40 transition-colors cursor-pointer"
                   onClick={() => { setSelectedAccount(account); setSheetOpen(true) }}
                 >
-                  <TableCell className="px-8 py-5">
+                  <TableCell className="pl-8 py-5 text-sm font-normal text-black/80 tracking-tight">
+                    {index + 1}
+                  </TableCell>
+                  <TableCell className="py-5">
                     <div className="flex items-center gap-4">
                       <div className="size-9 bg-blue-500/5 rounded-lg border border-blue-500/10 flex items-center justify-center">
                         <Mail className="w-4.5 h-4.5 text-blue-500/80" />
