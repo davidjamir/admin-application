@@ -280,7 +280,6 @@ export default function BloggerAccountsPage() {
         {selectedAccount && (
           <BloggerAccountSheet
             account={selectedAccount}
-            getStatus={getStatus}
             formatDate={formatDate}
           />
         )}
