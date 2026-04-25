@@ -46,7 +46,7 @@ export const WrapsTable: React.FC<WrapsTableProps> = ({ wraps, selectedId, onSel
                 </tr></thead>
                 <tbody>
                     {sorted.length === 0 ? (
-                        <tr><td colSpan={5} className="px-4 py-12 text-center text-muted-foreground"><Link2 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No wraps found</p></td></tr>
+                        <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><Link2 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No wraps found</p></td></tr>
                     ) : sorted.map((w, i) => (
                         <tr key={w._id} onClick={() => onSelect({ tab: "wraps", data: w })}
                             className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${selectedId === w._id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>

@@ -51,7 +51,7 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, on
                 </tr></thead>
                 <tbody>
                     {sorted.length === 0 ? (
-                        <tr><td colSpan={6} className="px-4 py-12 text-center text-muted-foreground"><BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No quotas found</p></td></tr>
+                        <tr><td colSpan={7} className="px-4 py-12 text-center text-muted-foreground"><BarChart3 className="w-8 h-8 mx-auto mb-2 opacity-25" /><p>No quotas found</p></td></tr>
                     ) : sorted.map((g, i) => {
                         const pct = g.latest.limit > 0 ? Math.round((g.latest.count / g.latest.limit) * 100) : 0
                         const barColor = pct >= 90 ? "bg-rose-500" : pct >= 70 ? "bg-amber-500" : "bg-emerald-500"

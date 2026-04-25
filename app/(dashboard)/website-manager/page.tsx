@@ -20,7 +20,8 @@ export default function WebsiteManagerPage() {
         statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
         mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
         allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
-        allChannels, allWrapChannels, allQuotaChannels, wrapChannelMap, quotaChannelMap, todayStr
+        allChannels, allWrapChannels, allQuotaChannels, quotaDateList,
+        wrapChannelMap, quotaChannelMap, todayStr
     } = useWebsiteManager()
 
     if (!mounted || loading) {
@@ -84,7 +85,7 @@ export default function WebsiteManagerPage() {
                 setStatusFilter={setStatusFilter}
                 dateFilter={dateFilter}
                 setDateFilter={setDateFilter}
-                dateList={["all", ...allDates]}
+                dateList={["all", ...quotaDateList]}
                 todayStr={todayStr}
             />
 

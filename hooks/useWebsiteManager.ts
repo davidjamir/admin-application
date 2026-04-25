@@ -185,6 +185,10 @@ export function useWebsiteManager() {
         return dates
     }, [quotas])
 
+    const todayStr = useMemo(() =>
+        new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).replace(/-/g, ""),
+        [])
+
     useEffect(() => {
         if (allDates.length > 0 && !hasInitializedDate) {
             setDateFilter(allDates[0])
@@ -247,28 +251,100 @@ export function useWebsiteManager() {
 
     const originList = useMemo(() => ["all", ...allOriginNames], [allOriginNames])
 
+    const withAllAndEmptyChannel = (channels: string[], hasEmptyChannel: boolean) => [
+        "all",
+        ...Array.from(new Set(channels.filter(Boolean))).sort(),
+        ...(hasEmptyChannel ? ["Empty Channel"] : [])
+    ]
+
     const allChannels = useMemo(() => {
-        const channels = Array.from(new Set(blogs.map(b => b.channel).filter(Boolean))).sort()
-        return ["all", ...channels, "Empty Channel"]
-    }, [blogs])
+        const availableBlogs = blogs.filter(b => {
+            const matchSearch = !search || b.blogDns.toLowerCase().includes(search.toLowerCase()) || b.blogUser.toLowerCase().includes(search.toLowerCase()) || (b.channel && b.channel.toLowerCase().includes(search.toLowerCase()))
+            const matchOrigin = originFilter === "all" || getOrigin(b.blogDns) === originFilter
+            const matchStatus = statusFilter === "all"
+                || (statusFilter === "enabled" && b.enabled)
+                || (statusFilter === "disabled" && !b.enabled)
+            return matchSearch && matchOrigin && matchStatus
+        })
+
+        return withAllAndEmptyChannel(
+            availableBlogs.map(b => b.channel),
+            availableBlogs.some(b => !b.channel)
+        )
+    }, [blogs, search, originFilter, statusFilter])
 
     const allWrapChannels = useMemo(() => {
-        const channels = Array.from(new Set(
-            wraps.map(w => wrapChannelMap.get(w._id) ?? "").filter(Boolean)
-        )).sort()
-        return ["all", ...channels, "Empty Channel"]
-    }, [wraps, wrapChannelMap])
+        const availableWraps = wraps.filter(w => {
+            const matchSearch = !search || w.wrap_host.toLowerCase().includes(search.toLowerCase()) || w.target_host.toLowerCase().includes(search.toLowerCase()) || w.prefix.toLowerCase().includes(search.toLowerCase())
+            const matchOrigin = originFilter === "all" || getOrigin(w.target_host) === originFilter
+            return matchSearch && matchOrigin
+        })
+
+        return withAllAndEmptyChannel(
+            availableWraps.map(w => wrapChannelMap.get(w._id) ?? ""),
+            availableWraps.some(w => !(wrapChannelMap.get(w._id) ?? ""))
+        )
+    }, [wraps, search, originFilter, wrapChannelMap])
 
     const allQuotaChannels = useMemo(() => {
-        const channels = Array.from(new Set(
-            allSubdomainGroups.map(g => quotaChannelMap.get(g.domain) ?? "").filter(Boolean)
-        )).sort()
-        return ["all", ...channels, "Empty Channel"]
-    }, [allSubdomainGroups, quotaChannelMap])
+        const availableGroups = allSubdomainGroups
+            .map(g => {
+                if (dateFilter !== "all") {
+                    const matched = g.history.find(r => r.date === dateFilter)
+                    if (!matched) return null
+                    return { ...g, latest: matched }
+                }
+                return g
+            })
+            .filter((g): g is QuotaGroup => {
+                if (!g) return false
+                const matchSearch = g.domain.toLowerCase().includes(search.toLowerCase()) || g.type.toLowerCase().includes(search.toLowerCase())
+                const matchOrigin = isFromOrigin(g.domain, originFilter)
+                return matchSearch && matchOrigin
+            })
 
-    const todayStr = useMemo(() =>
-        new Date().toLocaleDateString("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).replace(/-/g, ""),
-        [])
+        return withAllAndEmptyChannel(
+            availableGroups.map(g => quotaChannelMap.get(g.domain) ?? ""),
+            availableGroups.some(g => !(quotaChannelMap.get(g.domain) ?? ""))
+        )
+    }, [allSubdomainGroups, search, originFilter, dateFilter, quotaChannelMap])
+
+    const quotaDateList = useMemo(() => {
+        const availableGroups = allSubdomainGroups.filter(g => {
+            const matchSearch = g.domain.toLowerCase().includes(search.toLowerCase()) || g.type.toLowerCase().includes(search.toLowerCase())
+            const matchOrigin = isFromOrigin(g.domain, originFilter)
+            const quotaChannel = quotaChannelMap.get(g.domain) ?? ""
+            const matchChannel = quotaChannelFilter === "all"
+                || (quotaChannelFilter === "Empty Channel" && !quotaChannel)
+                || quotaChannel === quotaChannelFilter
+            return matchSearch && matchOrigin && matchChannel
+        })
+
+        const dates = new Set<string>([todayStr])
+        availableGroups.forEach(g => {
+            g.history.forEach(record => dates.add(record.date))
+        })
+
+        return Array.from(dates).sort().reverse()
+    }, [allSubdomainGroups, search, originFilter, quotaChannelFilter, quotaChannelMap, todayStr])
+
+    useEffect(() => {
+        if (!allChannels.includes(channelFilter)) setChannelFilter("all")
+    }, [allChannels, channelFilter])
+
+    useEffect(() => {
+        if (!allWrapChannels.includes(wrapChannelFilter)) setWrapChannelFilter("all")
+    }, [allWrapChannels, wrapChannelFilter])
+
+    useEffect(() => {
+        if (!allQuotaChannels.includes(quotaChannelFilter)) setQuotaChannelFilter("all")
+    }, [allQuotaChannels, quotaChannelFilter])
+
+    useEffect(() => {
+        if (dateFilter !== "all" && !quotaDateList.includes(dateFilter)) {
+            setDateFilter(todayStr)
+        }
+    }, [dateFilter, quotaDateList, todayStr])
 
     return {
         blogs, wraps, allSubdomainGroups, loading, refreshing, fetchedAt, tab, setTab,
@@ -277,6 +353,6 @@ export function useWebsiteManager() {
         statusFilter, setStatusFilter, dateFilter, setDateFilter, selected, setSelected,
         mounted, fetchData, copyToClipboard, filteredBlogs, filteredWraps, filteredGroups,
         allOriginNames, allDates, originHistory, counts, filteredCounts, originList,
-        allChannels, allWrapChannels, allQuotaChannels, wrapChannelMap, quotaChannelMap, todayStr
+        allChannels, allWrapChannels, allQuotaChannels, quotaDateList, wrapChannelMap, quotaChannelMap, todayStr
     }
 }
