@@ -16,6 +16,7 @@ import {
   Globe,
   ImagePlay,
   ShieldCheck,
+  KeyRound,
 } from "lucide-react"
 
 import {
@@ -77,6 +78,11 @@ const navItems = [
     title: "Ad Creatives",
     url: "/ad-creatives",
     icon: ImagePlay,
+  },
+  {
+    title: "Blogger API",
+    url: "/blogger-accounts",
+    icon: KeyRound,
   },
 ]
 
