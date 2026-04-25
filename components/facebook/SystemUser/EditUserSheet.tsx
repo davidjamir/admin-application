@@ -82,7 +82,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                                     const text = await navigator.clipboard.readText()
                                                     setEditForm({ ...editForm, token: text })
                                                     toast.success("Token pasted from clipboard")
-                                                } catch (err) {
+                                                } catch (_err) {
                                                     toast.error("Failed to read clipboard")
                                                 }
                                             }}
