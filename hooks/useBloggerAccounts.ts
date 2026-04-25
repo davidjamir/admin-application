@@ -22,6 +22,7 @@ interface FetchAccountsOptions {
 export function useBloggerAccounts() {
   const [accounts, setAccounts] = useState<BloggerAccount[]>([])
   const [loading, setLoading] = useState(true)
+  const [lastSyncedAt, setLastSyncedAt] = useState<Date | null>(null)
 
   const fetchAccounts = useCallback(async (options?: FetchAccountsOptions) => {
     const silent = options?.silent ?? false
@@ -34,6 +35,7 @@ export function useBloggerAccounts() {
       const json = await res.json()
       if (json.data) {
         setAccounts(json.data)
+        setLastSyncedAt(new Date())
       } else if (!silent) {
         toast.error(json.error || 'Failed to fetch accounts')
       }
@@ -66,6 +68,7 @@ export function useBloggerAccounts() {
   return {
     accounts,
     loading,
+    lastSyncedAt,
     refresh: fetchAccounts
   }
 }

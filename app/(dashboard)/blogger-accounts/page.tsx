@@ -32,7 +32,7 @@ import { Sheet } from "@/components/ui/sheet"
 import { BloggerAccountSheet } from "@/components/blogger/BloggerAccountSheet"
 
 export default function BloggerAccountsPage() {
-  const { accounts, loading, refresh } = useBloggerAccounts()
+  const { accounts, loading, lastSyncedAt, refresh } = useBloggerAccounts()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("All")
   const [selectedAccount, setSelectedAccount] = React.useState<BloggerAccount | null>(null)
@@ -90,13 +90,6 @@ export default function BloggerAccountsPage() {
     toast.success(`${label} copied to clipboard`)
   }
 
-  const lastSyncTime = accounts.length > 0 
-    ? accounts.reduce((latest, acc) => {
-        const current = typeof acc.updatedAt === 'string' ? acc.updatedAt : acc.updatedAt.$date
-        return new Date(current) > new Date(latest) ? current : latest
-      }, typeof accounts[0].updatedAt === 'string' ? accounts[0].updatedAt : accounts[0].updatedAt.$date)
-    : null
-
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
@@ -114,9 +107,9 @@ export default function BloggerAccountsPage() {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {lastSyncTime && (
+          {lastSyncedAt && (
             <span className="text-xs text-muted-foreground italic">
-              Data synced: {new Date(lastSyncTime).toLocaleString("en-US", { 
+              Data synced: {lastSyncedAt.toLocaleString("en-US", { 
                 timeZone: "Asia/Ho_Chi_Minh",
                 day: "2-digit",
                 month: "2-digit",
