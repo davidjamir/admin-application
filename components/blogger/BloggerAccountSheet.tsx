@@ -3,6 +3,7 @@
 import React from "react"
 import {
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet"
@@ -95,6 +96,9 @@ export function BloggerAccountSheet({ account, formatDate }: BloggerAccountSheet
               </span>
             </div>
           </SheetTitle>
+          <SheetDescription className="sr-only">
+            View Blogger account details, connected blogs, and credential status.
+          </SheetDescription>
         </SheetHeader>
 
         {/* Body */}
