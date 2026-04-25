@@ -128,7 +128,7 @@ export default function BloggerAccountsPage() {
             </span>
           )}
           <button 
-            onClick={refresh} 
+            onClick={() => refresh()} 
             disabled={loading}
             className={`p-2 rounded-md transition-all cursor-pointer active:scale-95 border border-transparent ${
               loading 
