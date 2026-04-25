@@ -92,11 +92,12 @@ export function useSystemUserHub(adminPassword: string, isAdminVerified: boolean
                 const expansionMap: Record<string, string> = {
                     "NB": "NBA", "ML": "MLB", "NH": "NHL", "NF": "NFL",
                     "Mu": "Music", "Mus": "Music", "Musi": "Music",
-                    "Mo": "Movie", "Mov": "Movie", "Movi": "Movie"
+                    "Mo": "Movie", "Mov": "Movie", "Movi": "Movie",
+                    "Storer": "Store"
                 }
                 note = nameParts[2].split(",")
                     .map(p => {
-                        const part = p.trim().replace(/\s*\d+$/, "")
+                        const part = p.trim().replace(/\d+/g, "").trim()
                         return expansionMap[part] || part
                     })
                     .filter((v, i, a) => v && a.indexOf(v) === i)
@@ -243,7 +244,7 @@ export function useSystemUserHub(adminPassword: string, isAdminVerified: boolean
             if (!res.ok) throw new Error(result.message || "Update failed")
             
             toast.success("Identity synchronized successfully")
-            setEditingUser(null)
+            setInitialEditForm({ ...editForm })
             void loadSystemUsers(adminPassword)
         } catch (err) {
             console.error("Edit save error:", err)

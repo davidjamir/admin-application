@@ -15,7 +15,8 @@ import { toast } from "sonner"
 import { AssetTableProps } from "./types"
 
 export const AssetTable: React.FC<AssetTableProps> = ({
-    pages, selectedPageIds, setSelectedPageIds, loadingPages, activePart, handleSelectThird
+    pages, selectedPageIds, setSelectedPageIds, loadingPages, activePart, handleSelectThird,
+    trafficInterval, viralInterval
 }) => {
     const isAllSelected = pages.length > 0 && pages.every((p) => selectedPageIds.includes(p.id))
 
@@ -75,11 +76,13 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-transparent border-border/50">
                         <TableHead className="text-center text-xs font-extrabold tracking-wider text-black w-10 py-4">#</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Asset ID</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Asset Identity</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Category</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4">Topic</TableHead>
-                        <TableHead className="text-right text-xs font-extrabold tracking-wider text-black py-4">Access Token</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[140px]">Asset ID</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 min-w-[220px]">Asset Identity</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black py-4 w-[80px]">Traffic</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black py-4 w-[80px]">Viral</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Category</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Topic</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Access Token</TableHead>
                         <TableHead className="w-14 text-center py-4">
                             <Checkbox
                                 checked={isAllSelected}
@@ -128,8 +131,8 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                 <TableCell className="text-center py-4 text-sm text-black tracking-tight w-10">
                                     {idx + 1}
                                 </TableCell>
-                                <TableCell className="py-4">
-                                    <div className="flex items-center justify-between gap-4 max-w-[180px]">
+                                <TableCell className="py-4 w-[140px]">
+                                    <div className="flex items-center justify-between">
                                         <span className="text-sm font-mono text-black">{page.id}</span>
                                         <Button
                                             variant="ghost"
@@ -141,23 +144,31 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                         </Button>
                                     </div>
                                 </TableCell>
-                                <TableCell className="py-4">
-                                    <span className="text-sm leading-tight text-black transition-colors group-hover:text-primary">{page.name}</span>
+                                <TableCell className="py-4 min-w-[220px]">
+                                    <span className="text-sm font-normal leading-tight text-black truncate block max-w-[300px]" title={page.name}>
+                                        {page.name}
+                                    </span>
                                 </TableCell>
-                                <TableCell className="py-4">
-                                    <span className="text-sm font-medium text-black">
+                                <TableCell className="py-4 w-[80px] text-center">
+                                    <span className="text-sm font-mono text-black">{trafficInterval}m</span>
+                                </TableCell>
+                                <TableCell className="py-4 w-[80px] text-center">
+                                    <span className="text-sm font-mono text-black">{viralInterval}m</span>
+                                </TableCell>
+                                <TableCell className="py-4 w-[130px]">
+                                    <span className="text-sm font-normal text-black truncate block" title={page.category || "-"}>
                                         {page.category || "-"}
                                     </span>
                                 </TableCell>
-                                <TableCell className="py-4">
-                                    <span className="text-sm font-medium text-black">
+                                <TableCell className="py-4 w-[130px]">
+                                    <span className="text-sm font-normal text-black truncate block" title={page.topic || "-"}>
                                         {page.topic || "-"}
                                     </span>
                                 </TableCell>
-                                <TableCell className="py-4" onClick={e => e.stopPropagation()}>
-                                    <div className="flex items-center justify-between gap-4 max-w-[200px]">
+                                <TableCell className="py-4 w-[130px]" onClick={e => e.stopPropagation()}>
+                                    <div className="flex items-center justify-between">
                                         <span className="text-sm font-mono text-black">
-                                            {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-8)}
+                                            {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-4)}
                                         </span>
                                         <Button
                                             variant="ghost"

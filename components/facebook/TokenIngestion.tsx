@@ -17,8 +17,16 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
         selectedSystemUserId, setSelectedSystemUserId, pages,
         selectedPageIds, setSelectedPageIds, saving, loadingPages,
         bmFilterOptions, filteredSystemUsers, activePart,
+        customTopic, setCustomTopic,
+        trafficInterval, setTrafficInterval,
+        viralInterval, setViralInterval,
+        availableTopics,
         handlePageSave, handleSelectThird
     } = useTokenIngestion(adminPassword, isAdminVerified)
+    
+    const displayPages = React.useMemo(() => 
+        customTopic ? pages.map(p => ({ ...p, topic: customTopic })) : pages
+    , [pages, customTopic])
 
     return (
         <Card className="border-border/50 bg-card/60 backdrop-blur-xl shadow-2xl overflow-hidden border-t-primary/20">
@@ -56,15 +64,24 @@ export default function TokenIngestion({ adminPassword, isAdminVerified }: Props
                     pages={pages}
                     selectedPageIds={selectedPageIds}
                     handlePageSave={handlePageSave}
+                    customTopic={customTopic}
+                    setCustomTopic={setCustomTopic}
+                    trafficInterval={trafficInterval}
+                    setTrafficInterval={setTrafficInterval}
+                    viralInterval={viralInterval}
+                    setViralInterval={setViralInterval}
+                    availableTopics={availableTopics}
                 />
 
                 <AssetTable 
-                    pages={pages}
+                    pages={displayPages}
                     selectedPageIds={selectedPageIds}
                     setSelectedPageIds={setSelectedPageIds}
                     loadingPages={loadingPages}
                     activePart={activePart}
                     handleSelectThird={handleSelectThird}
+                    trafficInterval={trafficInterval}
+                    viralInterval={viralInterval}
                 />
             </CardContent>
         </Card>

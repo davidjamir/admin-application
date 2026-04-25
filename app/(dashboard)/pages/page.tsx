@@ -57,6 +57,7 @@ export default function PagesManagementPage() {
           setShowToken={setShowToken}
           getHealthColor={getHealthColor}
           setDetails={setDetails}
+          onRefresh={handleRefresh}
         />
       )}
     </div>

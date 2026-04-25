@@ -84,9 +84,15 @@ export const PageCard: React.FC<PageCardProps> = ({
           <div className="text-[12.5px] font-medium leading-snug tracking-tight text-left" style={{ color: healthColor }}>
             {formatExactRelative(page.lastScheduledAt)}
           </div>
-          <span className="text-[10px] text-muted-foreground">
-            Admin: <span className="font-medium text-foreground">{page.systemUserName || "System"}</span>
-          </span>
+          <div className="flex flex-col items-end gap-1">
+            <span className="text-[10px] text-muted-foreground">
+              Admin: <span className="font-medium text-foreground">{page.systemUserName || "System"}</span>
+            </span>
+            <div className="flex items-center gap-2 text-[10px] font-bold opacity-70">
+              <span className="flex items-center gap-1">T: <span className="text-foreground">{page.trafficInterval || 0}m</span></span>
+              <span className="flex items-center gap-1">V: <span className="text-foreground">{page.viralInterval || 0}m</span></span>
+            </div>
+          </div>
         </div>
       </CardContent>
       

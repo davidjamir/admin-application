@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { toast } from "sonner"
 import { facebookService } from "@/services/facebook.service"
 import { FacebookPage, SystemUser } from "@/types/facebook"
+import { MongoPageData } from './useFacebookPages'
 
 export function useTokenIngestion(adminPassword: string, isAdminVerified: boolean) {
     const [status, setStatus] = useState("Select Business Manager to begin discovery.")
@@ -13,6 +14,10 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
     const [saving, setSaving] = useState(false)
     const [loadingPages, setLoadingPages] = useState(false)
     const [loadingUsers, setLoadingUsers] = useState(false)
+    const [customTopic, setCustomTopic] = useState("")
+    const [trafficInterval, setTrafficInterval] = useState(120)
+    const [viralInterval, setViralInterval] = useState(30)
+    const [availableTopics, setAvailableTopics] = useState<string[]>([])
 
     const bmFilterOptions = useMemo(() => {
         const seen = new Set<string>()
@@ -89,6 +94,30 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
     }, [isAdminVerified, adminPassword, loadSystemUsers])
 
     useEffect(() => {
+        const fetchTopics = async () => {
+            try {
+                const res = await fetch("/api/pages")
+                const json = await res.json()
+                if (json.data) {
+                    const topics = Array.from(new Set(json.data.map((p: MongoPageData) => p.topic).filter(Boolean))) as string[]
+                    setAvailableTopics(topics.sort())
+                }
+            } catch (err) {
+                console.error("Failed to fetch existing topics:", err)
+            }
+        }
+        void fetchTopics()
+    }, [])
+
+    useEffect(() => {
+        if (selectedUser?.category) {
+            setCustomTopic(selectedUser.category)
+        } else {
+            setCustomTopic("")
+        }
+    }, [selectedUser])
+
+    useEffect(() => {
         const token = selectedUser?.token
         if (!isAdminVerified || !token) {
             setPages([])
@@ -133,8 +162,10 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
                 systemUserName: selectedUser?.name ?? "",
                 appName: selectedUser?.appName ?? "",
                 category: page.category ?? "",
-                topic: selectedUser?.category || "",
+                topic: customTopic || selectedUser?.category || "",
                 token: page.access_token,
+                trafficInterval: trafficInterval,
+                viralInterval: viralInterval
             }))
 
             const res = await fetch("/api/database/saveToken", {
@@ -181,6 +212,10 @@ export function useTokenIngestion(adminPassword: string, isAdminVerified: boolea
         selectedSystemUserId, setSelectedSystemUserId, pages, setPages,
         selectedPageIds, setSelectedPageIds, saving, loadingPages, loadingUsers,
         bmFilterOptions, filteredSystemUsers, selectedUser, activePart,
+        customTopic, setCustomTopic,
+        trafficInterval, setTrafficInterval,
+        viralInterval, setViralInterval,
+        availableTopics,
         handlePageSave, handleSelectThird
     }
 }

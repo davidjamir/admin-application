@@ -13,6 +13,13 @@ export interface DiscoveryPipelineProps {
     pages: FacebookPage[]
     selectedPageIds: string[]
     handlePageSave: () => void
+    customTopic: string
+    setCustomTopic: (val: string) => void
+    trafficInterval: number
+    setTrafficInterval: (val: number) => void
+    viralInterval: number
+    setViralInterval: (val: number) => void
+    availableTopics: string[]
 }
 
 export interface AssetTableProps {
@@ -22,4 +29,6 @@ export interface AssetTableProps {
     loadingPages: boolean
     activePart: number | null
     handleSelectThird: (part: 1 | 2 | 3) => void
+    trafficInterval: number
+    viralInterval: number
 }

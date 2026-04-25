@@ -104,3 +104,61 @@ export async function GET(
     return NextResponse.json({ error: message }, { status: 500 })
   }
 }
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params
+  const pageId = resolvedParams.id
+  
+  try {
+    const body = await request.json()
+    const db = await getDb()
+    const pagesCollection = db.collection("pages")
+    
+    // Only allow updating specific fields
+    const updates: Record<string, string | number | Date> = {}
+    if (body.systemUserName !== undefined) updates.systemUserName = body.systemUserName
+    if (body.appName !== undefined) updates.appName = body.appName
+    if (body.trafficInterval !== undefined) updates.trafficInterval = Number(body.trafficInterval)
+    if (body.viralInterval !== undefined) updates.viralInterval = Number(body.viralInterval)
+    if (body.token !== undefined) updates.token = body.token
+    if (body.topic !== undefined) updates.topic = body.topic
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "No valid fields to update" }, { status: 400 })
+    }
+
+    updates.updatedAt = new Date()
+
+    let result;
+    try {
+      result = await pagesCollection.updateOne(
+        { _id: new ObjectId(pageId) },
+        { $set: updates }
+      )
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (e) {
+      result = await pagesCollection.updateOne(
+        { pageId: pageId },
+        { $set: updates }
+      )
+    }
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Page not found" }, { status: 404 })
+    }
+
+    // Invalidate cache
+    const cacheKey = `page_details_${pageId}`
+    await redis.del(cacheKey)
+    await redis.del("pages_list_master")
+
+    return NextResponse.json({ success: true, updates })
+  } catch (error: unknown) {
+    console.error("Page Update Error:", error)
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}

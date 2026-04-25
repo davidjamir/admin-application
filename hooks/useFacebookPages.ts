@@ -18,6 +18,8 @@ export interface MongoPageData {
   lastActionAt: number
   contentPreview?: string
   queueCount?: number
+  trafficInterval?: number
+  viralInterval?: number
 }
 
 export interface PageDetails {

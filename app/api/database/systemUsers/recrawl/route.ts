@@ -72,7 +72,10 @@ export async function POST(req: Request) {
       const rawNote = nameParts[2]
       // Preserve numbers and use previously transformed parts, split by comma for deduplication
       category = rawNote.split(",")
-        .map(p => p.trim())
+        .map(p => {
+          const part = p.trim().replace(/\d+/g, "").trim()
+          return nameMap[part] || part
+        })
         .filter((v, i, a) => v && a.indexOf(v) === i)
         .join(", ")
     }

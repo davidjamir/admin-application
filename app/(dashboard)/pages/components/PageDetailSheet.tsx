@@ -1,14 +1,60 @@
 import React from "react"
-import { CalendarClock, Clock, Copy, Facebook, History, LayoutDashboard, RefreshCcw, X } from "lucide-react"
+import { CalendarClock, Clock, Copy, Facebook, History, LayoutDashboard, RefreshCcw, X, Pencil, Check, Loader2 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { toast } from "sonner"
 import { PageDetailSheetProps } from "./types"
 import { LoadingScreen } from "@/components/ui/loading-screen"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 
 export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
-  selectedPage, onClose, details, detailsLoading, activeTab, setActiveTab, showToken, setShowToken, getHealthColor, setDetails
+  selectedPage, onClose, details, detailsLoading, activeTab, setActiveTab, showToken, setShowToken, getHealthColor, setDetails, onRefresh
 }) => {
   const [recrawling, setRecrawling] = React.useState(false)
+  const [isEditing, setIsEditing] = React.useState(false)
+  const [saving, setSaving] = React.useState(false)
+  const [editValues, setEditValues] = React.useState({
+    systemUserName: selectedPage.systemUserName,
+    appName: selectedPage.appName,
+    trafficInterval: selectedPage.trafficInterval || 0,
+    viralInterval: selectedPage.viralInterval || 0,
+    token: selectedPage.token,
+    topic: selectedPage.topic || ""
+  })
+
+  React.useEffect(() => {
+    setEditValues({
+      systemUserName: selectedPage.systemUserName,
+      appName: selectedPage.appName,
+      trafficInterval: selectedPage.trafficInterval || 0,
+      viralInterval: selectedPage.viralInterval || 0,
+      token: selectedPage.token,
+      topic: selectedPage.topic || ""
+    })
+    setIsEditing(false)
+  }, [selectedPage])
+
+  const handleSave = async () => {
+    setSaving(true)
+    try {
+      const res = await fetch(`/api/pages/${selectedPage._id.$oid}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(editValues)
+      })
+      if (!res.ok) throw new Error("Failed to update page")
+      toast.success("Page updated successfully")
+      setIsEditing(false)
+      onRefresh?.()
+      onClose()
+    } catch (err) {
+      console.error(err)
+      toast.error("Failed to update page")
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const sheetColor = getHealthColor(selectedPage.lastScheduledAt)
   const [isIdHovered, setIsIdHovered] = React.useState(false)
 
@@ -101,36 +147,117 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
           </button>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 p-6 bg-muted/30 border-b text-sm">
-          <div>
-            <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">System User</span>
-            <span className="font-medium">{selectedPage.systemUserName}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Source App</span>
-            <span className="font-medium">
-              {selectedPage.appName ? selectedPage.appName.charAt(0).toUpperCase() + selectedPage.appName.slice(1).toLowerCase() : "N/A"}
-            </span>
-          </div>
-          <div className="col-span-2">
-            <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Access Token</span>
-            <div className="flex items-center gap-2 bg-muted p-2 rounded-md font-mono text-xs overflow-hidden border">
-              <span className="truncate flex-1">
-                {showToken ? selectedPage.token : "••••••••••••••••••••••••••••••••••••••••••••••••"}
-              </span>
-              <button 
-                onClick={async () => {
-                  await navigator.clipboard.writeText(selectedPage.token)
-                  toast.success("Copied Access Token to clipboard")
-                }} 
-                className="text-muted-foreground hover:text-foreground p-1 rounded transition-colors cursor-pointer" 
-                title="Copy Token"
+        <div className="bg-muted/30 border-b relative">
+          <div className="absolute top-4 right-6 z-10">
+            {isEditing ? (
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="h-8 px-3 text-xs border-red-500/30 text-red-600 hover:bg-red-50 cursor-pointer"
+                  onClick={() => {
+                    setIsEditing(false)
+                    setEditValues({
+                      systemUserName: selectedPage.systemUserName,
+                      appName: selectedPage.appName,
+                      trafficInterval: selectedPage.trafficInterval || 0,
+                      viralInterval: selectedPage.viralInterval || 0,
+                      token: selectedPage.token,
+                      topic: selectedPage.topic || ""
+                    })
+                  }}
+                  disabled={saving}
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  size="sm" 
+                  className="h-8 px-3 text-xs bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
+                  onClick={handleSave}
+                  disabled={saving}
+                >
+                  {saving ? <Loader2 className="w-3 h-3 animate-spin mr-1.5" /> : <Check className="w-3 h-3 mr-1.5" />}
+                  Save
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                size="sm" 
+                variant="outline" 
+                className="h-8 px-3 text-xs border-primary/20 text-primary hover:bg-primary/5 cursor-pointer"
+                onClick={() => setIsEditing(true)}
               >
-                <Copy className="size-3.5" />
-              </button>
-              <button onClick={() => setShowToken(!showToken)} className="text-primary font-medium hover:underline whitespace-nowrap px-1 cursor-pointer">
-                {showToken ? "Hide" : "Show"}
-              </button>
+                <Pencil className="w-3 h-3 mr-1.5" />
+                Edit Info
+              </Button>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 p-6 pt-12 text-sm">
+            <div>
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">System User</span>
+              <span className="font-medium">{selectedPage.systemUserName}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Source App</span>
+              <span className="font-medium">
+                {selectedPage.appName ? selectedPage.appName.charAt(0).toUpperCase() + selectedPage.appName.slice(1).toLowerCase() : "N/A"}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Traffic Interval</span>
+              {isEditing ? (
+                <div className="relative">
+                  <Input 
+                    type="number"
+                    value={editValues.trafficInterval === 0 ? "" : editValues.trafficInterval}
+                    onChange={(e) => setEditValues({ ...editValues, trafficInterval: e.target.value === "" ? 0 : parseInt(e.target.value) })}
+                    placeholder="0"
+                    className="h-8 text-xs bg-background pr-10"
+                  />
+                  <span className="absolute right-2 top-1.5 text-[10px] text-muted-foreground">minutes</span>
+                </div>
+              ) : (
+                <span className="font-medium">{selectedPage.trafficInterval || 0} minutes</span>
+              )}
+            </div>
+            <div>
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Viral Interval</span>
+              {isEditing ? (
+                <div className="relative">
+                  <Input 
+                    type="number"
+                    value={editValues.viralInterval === 0 ? "" : editValues.viralInterval}
+                    onChange={(e) => setEditValues({ ...editValues, viralInterval: e.target.value === "" ? 0 : parseInt(e.target.value) })}
+                    placeholder="0"
+                    className="h-8 text-xs bg-background pr-12"
+                  />
+                  <span className="absolute right-2 top-1.5 text-[10px] text-muted-foreground">minutes</span>
+                </div>
+              ) : (
+                <span className="font-medium">{selectedPage.viralInterval || 0} minutes</span>
+              )}
+            </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Access Token</span>
+              <div className="flex items-center gap-2 bg-muted p-2 rounded-md font-mono text-xs overflow-hidden border">
+                <span className="truncate flex-1">
+                  {showToken ? selectedPage.token : "••••••••••••••••••••••••••••••••••••••••••••••••"}
+                </span>
+                <button 
+                  onClick={async () => {
+                    await navigator.clipboard.writeText(selectedPage.token)
+                    toast.success("Copied Access Token to clipboard")
+                  }} 
+                  className="text-muted-foreground hover:text-foreground p-1 rounded transition-colors cursor-pointer" 
+                  title="Copy Token"
+                >
+                  <Copy className="size-3.5" />
+                </button>
+                <button onClick={() => setShowToken(!showToken)} className="text-primary font-medium hover:underline whitespace-nowrap px-1 cursor-pointer">
+                  {showToken ? "Hide" : "Show"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

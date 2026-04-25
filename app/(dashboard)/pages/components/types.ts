@@ -41,4 +41,5 @@ export interface PageDetailSheetProps {
   setShowToken: (val: boolean) => void
   getHealthColor: (ts: number) => string
   setDetails: (details: PageDetails) => void
+  onRefresh?: () => void
 }
