@@ -231,7 +231,10 @@ export default function BloggerAccountsPage() {
                   <TableCell className="py-5">
                     <div 
                       className="flex items-center gap-1 group/token cursor-pointer hover:bg-blue-500/5 p-1 rounded-md transition-colors w-fit"
-                      onClick={() => handleCopy(account.accessToken, "Access Token")}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleCopy(account.accessToken, "Access Token")
+                      }}
                       title="Click to copy Access Token"
                     >
                       <code className="text-sm font-mono font-normal text-black/80">
@@ -242,7 +245,10 @@ export default function BloggerAccountsPage() {
                   <TableCell className="py-5">
                     <div 
                       className="flex items-center gap-1 group/token cursor-pointer hover:bg-emerald-500/5 p-1 rounded-md transition-colors w-fit"
-                      onClick={() => handleCopy(account.refreshToken, "Refresh Token")}
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        handleCopy(account.refreshToken, "Refresh Token")
+                      }}
                       title="Click to copy Refresh Token"
                     >
                       <code className="text-sm font-mono font-normal text-black/80">
