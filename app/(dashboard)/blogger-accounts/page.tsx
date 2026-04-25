@@ -28,11 +28,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Sheet } from "@/components/ui/sheet"
+import { BloggerAccountSheet } from "@/components/blogger/BloggerAccountSheet"
 
 export default function BloggerAccountsPage() {
   const { accounts, loading, refresh } = useBloggerAccounts()
   const [searchQuery, setSearchQuery] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("All")
+  const [selectedAccount, setSelectedAccount] = React.useState<BloggerAccount | null>(null)
+  const [sheetOpen, setSheetOpen] = React.useState(false)
 
   const formatDate = (date: string | { $date: string }) => {
     const dateStr = typeof date === 'string' ? date : date.$date
@@ -198,7 +202,11 @@ export default function BloggerAccountsPage() {
               </TableRow>
             ) : (
               filteredAccounts.map((account) => (
-                <TableRow key={account._id} className="group hover:bg-muted/20 border-border/40 transition-colors">
+                <TableRow
+                  key={account._id}
+                  className="group hover:bg-muted/20 border-border/40 transition-colors cursor-pointer"
+                  onClick={() => { setSelectedAccount(account); setSheetOpen(true) }}
+                >
                   <TableCell className="px-8 py-5">
                     <div className="flex items-center gap-4">
                       <div className="size-9 bg-blue-500/5 rounded-lg border border-blue-500/10 flex items-center justify-center">
@@ -267,6 +275,16 @@ export default function BloggerAccountsPage() {
           </TableBody>
         </Table>
       </div>
+
+      <Sheet open={sheetOpen} onOpenChange={setSheetOpen}>
+        {selectedAccount && (
+          <BloggerAccountSheet
+            account={selectedAccount}
+            getStatus={getStatus}
+            formatDate={formatDate}
+          />
+        )}
+      </Sheet>
     </div>
   )
 }
