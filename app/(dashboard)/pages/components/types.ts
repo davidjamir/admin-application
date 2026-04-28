@@ -23,6 +23,7 @@ export interface PageGridProps {
   handlePageClick: (page: MongoPageData) => void
   getHealthColor: (ts: number) => string
   formatExactRelative: (ts: number) => string | null
+  getLatestScheduledAt: (page: MongoPageData) => number
 }
 
 export interface PageCardProps {
@@ -31,6 +32,7 @@ export interface PageCardProps {
   onClick: () => void
   getHealthColor: (ts: number) => string
   formatExactRelative: (ts: number) => string | null
+  getLatestScheduledAt: (page: MongoPageData) => number
 }
 
 export interface PageDetailSheetProps {
@@ -43,6 +45,7 @@ export interface PageDetailSheetProps {
   showToken: boolean
   setShowToken: (val: boolean) => void
   getHealthColor: (ts: number) => string
+  getLatestScheduledAt: (page: MongoPageData) => number
   setDetails: (details: PageDetails) => void
   onRefresh?: () => void
 }

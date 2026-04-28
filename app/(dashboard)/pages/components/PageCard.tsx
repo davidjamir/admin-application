@@ -5,9 +5,10 @@ import { toast } from "sonner"
 import { PageCardProps } from "./types"
 
 export const PageCard: React.FC<PageCardProps> = ({
-  page, isSelected, onClick, getHealthColor, formatExactRelative
+  page, isSelected, onClick, getHealthColor, formatExactRelative, getLatestScheduledAt
 }) => {
-  const healthColor = getHealthColor(page.lastScheduledAt)
+  const latestScheduledAt = getLatestScheduledAt(page)
+  const healthColor = getHealthColor(latestScheduledAt)
   const [isIdHovered, setIsIdHovered] = useState(false)
 
   const handleCopyId = (e: React.MouseEvent) => {
@@ -82,7 +83,7 @@ export const PageCard: React.FC<PageCardProps> = ({
         </div>
         <div className="flex items-center justify-between mt-1">
           <div className="text-[12px] font-medium leading-snug tracking-tight text-left" style={{ color: healthColor }}>
-            {formatExactRelative(page.lastScheduledAt)}
+            {formatExactRelative(latestScheduledAt)}
           </div>
           <div className="flex flex-col items-end gap-0.5">
             <span className="text-[9px] text-muted-foreground">
@@ -104,7 +105,7 @@ export const PageCard: React.FC<PageCardProps> = ({
             <span className="font-medium text-foreground opacity-0">—</span>
           )}
           <span className="flex items-center gap-1">Last scheduled: <span className="font-semibold text-foreground">{
-             !page.lastScheduledAt || page.lastScheduledAt < 0 
+             !latestScheduledAt || latestScheduledAt < 0 
                ? "Chưa có lịch" 
                : new Intl.DateTimeFormat("en-GB", {
                    timeZone: "Asia/Ho_Chi_Minh",
@@ -113,7 +114,7 @@ export const PageCard: React.FC<PageCardProps> = ({
                    day: "2-digit",
                    month: "2-digit",
                    year: "numeric"
-                 }).format(new Date(page.lastScheduledAt)).replace(',', '')
+                 }).format(new Date(latestScheduledAt)).replace(',', '')
            }</span></span>
         </div>
       </CardFooter>

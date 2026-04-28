@@ -15,6 +15,7 @@ export interface MongoPageData {
   token: string
   updatedAt: { $date: string }
   lastScheduledAt: number 
+  lastScheduledViralAt?: number
   lastActionAt: number
   contentPreview?: string
   queueCount?: number
@@ -165,12 +166,18 @@ export function useFacebookPages() {
     }
   }
 
+  const getLatestScheduledAt = (page: Pick<MongoPageData, "lastScheduledAt" | "lastScheduledViralAt">) => {
+    const trafficScheduledAt = Number(page.lastScheduledAt) || 0
+    const viralScheduledAt = Number(page.lastScheduledViralAt) || 0
+    return Math.max(trafficScheduledAt, viralScheduledAt)
+  }
+
   return {
     data, totalPages, appliedCategoryFilter, appliedSearchQuery,
     loading, categoryFilter, setCategoryFilter,
     availableCategories, searchQuery, setSearchQuery, fetchedAt,
     selectedPage, setSelectedPage, details, setDetails, detailsLoading,
     activeTab, setActiveTab, showToken, setShowToken,
-    handleRefresh, handlePageClick, formatExactRelative, getHealthColor
+    handleRefresh, handlePageClick, formatExactRelative, getHealthColor, getLatestScheduledAt
   }
 }

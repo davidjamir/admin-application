@@ -35,7 +35,7 @@ const PageSkeleton = () => (
 )
 
 export const PageGrid: React.FC<PageGridProps> = ({
-  data, loading, selectedPageId, handlePageClick, getHealthColor, formatExactRelative
+  data, loading, selectedPageId, handlePageClick, getHealthColor, formatExactRelative, getLatestScheduledAt
 }) => {
   if (loading) {
     return (
@@ -67,6 +67,7 @@ export const PageGrid: React.FC<PageGridProps> = ({
           onClick={() => handlePageClick(page)}
           getHealthColor={getHealthColor}
           formatExactRelative={formatExactRelative}
+          getLatestScheduledAt={getLatestScheduledAt}
         />
       ))}
     </div>

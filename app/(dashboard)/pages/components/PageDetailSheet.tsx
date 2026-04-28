@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 
 export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
-  selectedPage, onClose, details, detailsLoading, activeTab, setActiveTab, showToken, setShowToken, getHealthColor, setDetails, onRefresh
+  selectedPage, onClose, details, detailsLoading, activeTab, setActiveTab, showToken, setShowToken, getHealthColor, getLatestScheduledAt, setDetails, onRefresh
 }) => {
   const [recrawling, setRecrawling] = React.useState(false)
   const [isEditing, setIsEditing] = React.useState(false)
@@ -57,7 +57,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
     }
   }
 
-  const sheetColor = getHealthColor(selectedPage.lastScheduledAt)
+  const sheetColor = getHealthColor(getLatestScheduledAt(selectedPage))
   const [isIdHovered, setIsIdHovered] = React.useState(false)
 
   const handleCopyId = () => {

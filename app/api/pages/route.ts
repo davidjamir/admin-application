@@ -44,6 +44,7 @@ export async function GET(request: Request) {
         createdAt?: Date | { $date: string };
         updatedAt?: Date | { $date: string };
         lastScheduledAt?: number;
+        lastScheduledViralAt?: number;
         lastActionAt?: number;
         contentPreview?: string;
         category?: string;
@@ -63,6 +64,7 @@ export async function GET(request: Request) {
           createdAt: { $date: toISO(doc.createdAt) },
           updatedAt: { $date: toISO(doc.updatedAt) },
           lastScheduledAt: doc.lastScheduledAt || Date.now() - 31536000000, 
+          lastScheduledViralAt: doc.lastScheduledViralAt || Date.now() - 31536000000,
           lastActionAt: doc.lastActionAt || Date.now() - 31536000000,
           contentPreview: doc.contentPreview || "Sẵn sàng phân phối nội dung...",
           queueCount: queueCounts[index] || 0
@@ -98,7 +100,11 @@ export async function GET(request: Request) {
     }
 
     // 4. Sort correctly based on Health curve timing
-    filteredData.sort((a, b) => ((b.lastScheduledAt as number) || 0) - ((a.lastScheduledAt as number) || 0))
+    filteredData.sort((a, b) => {
+      const aLatest = Math.max((a.lastScheduledAt as number) || 0, (a.lastScheduledViralAt as number) || 0)
+      const bLatest = Math.max((b.lastScheduledAt as number) || 0, (b.lastScheduledViralAt as number) || 0)
+      return bLatest - aLatest
+    })
 
     return NextResponse.json({
       data: filteredData,
