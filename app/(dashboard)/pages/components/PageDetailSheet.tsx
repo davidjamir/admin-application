@@ -18,6 +18,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
     appName: selectedPage.appName,
     trafficInterval: selectedPage.trafficInterval || 0,
     viralInterval: selectedPage.viralInterval || 0,
+    defaultTitle: selectedPage.defaultTitle || "",
     token: selectedPage.token,
     topic: selectedPage.topic || ""
   })
@@ -28,6 +29,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
       appName: selectedPage.appName,
       trafficInterval: selectedPage.trafficInterval || 0,
       viralInterval: selectedPage.viralInterval || 0,
+      defaultTitle: selectedPage.defaultTitle || "",
       token: selectedPage.token,
       topic: selectedPage.topic || ""
     })
@@ -162,6 +164,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
                       appName: selectedPage.appName,
                       trafficInterval: selectedPage.trafficInterval || 0,
                       viralInterval: selectedPage.viralInterval || 0,
+                      defaultTitle: selectedPage.defaultTitle || "",
                       token: selectedPage.token,
                       topic: selectedPage.topic || ""
                     })
@@ -236,6 +239,19 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
                 </div>
               ) : (
                 <span className="font-medium">{selectedPage.viralInterval || 0} minutes</span>
+              )}
+            </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground block mb-1 text-[10px] font-bold tracking-wider">Default Title</span>
+              {isEditing ? (
+                <Input
+                  value={editValues.defaultTitle}
+                  onChange={(e) => setEditValues({ ...editValues, defaultTitle: e.target.value })}
+                  placeholder="Default title"
+                  className="h-8 text-xs bg-background"
+                />
+              ) : (
+                <span className="font-medium">{selectedPage.defaultTitle || ""}</span>
               )}
             </div>
             <div className="col-span-2">

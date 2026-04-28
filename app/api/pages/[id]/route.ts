@@ -123,6 +123,7 @@ export async function PATCH(
     if (body.appName !== undefined) updates.appName = body.appName
     if (body.trafficInterval !== undefined) updates.trafficInterval = Number(body.trafficInterval)
     if (body.viralInterval !== undefined) updates.viralInterval = Number(body.viralInterval)
+    if (body.defaultTitle !== undefined) updates.defaultTitle = String(body.defaultTitle).trim()
     if (body.token !== undefined) updates.token = body.token
     if (body.topic !== undefined) updates.topic = body.topic
 

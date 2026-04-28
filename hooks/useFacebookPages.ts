@@ -20,6 +20,7 @@ export interface MongoPageData {
   queueCount?: number
   trafficInterval?: number
   viralInterval?: number
+  defaultTitle?: string
 }
 
 export interface PageDetails {
