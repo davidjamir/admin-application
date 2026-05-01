@@ -22,6 +22,8 @@ export interface MongoPageData {
   trafficInterval?: number
   viralInterval?: number
   defaultTitle?: string
+  defaultCtaImage?: string
+  defaultCtaVideo?: string
 }
 
 export interface PageDetails {
@@ -111,6 +113,36 @@ export function useFacebookPages() {
     }
   }, [])
 
+  const handleDeletePage = useCallback(async (page: MongoPageData) => {
+    try {
+      const res = await fetch(`/api/pages/${page._id.$oid}`, { method: "DELETE" })
+      const json = await res.json().catch(() => ({}))
+
+      if (!res.ok || json.error) {
+        throw new Error(json.error || "Failed to delete page")
+      }
+
+      setData((current) => current.filter((item) => item._id.$oid !== page._id.$oid))
+      setTotalPages((current) => (typeof current === "number" ? Math.max(0, current - 1) : current))
+      setAvailableCategories((current) => {
+        const remainingPages = data.filter((item) => item._id.$oid !== page._id.$oid)
+        const remainingTopics = new Set(remainingPages.map((item) => item.topic).filter(Boolean))
+        return current.filter((category) => category === "All" || remainingTopics.has(category))
+      })
+
+      if (selectedPage?._id.$oid === page._id.$oid) {
+        setSelectedPage(null)
+        setDetails(null)
+      }
+
+      toast.success("Page deleted")
+    } catch (error) {
+      console.error("Failed to delete page", error)
+      toast.error(error instanceof Error ? error.message : "Failed to delete page")
+      throw error
+    }
+  }, [data, selectedPage])
+
   const formatExactRelative = (timestamp: number) => {
     if (!timestamp || timestamp <= 0) return null
     const diffMs = timestamp - Date.now()
@@ -178,6 +210,6 @@ export function useFacebookPages() {
     availableCategories, searchQuery, setSearchQuery, fetchedAt,
     selectedPage, setSelectedPage, details, setDetails, detailsLoading,
     activeTab, setActiveTab, showToken, setShowToken,
-    handleRefresh, handlePageClick, formatExactRelative, getHealthColor, getLatestScheduledAt
+    handleRefresh, handlePageClick, handleDeletePage, formatExactRelative, getHealthColor, getLatestScheduledAt
   }
 }

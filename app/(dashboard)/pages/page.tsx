@@ -14,7 +14,7 @@ export default function PagesManagementPage() {
     availableCategories, searchQuery, setSearchQuery, fetchedAt,
     selectedPage, setSelectedPage, details, setDetails, detailsLoading,
     activeTab, setActiveTab, showToken, setShowToken,
-    handleRefresh, handlePageClick, formatExactRelative, getHealthColor, getLatestScheduledAt
+    handleRefresh, handlePageClick, handleDeletePage, formatExactRelative, getHealthColor, getLatestScheduledAt
   } = useFacebookPages()
 
   // Only show full screen loading for the very first load when there's no data yet
@@ -45,6 +45,7 @@ export default function PagesManagementPage() {
         loading={loading}
         selectedPageId={selectedPage?._id.$oid}
         handlePageClick={handlePageClick}
+        handleDeletePage={handleDeletePage}
         getHealthColor={getHealthColor}
         formatExactRelative={formatExactRelative}
         getLatestScheduledAt={getLatestScheduledAt}
@@ -63,6 +64,7 @@ export default function PagesManagementPage() {
           getHealthColor={getHealthColor}
           getLatestScheduledAt={getLatestScheduledAt}
           setDetails={setDetails}
+          onDelete={handleDeletePage}
           onRefresh={handleRefresh}
         />
       )}

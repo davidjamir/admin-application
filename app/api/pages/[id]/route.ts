@@ -124,6 +124,8 @@ export async function PATCH(
     if (body.trafficInterval !== undefined) updates.trafficInterval = Number(body.trafficInterval)
     if (body.viralInterval !== undefined) updates.viralInterval = Number(body.viralInterval)
     if (body.defaultTitle !== undefined) updates.defaultTitle = String(body.defaultTitle).trim()
+    if (body.defaultCtaImage !== undefined) updates.defaultCtaImage = String(body.defaultCtaImage).trim()
+    if (body.defaultCtaVideo !== undefined) updates.defaultCtaVideo = String(body.defaultCtaVideo).trim()
     if (body.token !== undefined) updates.token = body.token
     if (body.topic !== undefined) updates.topic = body.topic
 
@@ -159,6 +161,41 @@ export async function PATCH(
     return NextResponse.json({ success: true, updates })
   } catch (error: unknown) {
     console.error("Page Update Error:", error)
+    const message = error instanceof Error ? error.message : "Unknown error"
+    return NextResponse.json({ error: message }, { status: 500 })
+  }
+}
+
+export async function DELETE(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const resolvedParams = await params
+  const pageId = resolvedParams.id
+
+  try {
+    const db = await getDb()
+    const pagesCollection = db.collection("pages")
+
+    let result
+    if (ObjectId.isValid(pageId)) {
+      result = await pagesCollection.deleteOne({ _id: new ObjectId(pageId) })
+    }
+
+    if (!result || result.deletedCount === 0) {
+      result = await pagesCollection.deleteOne({ pageId })
+    }
+
+    if (result.deletedCount === 0) {
+      return NextResponse.json({ error: "Page not found" }, { status: 404 })
+    }
+
+    await redis.del(`page_details_${pageId}`)
+    await redis.del("pages_list_master")
+
+    return NextResponse.json({ success: true })
+  } catch (error: unknown) {
+    console.error("Page Delete Error:", error)
     const message = error instanceof Error ? error.message : "Unknown error"
     return NextResponse.json({ error: message }, { status: 500 })
   }

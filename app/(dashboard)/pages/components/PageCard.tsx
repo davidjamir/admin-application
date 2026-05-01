@@ -3,9 +3,10 @@ import { Card, CardHeader, CardContent, CardFooter } from "@/components/ui/card"
 import { Facebook, MessageSquare } from "lucide-react"
 import { toast } from "sonner"
 import { PageCardProps } from "./types"
+import { DeletePageDialog } from "./DeletePageDialog"
 
 export const PageCard: React.FC<PageCardProps> = ({
-  page, isSelected, onClick, getHealthColor, formatExactRelative, getLatestScheduledAt
+  page, isSelected, onClick, onDelete, getHealthColor, formatExactRelative, getLatestScheduledAt
 }) => {
   const latestScheduledAt = getLatestScheduledAt(page)
   const healthColor = getHealthColor(latestScheduledAt)
@@ -15,6 +16,10 @@ export const PageCard: React.FC<PageCardProps> = ({
     e.stopPropagation()
     navigator.clipboard.writeText(page.pageId)
     toast.success(`Page ID: ${page.pageId} copied!`)
+  }
+
+  const stopCardClickPropagation = (e: React.SyntheticEvent) => {
+    e.stopPropagation()
   }
   
   return (
@@ -37,7 +42,8 @@ export const PageCard: React.FC<PageCardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="size-5 inline-flex items-center justify-center rounded-full bg-[#1877F2]/10 hover:bg-[#1877F2]/20 transition-all"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={stopCardClickPropagation}
+                  onPointerDown={stopCardClickPropagation}
                   title="View on Facebook"
                 >
                   <Facebook className="size-2.5 text-[#1877F2]" />
@@ -47,7 +53,8 @@ export const PageCard: React.FC<PageCardProps> = ({
                   target="_blank"
                   rel="noopener noreferrer"
                   className="size-5 inline-flex items-center justify-center rounded-full bg-indigo-500/10 hover:bg-indigo-500/20 transition-all font-bold"
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={stopCardClickPropagation}
+                  onPointerDown={stopCardClickPropagation}
                   title="View Reviews"
                 >
                   <MessageSquare className="size-2.5 text-indigo-500" />
@@ -56,7 +63,10 @@ export const PageCard: React.FC<PageCardProps> = ({
             </span>
           </div>
         </div>
-        <div className="size-2.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
+        <div className="mt-0.5 flex shrink-0 items-center gap-2">
+          <DeletePageDialog page={page} onDelete={onDelete} />
+          <div className="size-2.5 rounded-full" style={{ backgroundColor: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
+        </div>
       </CardHeader>
       
       <CardContent className="flex-1 px-5 pt-1 pb-1 flex flex-col justify-end">
@@ -71,6 +81,7 @@ export const PageCard: React.FC<PageCardProps> = ({
             <div 
               className="group/id flex items-center gap-1.5 cursor-pointer transition-colors"
               onClick={handleCopyId}
+              onPointerDown={stopCardClickPropagation}
               onMouseEnter={() => setIsIdHovered(true)}
               onMouseLeave={() => setIsIdHovered(false)}
               style={{ color: isIdHovered ? healthColor : undefined }}

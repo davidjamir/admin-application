@@ -21,6 +21,7 @@ export interface PageGridProps {
   loading: boolean
   selectedPageId: string | undefined
   handlePageClick: (page: MongoPageData) => void
+  handleDeletePage: (page: MongoPageData) => Promise<void>
   getHealthColor: (ts: number) => string
   formatExactRelative: (ts: number) => string | null
   getLatestScheduledAt: (page: MongoPageData) => number
@@ -30,6 +31,7 @@ export interface PageCardProps {
   page: MongoPageData
   isSelected: boolean
   onClick: () => void
+  onDelete: (page: MongoPageData) => Promise<void>
   getHealthColor: (ts: number) => string
   formatExactRelative: (ts: number) => string | null
   getLatestScheduledAt: (page: MongoPageData) => number
@@ -47,5 +49,6 @@ export interface PageDetailSheetProps {
   getHealthColor: (ts: number) => string
   getLatestScheduledAt: (page: MongoPageData) => number
   setDetails: (details: PageDetails) => void
+  onDelete: (page: MongoPageData) => Promise<void>
   onRefresh?: () => void
 }

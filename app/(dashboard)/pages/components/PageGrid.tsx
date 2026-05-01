@@ -35,7 +35,7 @@ const PageSkeleton = () => (
 )
 
 export const PageGrid: React.FC<PageGridProps> = ({
-  data, loading, selectedPageId, handlePageClick, getHealthColor, formatExactRelative, getLatestScheduledAt
+  data, loading, selectedPageId, handlePageClick, handleDeletePage, getHealthColor, formatExactRelative, getLatestScheduledAt
 }) => {
   if (loading) {
     return (
@@ -65,6 +65,7 @@ export const PageGrid: React.FC<PageGridProps> = ({
           page={page}
           isSelected={selectedPageId === page._id.$oid}
           onClick={() => handlePageClick(page)}
+          onDelete={handleDeletePage}
           getHealthColor={getHealthColor}
           formatExactRelative={formatExactRelative}
           getLatestScheduledAt={getLatestScheduledAt}
