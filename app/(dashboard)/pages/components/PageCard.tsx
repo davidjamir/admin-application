@@ -64,7 +64,9 @@ export const PageCard: React.FC<PageCardProps> = ({
           </div>
         </div>
         <div className="mt-0.5 flex shrink-0 items-center gap-2">
-          <DeletePageDialog page={page} onDelete={onDelete} />
+          <span className="hidden shrink-0 group-hover:inline-flex">
+            <DeletePageDialog page={page} onDelete={onDelete} />
+          </span>
           <div className="size-2.5 rounded-full" style={{ backgroundColor: healthColor, boxShadow: `0 0 6px ${healthColor}` }} />
         </div>
       </CardHeader>
