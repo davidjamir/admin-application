@@ -66,6 +66,9 @@ const SOCIAL_MODE_NEEDS_PAGE = "needs_page"
 /** Omit `chatName` query → all channels */
 const CHANNEL_ALL = "__all_channels__"
 
+/** Controlled Select sentinel — avoids Radix switching uncontrolled ⇄ controlled when using `undefined`. */
+const BULK_SCHEDULE_SELECT_UNSET = "__bulk_schedule_unset__"
+
 const HCM_DISPLAY: Intl.DateTimeFormatOptions = {
   timeZone: TZ_HCM,
   year: "numeric",
@@ -522,13 +525,19 @@ export function ContentPublisherView() {
   /** Pages for “Schedule to page” picker — scaffold until bulk schedule API lands. */
   const [bulkSchedulePages, setBulkSchedulePages] = React.useState<MongoPageData[]>([])
   const [bulkSchedulePagesLoading, setBulkSchedulePagesLoading] = React.useState(false)
-  const [bulkSchedulePageOid, setBulkSchedulePageOid] = React.useState("")
-  const [bulkScheduleAtLocal, setBulkScheduleAtLocal] = React.useState("")
+  const [bulkSchedulePageOid, setBulkSchedulePageOid] = React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
+  /** Label "Categories" in UI; options = `topics` from the same API as the Topic filter (independent value). */
+  const [bulkScheduleCategory, setBulkScheduleCategory] =
+    React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
+  /** Options from selected rows (and from that page when Target page is picked). */
+  const [bulkScheduleChannel, setBulkScheduleChannel] = React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
+  const [bulkScheduleApplying, setBulkScheduleApplying] = React.useState(false)
 
   React.useEffect(() => {
     if (!hasBulkScheduleSelection) {
-      setBulkSchedulePageOid("")
-      setBulkScheduleAtLocal("")
+      setBulkSchedulePageOid(BULK_SCHEDULE_SELECT_UNSET)
+      setBulkScheduleCategory(BULK_SCHEDULE_SELECT_UNSET)
+      setBulkScheduleChannel(BULK_SCHEDULE_SELECT_UNSET)
       return
     }
     let cancelled = false
@@ -548,6 +557,98 @@ export function ContentPublisherView() {
       cancelled = true
     }
   }, [hasBulkScheduleSelection])
+
+  const bulkScheduleCategoryChoices = React.useMemo(
+    () => [...topics].sort((a, b) => a.localeCompare(b)),
+    [topics]
+  )
+
+  const bulkScheduleSelectedRows = React.useMemo(() => {
+    const idSet = new Set(selectedRowIds)
+    return items.filter((r) => idSet.has(r.id))
+  }, [items, selectedRowIds])
+
+  const bulkRowsAfterCategoryFilter = React.useMemo(() => {
+    if (bulkScheduleCategory === BULK_SCHEDULE_SELECT_UNSET) return bulkScheduleSelectedRows
+    const c = bulkScheduleCategory.trim()
+    return bulkScheduleSelectedRows.filter((r) => (r.topic?.trim() ?? "") === c)
+  }, [bulkScheduleSelectedRows, bulkScheduleCategory])
+
+  const bulkFilteredChannelOptions = React.useMemo(() => {
+    const out: string[] = []
+    const seen = new Set<string>()
+    for (const row of bulkRowsAfterCategoryFilter) {
+      const ch = row.channel?.trim()
+      if (ch && !seen.has(ch)) {
+        seen.add(ch)
+        out.push(ch)
+      }
+    }
+    return out
+  }, [bulkRowsAfterCategoryFilter])
+
+  const filteredBulkSchedulePages = React.useMemo(() => {
+    // Filter by category (topic) if chosen; then push pages used by selected items to the top.
+    const selectedRowPageKeys = new Set<string>()
+    for (const row of bulkRowsAfterCategoryFilter) {
+      const raw = row.raw as Record<string, unknown>
+
+      // 1) item.targetPages: ["Page A", "Page B", ...]
+      const targetPages = raw.targetPages
+      if (Array.isArray(targetPages)) {
+        for (const p of targetPages) {
+          if (typeof p === "string" && p.trim()) selectedRowPageKeys.add(p.trim().toLowerCase())
+        }
+      }
+
+      // 2) item.pages: [{ page, name, pageId, ... }, ...]
+      const rawPages = raw.pages
+      if (Array.isArray(rawPages)) {
+        for (const entry of rawPages) {
+          if (!entry || typeof entry !== "object") continue
+          const e = entry as Record<string, unknown>
+          for (const key of ["page", "name", "pageId"] as const) {
+            const v = e[key]
+            if (typeof v === "string" && v.trim()) selectedRowPageKeys.add(v.trim().toLowerCase())
+          }
+        }
+      }
+    }
+
+    let list = bulkSchedulePages
+    if (bulkScheduleCategory !== BULK_SCHEDULE_SELECT_UNSET) {
+      const c = bulkScheduleCategory.trim()
+      list = list.filter((p) => (typeof p.topic === "string" ? p.topic.trim() : "") === c)
+    }
+
+    const matchesSelectedRows = (p: MongoPageData) => {
+      const nameKey = (p.name ?? "").trim().toLowerCase()
+      const pageIdKey = (p.pageId ?? "").trim().toLowerCase()
+      return (
+        (nameKey && selectedRowPageKeys.has(nameKey)) ||
+        (pageIdKey && selectedRowPageKeys.has(pageIdKey))
+      )
+    }
+
+    return [...list].sort((a, b) => {
+      const sel = Number(matchesSelectedRows(b)) - Number(matchesSelectedRows(a))
+      if (sel !== 0) return sel
+      return (a.name || a.pageId || "").localeCompare(b.name || b.pageId || "")
+    })
+  }, [bulkSchedulePages, bulkScheduleCategory, bulkRowsAfterCategoryFilter])
+
+  React.useEffect(() => {
+    if (bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET) return
+    if (!bulkFilteredChannelOptions.includes(bulkScheduleChannel)) {
+      setBulkScheduleChannel(BULK_SCHEDULE_SELECT_UNSET)
+    }
+  }, [bulkFilteredChannelOptions, bulkScheduleChannel])
+
+  React.useEffect(() => {
+    if (bulkSchedulePageOid === BULK_SCHEDULE_SELECT_UNSET) return
+    const ok = filteredBulkSchedulePages.some((p) => p._id.$oid === bulkSchedulePageOid)
+    if (!ok) setBulkSchedulePageOid(BULK_SCHEDULE_SELECT_UNSET)
+  }, [bulkSchedulePageOid, filteredBulkSchedulePages])
 
   React.useEffect(() => {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400)
@@ -661,6 +762,36 @@ export function ContentPublisherView() {
       toast.error(e instanceof Error ? e.message : "Delete failed")
     } finally {
       setDeleting(false)
+    }
+  }
+
+  const bulkScheduleCanApply =
+    selectedRowIds.length > 0 && bulkSchedulePageOid !== BULK_SCHEDULE_SELECT_UNSET
+
+  const handleBulkScheduleApply = async () => {
+    if (!bulkScheduleCanApply) return
+    setBulkScheduleApplying(true)
+    try {
+      const res = await fetch("/api/content-publisher/schedule", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          socialIds: selectedRowIds,
+          pageOid: bulkSchedulePageOid,
+          category:
+            bulkScheduleCategory === BULK_SCHEDULE_SELECT_UNSET ? "" : bulkScheduleCategory,
+          channel: bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET ? "" : bulkScheduleChannel,
+        }),
+      })
+      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string }
+      if (!res.ok) throw new Error(data.error || "Schedule request failed")
+      toast.success(data.message || "Publishing targets applied.")
+      setSelectedRowIds([])
+      await load()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Schedule request failed")
+    } finally {
+      setBulkScheduleApplying(false)
     }
   }
 
@@ -851,25 +982,79 @@ export function ContentPublisherView() {
                       <CardTitle id="publisher-bulk-schedule-heading" className="text-sm font-semibold">
                         Schedule publish
                       </CardTitle>
-                      <p className="mt-1 text-xs text-muted-foreground">
-                        {selectedRowIds.length === 1
-                          ? "1 item selected — pick a Page and publication time."
-                          : `${selectedRowIds.length} items selected — applies to each when you hook the submit handler.`}{" "}
-                        Time below is interpreted in your browser timezone; convert to unix for the API if needed (
-                        {TZ_HCM} preferred for operations).
-                      </p>
                     </div>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-4">
-                <div className="grid gap-4 sm:grid-cols-2">
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                   <div className="space-y-1.5">
-                    <Label htmlFor="publisher-bulk-target-page">Target Page</Label>
+                    <Label htmlFor="publisher-bulk-categories">Categories</Label>
                     <Select
-                      value={bulkSchedulePageOid === "" ? undefined : bulkSchedulePageOid}
+                      value={bulkScheduleCategory}
+                      onValueChange={setBulkScheduleCategory}
+                      disabled={bulkScheduleCategoryChoices.length === 0}
+                    >
+                      <SelectTrigger id="publisher-bulk-categories" className="w-full cursor-pointer">
+                        <SelectValue placeholder="Choose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          value={BULK_SCHEDULE_SELECT_UNSET}
+                          className="cursor-pointer text-muted-foreground"
+                        >
+                          Choose
+                        </SelectItem>
+                        {bulkScheduleCategoryChoices.map((t) => (
+                          <SelectItem key={t} value={t} className="cursor-pointer">
+                            {t}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {bulkScheduleCategoryChoices.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        No topics yet — same list as Topic above; refresh after a successful load.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="publisher-bulk-channel">Channel</Label>
+                    <Select value={bulkScheduleChannel} onValueChange={setBulkScheduleChannel} disabled={bulkFilteredChannelOptions.length === 0}>
+                      <SelectTrigger id="publisher-bulk-channel" className="w-full cursor-pointer">
+                        <SelectValue placeholder="Choose" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem
+                          value={BULK_SCHEDULE_SELECT_UNSET}
+                          className="cursor-pointer text-muted-foreground"
+                        >
+                          Choose
+                        </SelectItem>
+                        {bulkFilteredChannelOptions.map((name) => (
+                          <SelectItem key={name} value={name} className="cursor-pointer">
+                            {name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    {bulkFilteredChannelOptions.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground">
+                        No channels on the selected rows
+                        {bulkScheduleCategory !== BULK_SCHEDULE_SELECT_UNSET ? " for this category" : ""}.
+                      </p>
+                    ) : null}
+                  </div>
+                  <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                    <Label htmlFor="publisher-bulk-target-page">Target page</Label>
+                    <Select
+                      value={bulkSchedulePageOid}
                       onValueChange={setBulkSchedulePageOid}
-                      disabled={bulkSchedulePagesLoading || bulkSchedulePages.length === 0}
+                      disabled={
+                        bulkSchedulePagesLoading ||
+                        bulkSchedulePages.length === 0 ||
+                        filteredBulkSchedulePages.length === 0
+                      }
                     >
                       <SelectTrigger
                         id="publisher-bulk-target-page"
@@ -881,11 +1066,17 @@ export function ContentPublisherView() {
                             Loading pages…
                           </span>
                         ) : (
-                          <SelectValue placeholder="Choose a Page" />
+                          <SelectValue placeholder="Choose" />
                         )}
                       </SelectTrigger>
                       <SelectContent>
-                        {bulkSchedulePages.map((p) => (
+                        <SelectItem
+                          value={BULK_SCHEDULE_SELECT_UNSET}
+                          className="cursor-pointer text-muted-foreground"
+                        >
+                          Choose
+                        </SelectItem>
+                        {filteredBulkSchedulePages.map((p) => (
                           <SelectItem key={p._id.$oid} value={p._id.$oid} className="cursor-pointer">
                             <span className="truncate">{p.name || p.pageId}</span>
                           </SelectItem>
@@ -898,38 +1089,25 @@ export function ContentPublisherView() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="publisher-bulk-schedule-datetime">Publish time</Label>
-                    <Input
-                      id="publisher-bulk-schedule-datetime"
-                      type="datetime-local"
-                      className="cursor-pointer tabular-nums"
-                      value={bulkScheduleAtLocal}
-                      onChange={(e) => setBulkScheduleAtLocal(e.target.value)}
-                    />
-                    <p className="text-[11px] text-muted-foreground">
-                      Wire this input to your API (unix ms or RFC string).
-                    </p>
-                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 border-t border-border/60 pt-4">
                   <Button
                     type="button"
                     variant="default"
                     size="sm"
-                    className="cursor-not-allowed opacity-70"
-                    disabled
-                    title="Replace with fetch() when API is ready"
+                    className="cursor-pointer"
+                    disabled={!bulkScheduleCanApply || bulkScheduleApplying || loading}
+                    onClick={() => void handleBulkScheduleApply()}
                   >
-                    Apply schedule
+                    {bulkScheduleApplying ? (
+                      <>
+                        <Loader2 className="mr-2 size-3.5 shrink-0 animate-spin" aria-hidden />
+                        Applying…
+                      </>
+                    ) : (
+                      "Apply schedule"
+                    )}
                   </Button>
-                  <p className="min-w-0 flex-1 text-[11px] text-muted-foreground">
-                    Payload stub:{" "}
-                    <code className="rounded bg-muted px-1 py-px font-mono text-[10px]">{`selectedRowIds`}</code>
-                    , <code className="rounded bg-muted px-1 py-px font-mono text-[10px]">bulkSchedulePageOid</code>
-                    , <code className="rounded bg-muted px-1 py-px font-mono text-[10px]">{`bulkScheduleAtLocal`}</code>
-                    .
-                  </p>
                 </div>
               </CardContent>
             </Card>
