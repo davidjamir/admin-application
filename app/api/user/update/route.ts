@@ -3,7 +3,7 @@ import { getDb } from "@/lib/mongodb";
 import { getServerSession } from "@/lib/auth/session";
 import { hashPassword, comparePassword } from "@/lib/auth/bcrypt";
 import { createToken } from "@/lib/auth/jwt";
-import { AUTH_COOKIE_NAME } from "@/lib/auth/constants";
+import { AUTH_COOKIE_NAME, AUTH_SESSION_MAX_AGE_SECONDS } from "@/lib/auth/constants";
 import { ObjectId } from "mongodb";
 
 export async function POST(req: NextRequest) {
@@ -59,7 +59,7 @@ export async function POST(req: NextRequest) {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
-      maxAge: 60 * 60 * 2, // 2 hours
+      maxAge: AUTH_SESSION_MAX_AGE_SECONDS,
       path: "/",
     });
 

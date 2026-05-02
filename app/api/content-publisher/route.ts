@@ -34,6 +34,10 @@ function normalizeHttpUrl(raw: string | null): string | null {
   return null
 }
 
+function escapeRegexLiteral(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+}
+
 function thumbnailFromDoc(flat: Record<string, unknown>): string | null {
   const fi = flat.featuredImage
   if (typeof fi === "string" && /^https?:\/\//i.test(fi)) return fi
@@ -58,33 +62,25 @@ function thumbnailFromDoc(flat: Record<string, unknown>): string | null {
 function summarizePages(rawPages: unknown): {
   pageLabel: string | null
   primaryTopic: string | null
-  primaryChatId: string | null
+  channelLabel: string | null
 } {
   if (!Array.isArray(rawPages) || rawPages.length === 0) {
-    return { pageLabel: null, primaryTopic: null, primaryChatId: null }
+    return { pageLabel: null, primaryTopic: null, channelLabel: null }
   }
 
   const names: string[] = []
   let primaryTopic: string | null = null
-  let primaryChatId: string | null = null
+  const channelNames: string[] = []
 
   for (const entry of rawPages) {
     if (!entry || typeof entry !== "object") continue
     const p = entry as Record<string, unknown>
     if (typeof p.page === "string" && p.page.trim()) names.push(p.page.trim())
-    if (
-      typeof p.topic === "string" &&
-      p.topic.trim() &&
-      primaryTopic == null
-    ) {
+    if (typeof p.topic === "string" && p.topic.trim() && primaryTopic == null) {
       primaryTopic = p.topic.trim()
     }
-    if (
-      typeof p.requestChatId === "string" &&
-      p.requestChatId.trim() &&
-      primaryChatId == null
-    ) {
-      primaryChatId = p.requestChatId.trim()
+    if (typeof p.chatName === "string" && p.chatName.trim()) {
+      channelNames.push(p.chatName.trim())
     }
   }
 
@@ -93,7 +89,29 @@ function summarizePages(rawPages: unknown): {
   else if (names.length === 2) pageLabel = names.join(", ")
   else if (names.length > 2) pageLabel = `${names[0]}, +${names.length - 1}`
 
-  return { pageLabel, primaryTopic, primaryChatId }
+  const uniqChannels = [...new Set(channelNames)]
+  let channelLabel: string | null = null
+  if (uniqChannels.length === 1) channelLabel = uniqChannels[0]
+  else if (uniqChannels.length === 2) channelLabel = uniqChannels.join(", ")
+  else if (uniqChannels.length > 2)
+    channelLabel = `${uniqChannels[0]}, +${uniqChannels.length - 1}`
+
+  return { pageLabel, primaryTopic, channelLabel }
+}
+
+function docChatNamesFlat(flat: Record<string, unknown>): Set<string> {
+  const seen = new Set<string>()
+  const root = flat.chatName
+  if (typeof root === "string" && root.trim()) seen.add(root.trim())
+  const rawPages = flat.pages
+  if (Array.isArray(rawPages)) {
+    for (const entry of rawPages) {
+      if (!entry || typeof entry !== "object") continue
+      const cn = (entry as { chatName?: string }).chatName
+      if (typeof cn === "string" && cn.trim()) seen.add(cn.trim())
+    }
+  }
+  return seen
 }
 
 function docTopics(flat: Record<string, unknown>, primaryTopicFromPages: string | null): Set<string> {
@@ -125,7 +143,7 @@ function mapSocialDoc(
   const flat = doc as Record<string, unknown>
   const itemId = String(flat.itemId ?? _id.slice(-12))
 
-  const { pageLabel, primaryTopic: pagePrimaryTopic, primaryChatId } = summarizePages(flat.pages)
+  const { pageLabel, primaryTopic: pagePrimaryTopic, channelLabel } = summarizePages(flat.pages)
 
   const rootTopic =
     Array.isArray(flat.topics) &&
@@ -198,7 +216,7 @@ function mapSocialDoc(
     itemId,
     page: pageLabel,
     topic: inferredTopic || null,
-    chatId: primaryChatId || null,
+    channel: channelLabel || null,
     scheduleAt: scheduleCandidate || primaryTs || createdAtMs,
     createdAt: createdAtMs,
     primaryTs,
@@ -238,15 +256,98 @@ async function mergedTopicOptions(
   return Array.from(merged).sort((a, b) => a.localeCompare(b))
 }
 
+async function mergedChannelOptions(socialCol: Collection<Document>): Promise<string[]> {
+  const merged = new Set<string>()
+  const sample = await socialCol
+    .find({}, { projection: { chatName: 1, pages: { chatName: 1 } } })
+    .limit(4000)
+    .toArray()
+
+  for (const d of sample) {
+    for (const c of docChatNamesFlat(d as Record<string, unknown>)) merged.add(c)
+  }
+
+  return Array.from(merged).sort((a, b) => a.localeCompare(b))
+}
+
+function parseCreatedDayBoundsIct(
+  ymd: string
+): { startMs: number; endMsExclusive: number } | null {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(ymd.trim())
+  if (!m) return null
+  const startMs = Date.parse(`${m[1]}-${m[2]}-${m[3]}T00:00:00.000+07:00`)
+  if (!Number.isFinite(startMs)) return null
+  return { startMs, endMsExclusive: startMs + 86_400_000 }
+}
+
+function createdAtInDayBounds(bounds: {
+  startMs: number
+  endMsExclusive: number
+}): Document {
+  return {
+    $or: [
+      {
+        createdAt: {
+          $gte: new Date(bounds.startMs),
+          $lt: new Date(bounds.endMsExclusive),
+        },
+      },
+      {
+        createdAt: {
+          $gte: bounds.startMs,
+          $lt: bounds.endMsExclusive,
+        },
+      },
+    ],
+  }
+}
+
+/** Any `pages[]` row that looks wired to a real page/channel target */
+function pageTargetElemMatchClause(): Document {
+  const nonempty = /\S/
+  return {
+    pages: {
+      $elemMatch: {
+        $or: [
+          { page: { $regex: nonempty } },
+          { requestChatId: { $regex: nonempty } },
+          {
+            requestChatId: {
+              $exists: true,
+              $type: ["long", "int", "double", "decimal"],
+            },
+          },
+        ],
+      },
+    },
+  }
+}
+
+/** Items waiting to assign + schedule — no wired page target anywhere in `pages` */
+function needsPageAssignmentClause(): Document {
+  return { $nor: [pageTargetElemMatchClause()] }
+}
+
+function socialModeStrictInPagesClause(value: "auto" | "manual"): Document {
+  const pat = new RegExp(`^${escapeRegexLiteral(value)}$`, "i")
+  return {
+    pages: {
+      $elemMatch: {
+        mode: { $regex: pat },
+      },
+    },
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
     const search = (searchParams.get("search") || "").trim()
     const topic = (searchParams.get("topic") || "").trim()
-    const chatId = (searchParams.get("chatId") || "").trim()
-    const pipeline = (searchParams.get("pipeline") || "").trim().toLowerCase()
-    const dateFrom = searchParams.get("dateFrom") || ""
-    const dateTo = searchParams.get("dateTo") || ""
+    const chatName = (searchParams.get("chatName") || "").trim()
+    const pipelineFilter = (searchParams.get("pipeline") || "").trim().toLowerCase()
+    const createdDayParam = (searchParams.get("createdDay") || "").trim()
+    const socialModeParam = (searchParams.get("socialMode") || "").trim().toLowerCase()
 
     const primaryDb = await getDb()
 
@@ -271,12 +372,15 @@ export async function GET(request: Request) {
     const socialDb = await getSocialItemsDb()
     const socialCol = socialDb.collection(SOCIAL_COLL)
 
-    const distinctTopics = await mergedTopicOptions(primaryTopicsDistinct, socialCol)
+    const [distinctTopics, distinctChannels] = await Promise.all([
+      mergedTopicOptions(primaryTopicsDistinct, socialCol),
+      mergedChannelOptions(socialCol),
+    ])
 
     const andClauses: Document[] = []
 
-    if (pipeline === "traffic" || pipeline === "viral") {
-      andClauses.push({ pipeline })
+    if (pipelineFilter === "traffic" || pipelineFilter === "viral") {
+      andClauses.push({ pipeline: pipelineFilter })
     }
 
     if (topic) {
@@ -285,29 +389,72 @@ export async function GET(request: Request) {
       })
     }
 
-    if (chatId) {
-      andClauses.push({ "pages.requestChatId": chatId })
+    if (chatName) {
+      andClauses.push({
+        pages: {
+          $elemMatch: {
+            chatName,
+          },
+        },
+      })
     }
 
-    const mongoFilter: Document = andClauses.length ? { $and: andClauses } : {}
+    if (socialModeParam === "auto" || socialModeParam === "manual") {
+      andClauses.push(socialModeStrictInPagesClause(socialModeParam))
+    } else if (socialModeParam === "needs_page") {
+      andClauses.push(needsPageAssignmentClause())
+    }
+
+    const dayBounds =
+      createdDayParam.length >= 10 ? parseCreatedDayBoundsIct(createdDayParam) : null
+    const listingClauses: Document[] =
+      dayBounds !== null ? [...andClauses, createdAtInDayBounds(dayBounds)] : [...andClauses]
+
+    const mongoFilter: Document = listingClauses.length ? { $and: listingClauses } : {}
+
+    const aggMatch: Document = andClauses.length ? { $and: andClauses } : {}
+
+    let createdDays: string[]
+    try {
+      const agg = await socialCol
+        .aggregate([
+          ...(Object.keys(aggMatch).length ? [{ $match: aggMatch }] : []),
+          {
+            $addFields: {
+              _cdnorm: {
+                $convert: { input: "$createdAt", to: "date", onError: null, onNull: null },
+              },
+            },
+          },
+          { $match: { _cdnorm: { $ne: null } } },
+          {
+            $project: {
+              ymd: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$_cdnorm",
+                  timezone: "Asia/Ho_Chi_Minh",
+                },
+              },
+            },
+          },
+          { $group: { _id: "$ymd" } },
+          { $sort: { _id: -1 } },
+        ])
+        .toArray()
+
+      createdDays = agg
+        .map((doc) => (doc._id != null ? String(doc._id).trim() : ""))
+        .filter((ymd) => /^\d{4}-\d{2}-\d{2}$/.test(ymd))
+    } catch {
+      createdDays = []
+    }
 
     const rawDocs = (await socialCol.find(mongoFilter).limit(800).toArray()) as Document[]
 
     const now = Date.now()
 
-    let edgeFrom = 0
-    let edgeTo = Number.POSITIVE_INFINITY
-    if (dateFrom) {
-      edgeFrom = new Date(`${dateFrom}T00:00:00+07:00`).getTime()
-    }
-    if (dateTo) {
-      edgeTo = new Date(`${dateTo}T23:59:59.999+07:00`).getTime()
-    }
-
     const rows = rawDocs.map((doc) => mapSocialDoc(doc, now, pageTopic)).filter((row) => {
-      if (dateFrom || dateTo) {
-        if (row.primaryTs < edgeFrom || row.primaryTs > edgeTo) return false
-      }
       if (!search) return true
       const q = search.toLowerCase()
       const batchId = typeof row.raw.batchId === "string" ? row.raw.batchId : ""
@@ -316,13 +463,17 @@ export async function GET(request: Request) {
       const topicMatchDoc = [...docTopics(row.raw as Record<string, unknown>, row.topic)].some((t) =>
         t.toLowerCase().includes(q)
       )
+      const chatNameMatchDoc = [...docChatNamesFlat(row.raw as Record<string, unknown>)].some((c) =>
+        c.toLowerCase().includes(q)
+      )
 
       return (
         row.itemId.toLowerCase().includes(q) ||
         (row.page?.toLowerCase().includes(q) ?? false) ||
         (row.topic?.toLowerCase().includes(q) ?? false) ||
+        (row.channel?.toLowerCase().includes(q) ?? false) ||
         topicMatchDoc ||
-        (row.chatId?.toLowerCase().includes(q) ?? false) ||
+        chatNameMatchDoc ||
         row.previewTitle.toLowerCase().includes(q) ||
         row.previewBody.toLowerCase().includes(q) ||
         (row.linkUrl?.toLowerCase().includes(q) ?? false) ||
@@ -338,6 +489,8 @@ export async function GET(request: Request) {
     return NextResponse.json({
       items,
       topics: distinctTopics,
+      channels: distinctChannels,
+      createdDays,
       total: items.length,
     })
   } catch (error: unknown) {

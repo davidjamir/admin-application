@@ -41,8 +41,8 @@ describe("Authentication Utilities", () => {
       expect(verified.iat).toBeDefined();
       expect(verified.exp).toBeDefined();
       
-      const durationHours = (verified.exp - verified.iat) / 3600;
-      expect(Math.round(durationHours)).toBe(2); // 2 hours as requested
+      const durationDays = (verified.exp - verified.iat) / 86400;
+      expect(Math.round(durationDays)).toBe(7); // JWT matches AUTH_SESSION_JWT_EXPIRES
     });
   });
 });

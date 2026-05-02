@@ -1,13 +1,16 @@
 'use client'
 
+import { AUTH_SESSION_MAX_AGE_SECONDS } from "@/lib/auth/constants"
+
 const SESSION_KEY = "bm-admin-session"
-const SESSION_EXPIRY = 60 * 60 * 1000 // 1 hour
+/** Same wall-clock window as JWT + `7forge_session` cookie (`AUTH_SESSION_MAX_AGE_SECONDS`). */
+const SESSION_EXPIRY_MS = AUTH_SESSION_MAX_AGE_SECONDS * 1000
 
 export const saveSession = (password: string) => {
   if (typeof window === "undefined") return
   const data = {
     password,
-    expiresAt: Date.now() + SESSION_EXPIRY,
+    expiresAt: Date.now() + SESSION_EXPIRY_MS,
   }
   localStorage.setItem(SESSION_KEY, JSON.stringify(data))
 }
