@@ -17,6 +17,7 @@ import {
   ImagePlay,
   ShieldCheck,
   KeyRound,
+  FilePenLine,
 } from "lucide-react"
 
 import {
@@ -60,7 +61,7 @@ const navItems = [
     icon: Layers,
   },
   {
-    title: "Content & Schedules",
+    title: "Schedules Manager",
     url: "/schedules",
     icon: Calendar,
   },
@@ -83,6 +84,11 @@ const navItems = [
     title: "Blogger API",
     url: "/blogger-accounts",
     icon: KeyRound,
+  },
+  {
+    title: "Content Publisher",
+    url: "/content-publisher",
+    icon: FilePenLine,
   },
 ]
 
@@ -133,7 +139,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarGroupLabel>Overview</SidebarGroupLabel>
           <SidebarMenu>
             {navItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.url}>
                 <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                   <Link href={item.url}>
                     <item.icon />
@@ -150,7 +156,7 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarGroupLabel>System</SidebarGroupLabel>
           <SidebarMenu>
             {settingsItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
+              <SidebarMenuItem key={item.url}>
                 <SidebarMenuButton asChild isActive={pathname === item.url} tooltip={item.title}>
                   <Link href={item.url}>
                     <item.icon />

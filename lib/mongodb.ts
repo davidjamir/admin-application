@@ -22,6 +22,10 @@ attachDatabasePool(client);
 let _db: Db | null = null;
 let _initialized = false;
 
+/** Separate cluster for consolidated `social` documents (see MONGODB_URI2). */
+let _socialClient: MongoClient | null = null;
+let _socialDb: Db | null = null;
+
 
 
 export async function getDb(): Promise<Db> {
@@ -42,4 +46,37 @@ export async function getDb(): Promise<Db> {
     _initialized = true;
   }
   return _db;
+}
+
+/**
+ * Publisher / social archive DB (collection `social` by default).
+ * Uses MONGODB_URI2; DB name defaults to `MONGODB_DB2`, then `MONGODB_DB`, then `databases`.
+ */
+export async function getSocialItemsDb(): Promise<Db> {
+  if (_socialDb) return _socialDb;
+
+  const uri2 = process.env.MONGODB_URI2?.trim()
+  if (!uri2) {
+    throw new Error(
+      "MONGODB_URI2 is not configured. Add it to .env.local to load consolidated social documents.",
+    )
+  }
+
+  _socialClient = new MongoClient(uri2, options)
+  attachDatabasePool(_socialClient)
+
+  try {
+    await _socialClient.connect()
+  } catch (error) {
+    console.error("MongoDB (social items) connection error:", error)
+    _socialClient = null
+    throw error
+  }
+
+  const dbName =
+    process.env.MONGODB_DB2?.trim() ||
+    process.env.MONGODB_DB?.trim() ||
+    "databases"
+  _socialDb = _socialClient.db(dbName)
+  return _socialDb
 }

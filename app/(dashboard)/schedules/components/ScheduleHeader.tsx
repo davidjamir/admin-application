@@ -11,7 +11,7 @@ export const ScheduleHeader: React.FC<ScheduleHeaderProps> = ({
       <div className="flex-1">
         <div className="flex items-center gap-2 mb-1 text-primary">
           <Calendar className="size-5" />
-          <h1 className="text-3xl font-bold tracking-tight">Content & Schedules</h1>
+          <h1 className="text-3xl font-bold tracking-tight">Schedules Manager</h1>
         </div>
         <p className="text-muted-foreground font-medium text-sm leading-relaxed max-w-2xl">
           Universal posting calendar and content asset pipelines. Real-time background nodes are monitoring and distributing your content.
