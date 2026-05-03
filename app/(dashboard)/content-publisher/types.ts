@@ -7,6 +7,12 @@ export interface ContentPublisherRow {
   topic: string | null
   /** From `pages[].chatName`: display label(s) for Telegram / channel targeting. */
   channel: string | null
+  /** Root `chatName` on the social document (Telegram / chat label). */
+  chatName: string | null
+  /** Root `chatId` on the social document (e.g. Telegram id). */
+  chatId: string | number | null
+  /** Root `chatType` on the social document. */
+  chatType: string | null
   scheduleAt: number
   createdAt: number
   primaryTs: number

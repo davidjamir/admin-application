@@ -82,6 +82,7 @@ export function buildSchedulePublishPayload(
 
   const chatName =
     opts.chatNameOverride?.trim() ||
+    row.chatName?.trim() ||
     row.channel?.trim() ||
     pickString(raw, ["chatName"]) ||
     ""
@@ -105,8 +106,15 @@ export function buildSchedulePublishPayload(
   }
 
   if (chatId == null) {
+    const rid = row.chatId
+    if (typeof rid === "string" || typeof rid === "number") chatId = rid
+  }
+  if (chatId == null) {
     const root = raw.chatId
     if (typeof root === "string" || typeof root === "number") chatId = root
+  }
+  if (!chatType) {
+    chatType = row.chatType?.trim() ?? ""
   }
   if (!chatType) {
     const t = raw.chatType
@@ -118,15 +126,10 @@ export function buildSchedulePublishPayload(
 
   const link = resolveDbLink(row, raw)
 
-  const baseText =
+  const text =
     [row.previewTitle, row.previewBody].filter(Boolean).join("\n\n").trim() ||
     pickString(raw, ["message", "caption", "text", "snippet", "description"]) ||
     ""
-
-  const text =
-    link.trim().length > 0
-      ? `${baseText}${baseText ? "\n\n" : ""}Link: ${link.trim()}`
-      : baseText
 
   const isTraffic = rowPipelineKey(row, raw) === "traffic"
   const images = isTraffic ? [] : stringArray(raw.images)

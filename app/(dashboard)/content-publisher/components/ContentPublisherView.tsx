@@ -454,6 +454,19 @@ const PublisherResultRowItem = React.memo(function PublisherResultRowItem({
                 {row.channel}
               </Badge>
             ) : null}
+            {row.chatName ? (
+              <Badge
+                variant="secondary"
+                className="max-w-[14rem] cursor-default truncate text-[10px] font-normal"
+                title={
+                  [row.chatName, row.chatType, row.chatId != null ? String(row.chatId) : ""]
+                    .filter(Boolean)
+                    .join(" · ") || row.chatName
+                }
+              >
+                {row.chatName}
+              </Badge>
+            ) : null}
           </div>
           <p className="cursor-default select-none font-medium leading-snug line-clamp-2">{row.previewTitle}</p>
           <p className="cursor-default select-none text-xs text-muted-foreground line-clamp-2">
@@ -645,13 +658,14 @@ export function ContentPublisherView() {
     const out: string[] = []
     const seen = new Set<string>()
     for (const row of bulkRowsAfterCategoryFilter) {
-      const ch = row.channel?.trim()
-      if (ch && !seen.has(ch)) {
-        seen.add(ch)
-        out.push(ch)
+      for (const label of [row.channel?.trim(), row.chatName?.trim()].filter(Boolean) as string[]) {
+        if (!seen.has(label)) {
+          seen.add(label)
+          out.push(label)
+        }
       }
     }
-    return out
+    return [...out].sort((a, b) => a.localeCompare(b))
   }, [bulkRowsAfterCategoryFilter])
 
   const filteredBulkSchedulePages = React.useMemo(() => {
@@ -1397,6 +1411,23 @@ export function ContentPublisherView() {
                       {previewRow.channel ? (
                         <Badge variant="outline" className="max-w-full truncate font-normal">
                           {previewRow.channel}
+                        </Badge>
+                      ) : null}
+                      {previewRow.chatName ? (
+                        <Badge variant="secondary">{previewRow.chatName}</Badge>
+                      ) : null}
+                      {previewRow.chatType ? (
+                        <Badge variant="outline" className="font-normal text-[10px]">
+                          {previewRow.chatType}
+                        </Badge>
+                      ) : null}
+                      {previewRow.chatId != null ? (
+                        <Badge
+                          variant="outline"
+                          className="max-w-full truncate font-mono text-[10px] font-normal"
+                          title="chatId"
+                        >
+                          chatId:{String(previewRow.chatId)}
                         </Badge>
                       ) : null}
                     </div>

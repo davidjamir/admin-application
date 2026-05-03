@@ -209,6 +209,19 @@ function mapSocialDoc(
 
   const thumbnailUrl = thumbnailFromDoc(flat)
 
+  const rootChatName =
+    typeof flat.chatName === "string" && flat.chatName.trim() ? flat.chatName.trim() : null
+
+  let rootChatId: string | number | null = null
+  const cid = flat.chatId
+  if (typeof cid === "string" || typeof cid === "number") rootChatId = cid
+  else if (cid != null && typeof cid === "object" && typeof (cid as { toString(): string }).toString === "function") {
+    rootChatId = (cid as { toString(): string }).toString()
+  }
+
+  const rootChatType =
+    typeof flat.chatType === "string" && flat.chatType.trim() ? flat.chatType.trim() : null
+
   const scheduleCandidate = queuedAtMs || publishedAtMs || crawledAtMs || createdAtMs
 
   return {
@@ -217,6 +230,9 @@ function mapSocialDoc(
     page: pageLabel,
     topic: inferredTopic || null,
     channel: channelLabel || null,
+    chatName: rootChatName,
+    chatId: rootChatId,
+    chatType: rootChatType,
     scheduleAt: scheduleCandidate || primaryTs || createdAtMs,
     createdAt: createdAtMs,
     primaryTs,
@@ -472,6 +488,9 @@ export async function GET(request: Request) {
         (row.page?.toLowerCase().includes(q) ?? false) ||
         (row.topic?.toLowerCase().includes(q) ?? false) ||
         (row.channel?.toLowerCase().includes(q) ?? false) ||
+        (row.chatName?.toLowerCase().includes(q) ?? false) ||
+        (row.chatType?.toLowerCase().includes(q) ?? false) ||
+        (row.chatId != null && String(row.chatId).toLowerCase().includes(q)) ||
         topicMatchDoc ||
         chatNameMatchDoc ||
         row.previewTitle.toLowerCase().includes(q) ||
