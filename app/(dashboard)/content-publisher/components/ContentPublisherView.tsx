@@ -49,6 +49,10 @@ import { Separator } from "@/components/ui/separator"
 import { AnimatePresence, motion } from "framer-motion"
 import type { ContentPublisherRow, ContentPublisherResponse, PublisherPlatform } from "../types"
 import { PLATFORMS } from "../types"
+import {
+  buildSchedulePublishPayload,
+  type ScheduleToggle,
+} from "../buildSchedulePayload"
 import { cn } from "@/lib/utils"
 import type { MongoPageData } from "@/hooks/useFacebookPages"
 
@@ -68,6 +72,12 @@ const CHANNEL_ALL = "__all_channels__"
 
 /** Controlled Select sentinel — avoids Radix switching uncontrolled ⇄ controlled when using `undefined`. */
 const BULK_SCHEDULE_SELECT_UNSET = "__bulk_schedule_unset__"
+
+/** Bulk panel — giá trị `schedule` trong body */
+const SCHEDULE_TOGGLE_ON: ScheduleToggle = "on"
+const SCHEDULE_TOGGLE_OFF: ScheduleToggle = "off"
+
+/** Proxy đọc env server-only: `GET/POST /api/content-publisher/schedule` */
 
 const HCM_DISPLAY: Intl.DateTimeFormatOptions = {
   timeZone: TZ_HCM,
@@ -531,13 +541,70 @@ export function ContentPublisherView() {
     React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
   /** Options from selected rows (and from that page when Target page is picked). */
   const [bulkScheduleChannel, setBulkScheduleChannel] = React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
+  /** Schedule on/off — mặc định on */
+  const [bulkScheduleToggle, setBulkScheduleToggle] = React.useState<ScheduleToggle>(
+    SCHEDULE_TOGGLE_ON
+  )
   const [bulkScheduleApplying, setBulkScheduleApplying] = React.useState(false)
+
+  /** Server `/api/content-publisher/schedule` — env chỉ đọc trên server (CONTENT_PUBLISHER_*) */
+  const [scheduleGate, setScheduleGate] = React.useState<{
+    locked: boolean
+    disabled: boolean
+    urlConfigured: boolean
+    cronSecretConfigured: boolean
+  } | null>(null)
+
+  React.useEffect(() => {
+    let cancelled = false
+    void fetch("/api/content-publisher/schedule")
+      .then(async (r) => {
+        if (r.status === 401) {
+          if (!cancelled)
+            setScheduleGate({
+              locked: true,
+              disabled: false,
+              urlConfigured: false,
+              cronSecretConfigured: false,
+            })
+          return
+        }
+        const j = (await r.json()) as {
+          locked?: boolean
+          disabled?: boolean
+          urlConfigured?: boolean
+          cronSecretConfigured?: boolean
+        }
+        if (!cancelled)
+          setScheduleGate({
+            locked: Boolean(j.locked),
+            disabled: Boolean(j.disabled),
+            urlConfigured: Boolean(j.urlConfigured),
+            cronSecretConfigured: Boolean(j.cronSecretConfigured),
+          })
+      })
+      .catch(() => {
+        if (!cancelled)
+          setScheduleGate({
+            locked: true,
+            disabled: false,
+            urlConfigured: false,
+            cronSecretConfigured: false,
+          })
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [])
+
+  const schedulePublishLocked = scheduleGate?.locked ?? true
 
   React.useEffect(() => {
     if (!hasBulkScheduleSelection) {
       setBulkSchedulePageOid(BULK_SCHEDULE_SELECT_UNSET)
       setBulkScheduleCategory(BULK_SCHEDULE_SELECT_UNSET)
       setBulkScheduleChannel(BULK_SCHEDULE_SELECT_UNSET)
+      setBulkScheduleToggle(SCHEDULE_TOGGLE_ON)
       return
     }
     let cancelled = false
@@ -766,28 +833,75 @@ export function ContentPublisherView() {
   }
 
   const bulkScheduleCanApply =
-    selectedRowIds.length > 0 && bulkSchedulePageOid !== BULK_SCHEDULE_SELECT_UNSET
+    selectedRowIds.length > 0 &&
+    bulkSchedulePageOid !== BULK_SCHEDULE_SELECT_UNSET &&
+    !schedulePublishLocked
 
   const handleBulkScheduleApply = async () => {
     if (!bulkScheduleCanApply) return
+
+    const pageDoc = bulkSchedulePages.find((p) => p._id.$oid === bulkSchedulePageOid)
+    const pageForFlags = (pageDoc?.name ?? pageDoc?.pageId ?? "").trim()
+
+    const chatNameOverride =
+      bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET
+        ? undefined
+        : bulkScheduleChannel.trim()
+
+    const selectedRows: ContentPublisherRow[] = []
+    for (const socialId of selectedRowIds) {
+      const row = items.find((r) => r.id === socialId)
+      if (row) selectedRows.push(row)
+    }
+    if (selectedRows.length === 0) {
+      toast.error("Không tìm thấy item đã chọn.")
+      return
+    }
+
     setBulkScheduleApplying(true)
     try {
-      const res = await fetch("/api/content-publisher/schedule", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          socialIds: selectedRowIds,
-          pageOid: bulkSchedulePageOid,
-          category:
-            bulkScheduleCategory === BULK_SCHEDULE_SELECT_UNSET ? "" : bulkScheduleCategory,
-          channel: bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET ? "" : bulkScheduleChannel,
-        }),
-      })
-      const data = (await res.json().catch(() => ({}))) as { error?: string; message?: string }
-      if (!res.ok) throw new Error(data.error || "Schedule request failed")
-      toast.success(data.message || "Publishing targets applied.")
-      setSelectedRowIds([])
-      await load()
+      const outcomes = await Promise.allSettled(
+        selectedRows.map(async (row) => {
+          const payload = buildSchedulePublishPayload(row, {
+            chatNameOverride,
+            schedule: bulkScheduleToggle,
+            page: pageForFlags,
+          })
+
+          const res = await fetch("/api/content-publisher/schedule", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          })
+          const text = await res.text()
+          let data: { error?: string; message?: string } = {}
+          if (text) {
+            try {
+              data = JSON.parse(text) as { error?: string; message?: string }
+            } catch {
+              /* non-JSON body */
+            }
+          }
+          if (!res.ok)
+            throw new Error(data.error || text || res.statusText || "Schedule request failed")
+          return row.itemId
+        })
+      )
+
+      const failed = outcomes.filter((o) => o.status === "rejected") as PromiseRejectedResult[]
+      const okCount = outcomes.length - failed.length
+
+      if (okCount === outcomes.length) {
+        toast.success(`Đã gửi ${okCount} item (body đúng cấu trúc upstream + link).`)
+        setSelectedRowIds([])
+      } else if (okCount > 0) {
+        toast.warning(
+          `Một phần thành công: ${okCount}/${outcomes.length}. ${failed[0]?.reason instanceof Error ? failed[0].reason.message : ""}`
+        )
+      } else {
+        const first = failed[0]?.reason
+        throw first instanceof Error ? first : new Error("Schedule request failed")
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Schedule request failed")
     } finally {
@@ -987,7 +1101,54 @@ export function ContentPublisherView() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-4 pt-4">
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {scheduleGate === null ? (
+                  <div
+                    role="status"
+                    className="flex items-center gap-2 rounded-lg border border-border/60 bg-muted/30 px-3 py-2 text-[12px] text-muted-foreground"
+                  >
+                    <Loader2 className="size-3.5 shrink-0 animate-spin" aria-hidden />
+                    Đang kiểm tra cấu hình gửi lịch…
+                  </div>
+                ) : scheduleGate.locked ? (
+                  <div
+                    role="status"
+                    className="rounded-lg border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-[12px] leading-snug text-amber-950 dark:text-amber-50"
+                  >
+                    {scheduleGate.disabled ? (
+                      <>
+                        <span className="font-medium">Gửi lên lịch đang khóa.</span> Đặt{" "}
+                        <code className="rounded bg-background/60 px-1 py-px font-mono text-[11px]">
+                          CONTENT_PUBLISHER_SCHEDULE_DISABLED
+                        </code>{" "}
+                        thành{" "}
+                        <code className="rounded bg-background/60 px-1 py-px font-mono text-[11px]">
+                          false
+                        </code>{" "}
+                        hoặc xóa biến, rồi restart server.
+                      </>
+                    ) : !scheduleGate.urlConfigured ? (
+                      <>
+                        <span className="font-medium">Chưa bật URL gửi lịch.</span> Thêm{" "}
+                        <code className="rounded bg-background/60 px-1 py-px font-mono text-[11px]">
+                          CONTENT_PUBLISHER_SCHEDULE_URL
+                        </code>{" "}
+                        vào <code className="font-mono text-[11px]">.env.local</code> (server-only, không cần{" "}
+                        <code className="font-mono text-[11px]">NEXT_PUBLIC_</code>) rồi restart.
+                      </>
+                    ) : !scheduleGate.cronSecretConfigured ? (
+                      <>
+                        <span className="font-medium">Thiếu Bearer cho upstream.</span> Đặt{" "}
+                        <code className="rounded bg-background/60 px-1 py-px font-mono text-[11px]">
+                          CONTENT_PUBLISHER_SCHEDULE_CRON_SECRET
+                        </code>{" "}
+                        (hoặc <code className="rounded bg-background/60 px-1 py-px font-mono text-[11px]">CRON_SECRET</code>)
+                        trong <code className="font-mono text-[11px]">.env.local</code> — proxy sẽ gửi{" "}
+                        <code className="font-mono text-[11px]">Authorization: Bearer …</code> tới API lên lịch.
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="publisher-bulk-categories">Categories</Label>
                     <Select
@@ -1045,7 +1206,7 @@ export function ContentPublisherView() {
                       </p>
                     ) : null}
                   </div>
-                  <div className="space-y-1.5 sm:col-span-2 lg:col-span-1">
+                  <div className="space-y-1.5">
                     <Label htmlFor="publisher-bulk-target-page">Target page</Label>
                     <Select
                       value={bulkSchedulePageOid}
@@ -1088,6 +1249,25 @@ export function ContentPublisherView() {
                         No pages returned from <code className="text-[10px]">/api/pages</code>.
                       </p>
                     ) : null}
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="publisher-bulk-schedule-toggle">Schedule</Label>
+                    <Select
+                      value={bulkScheduleToggle}
+                      onValueChange={(v) => setBulkScheduleToggle(v as ScheduleToggle)}
+                    >
+                      <SelectTrigger id="publisher-bulk-schedule-toggle" className="w-full cursor-pointer">
+                        <SelectValue placeholder="Schedule" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SCHEDULE_TOGGLE_ON} className="cursor-pointer">
+                          On
+                        </SelectItem>
+                        <SelectItem value={SCHEDULE_TOGGLE_OFF} className="cursor-pointer">
+                          Off
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 border-t border-border/60 pt-4">
