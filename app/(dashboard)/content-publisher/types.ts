@@ -32,7 +32,7 @@ export interface ContentPublisherRow {
 export interface ContentPublisherResponse {
   items: ContentPublisherRow[]
   topics: string[]
-  /** Distinct non-empty `pages[].chatName` (and root `chatName`) from sampled social docs */
+  /** Distinct non-empty `pages[].chatName` and root `chatName` across the social collection */
   channels: string[]
   /** Calendar days that have rows (Asia/Ho_Chi_Minh, YYYY-MM-DD), newest-first from API aggregation. */
   createdDays: string[]

@@ -272,7 +272,8 @@ async function mergedTopicOptions(
   return Array.from(merged).sort((a, b) => a.localeCompare(b))
 }
 
-async function mergedChannelOptions(socialCol: Collection<Document>): Promise<string[]> {
+/** Fallback when aggregation is unavailable — sampled distinct chat names. */
+async function mergedChannelOptionsSampled(socialCol: Collection<Document>): Promise<string[]> {
   const merged = new Set<string>()
   const sample = await socialCol
     .find({}, { projection: { chatName: 1, pages: { chatName: 1 } } })
@@ -284,6 +285,69 @@ async function mergedChannelOptions(socialCol: Collection<Document>): Promise<st
   }
 
   return Array.from(merged).sort((a, b) => a.localeCompare(b))
+}
+
+/** Every distinct non-empty root `chatName` and `pages[].chatName` in the social collection. */
+async function distinctAllChatNamesFromSocial(
+  socialCol: Collection<Document>
+): Promise<string[]> {
+  try {
+    const agg = await socialCol
+      .aggregate<{ _id: string }>(
+        [
+          {
+            $project: {
+              _names: {
+                $setUnion: [
+                  {
+                    $cond: [
+                      {
+                        $and: [
+                          { $eq: [{ $type: "$chatName" }, "string"] },
+                          {
+                            $gt: [{ $strLenCP: { $trim: { input: "$chatName" } } }, 0],
+                          },
+                        ],
+                      },
+                      [{ $trim: { input: "$chatName" } }],
+                      [],
+                    ],
+                  },
+                  {
+                    $filter: {
+                      input: {
+                        $map: {
+                          input: { $ifNull: ["$pages", []] },
+                          as: "p",
+                          in: "$$p.chatName",
+                        },
+                      },
+                      as: "cn",
+                      cond: {
+                        $and: [
+                          { $eq: [{ $type: "$$cn" }, "string"] },
+                          { $gt: [{ $strLenCP: "$$cn" }, 0] },
+                        ],
+                      },
+                    },
+                  },
+                ],
+              },
+            },
+          },
+          { $unwind: "$_names" },
+          { $group: { _id: "$_names" } },
+          { $sort: { _id: 1 } },
+        ],
+        { allowDiskUse: true }
+      )
+      .toArray()
+
+    return agg.map((d) => String(d._id).trim()).filter(Boolean)
+  } catch (e) {
+    console.error("[content-publisher] distinctAllChatNamesFromSocial", e)
+    return mergedChannelOptionsSampled(socialCol)
+  }
 }
 
 function parseCreatedDayBoundsIct(
@@ -390,7 +454,7 @@ export async function GET(request: Request) {
 
     const [distinctTopics, distinctChannels] = await Promise.all([
       mergedTopicOptions(primaryTopicsDistinct, socialCol),
-      mergedChannelOptions(socialCol),
+      distinctAllChatNamesFromSocial(socialCol),
     ])
 
     const andClauses: Document[] = []
@@ -407,11 +471,7 @@ export async function GET(request: Request) {
 
     if (chatName) {
       andClauses.push({
-        pages: {
-          $elemMatch: {
-            chatName,
-          },
-        },
+        $or: [{ chatName }, { pages: { $elemMatch: { chatName } } }],
       })
     }
 

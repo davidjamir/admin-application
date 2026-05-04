@@ -96,6 +96,108 @@ function formatTs(ts: number) {
   return new Date(ts).toLocaleString("en-GB", HCM_DISPLAY)
 }
 
+/**
+ * Channel labels often embed the selected topic at the start, e.g. "NFL - Page A", "NFL 1".
+ * Match exact topic or prefix followed by a separator/number (not a glued extra word like "NFLX").
+ */
+function channelNameMatchesTopicPrefix(channelName: string, topic: string): boolean {
+  const t = topic.trim()
+  const c = channelName.trim()
+  if (!t) return true
+  if (c.localeCompare(t, undefined, { sensitivity: "accent" }) === 0) return true
+  const tl = t.toLowerCase()
+  const cl = c.toLowerCase()
+  if (!cl.startsWith(tl)) return false
+  if (cl.length <= tl.length) return true
+  const ch0 = c.slice(t.length)[0] ?? ""
+  if (/\s/.test(ch0) || /\d/.test(ch0)) return true
+  // "NFL - …", "NFL_1", "NFL (extra)" — reject glued letters e.g. "NFLX…"
+  const punctuation = "-–—_:|/()[]&+,.!"
+  if (punctuation.includes(ch0)) return true
+  return false
+}
+
+/** Chat targets on a row (same sources as the API’s doc chat names). Order: root, raw pages, then summarized channel. */
+function chatLabelsFromPublisherRow(row: ContentPublisherRow): string[] {
+  const ordered: string[] = []
+  const seen = new Set<string>()
+  const add = (s: unknown) => {
+    if (typeof s !== "string") return
+    const t = s.trim()
+    if (!t || seen.has(t)) return
+    seen.add(t)
+    ordered.push(t)
+  }
+
+  add(row.chatName)
+  const raw = row.raw
+  if (raw && typeof raw === "object" && !Array.isArray(raw)) {
+    const o = raw as Record<string, unknown>
+    add(o.chatName)
+    const pages = o.pages
+    if (Array.isArray(pages)) {
+      for (const entry of pages) {
+        if (!entry || typeof entry !== "object") continue
+        add((entry as { chatName?: string }).chatName)
+      }
+    }
+  }
+  add(row.channel)
+  return ordered
+}
+
+/** Upstream schedule POST may return `{ status: true }` or `{ status: false | "fail", … }` even with HTTP 200. */
+function interpretScheduleApplyResponse(
+  res: Response,
+  parsed: unknown,
+  rawText: string
+): { ok: true } | { ok: false; message: string } {
+  const msgFromBody = (o: Record<string, unknown>) =>
+    (typeof o.error === "string" && o.error.trim()) ||
+    (typeof o.message === "string" && o.message.trim()) ||
+    ""
+
+  if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+    const o = parsed as Record<string, unknown>
+    if ("status" in o) {
+      const s = o.status
+      if (s === true || s === "true") {
+        return { ok: true }
+      }
+      if (
+        s === false ||
+        s === "false" ||
+        s === "fail" ||
+        s === "failed" ||
+        s === "failure"
+      ) {
+        return {
+          ok: false,
+          message:
+            msgFromBody(o) || rawText.trim() || "Upstream báo thất bại (status).",
+        }
+      }
+      return {
+        ok: false,
+        message: msgFromBody(o) || "Phản hồi status không hợp lệ.",
+      }
+    }
+  }
+
+  if (!res.ok) {
+    const fallback =
+      (parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? msgFromBody(parsed as Record<string, unknown>)
+        : "") ||
+      rawText.trim() ||
+      res.statusText ||
+      "Schedule request failed"
+    return { ok: false, message: fallback }
+  }
+
+  return { ok: true }
+}
+
 /** Deterministic avatar for mock previews (demo only). */
 function demoPageAvatarUrl(pageName: string, backgroundHex: string) {
   const name = encodeURIComponent((pageName || "Page").slice(0, 48))
@@ -436,35 +538,42 @@ const PublisherResultRowItem = React.memo(function PublisherResultRowItem({
               </Badge>
             ) : null}
             {row.topic ? (
-              <Badge variant="secondary" className="cursor-default text-[10px]">
-                {row.topic}
+              <Badge
+                variant="secondary"
+                className="max-w-[18rem] cursor-default gap-1 truncate text-[10px] font-normal"
+                title={`Topic: ${row.topic}`}
+              >
+                <span className="shrink-0 font-medium text-muted-foreground">Topic</span>
+                <span className="min-w-0 truncate">{row.topic}</span>
+              </Badge>
+            ) : null}
+            {row.chatName?.trim() || row.channel?.trim() ? (
+              <Badge
+                variant="secondary"
+                className="max-w-[18rem] cursor-default gap-1 truncate text-[10px] font-normal"
+                title={
+                  [
+                    `Channel: ${row.chatName?.trim() || row.channel?.trim() || ""}`,
+                    row.chatType,
+                    row.chatId != null ? String(row.chatId) : "",
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")
+                }
+              >
+                <span className="shrink-0 font-medium text-muted-foreground">Channel</span>
+                <span className="min-w-0 truncate">
+                  {row.chatName?.trim() || row.channel?.trim()}
+                </span>
               </Badge>
             ) : null}
             {row.page ? (
-              <Badge variant="outline" className="cursor-default text-[10px] font-normal">
-                {row.page}
-              </Badge>
-            ) : null}
-            {row.channel ? (
               <Badge
                 variant="outline"
-                className="max-w-[14rem] cursor-default truncate text-[10px] font-normal"
-                title={row.channel}
+                className="max-w-[18rem] cursor-default truncate text-[10px] font-normal"
+                title={row.page}
               >
-                {row.channel}
-              </Badge>
-            ) : null}
-            {row.chatName ? (
-              <Badge
-                variant="secondary"
-                className="max-w-[14rem] cursor-default truncate text-[10px] font-normal"
-                title={
-                  [row.chatName, row.chatType, row.chatId != null ? String(row.chatId) : ""]
-                    .filter(Boolean)
-                    .join(" · ") || row.chatName
-                }
-              >
-                {row.chatName}
+                {row.page}
               </Badge>
             ) : null}
           </div>
@@ -549,7 +658,7 @@ export function ContentPublisherView() {
   const [bulkSchedulePages, setBulkSchedulePages] = React.useState<MongoPageData[]>([])
   const [bulkSchedulePagesLoading, setBulkSchedulePagesLoading] = React.useState(false)
   const [bulkSchedulePageOid, setBulkSchedulePageOid] = React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
-  /** Label "Categories" in UI; options = `topics` from the same API as the Topic filter (independent value). */
+  /** Same vocabulary as Topic filter above (`topics` from GET /api/content-publisher). Filters Target page list when set. */
   const [bulkScheduleCategory, setBulkScheduleCategory] =
     React.useState<string>(BULK_SCHEDULE_SELECT_UNSET)
   /** Options from selected rows (and from that page when Target page is picked). */
@@ -638,40 +747,48 @@ export function ContentPublisherView() {
     }
   }, [hasBulkScheduleSelection])
 
-  const bulkScheduleCategoryChoices = React.useMemo(
-    () => [...topics].sort((a, b) => a.localeCompare(b)),
-    [topics]
-  )
-
   const bulkScheduleSelectedRows = React.useMemo(() => {
     const idSet = new Set(selectedRowIds)
     return items.filter((r) => idSet.has(r.id))
   }, [items, selectedRowIds])
 
-  const bulkRowsAfterCategoryFilter = React.useMemo(() => {
-    if (bulkScheduleCategory === BULK_SCHEDULE_SELECT_UNSET) return bulkScheduleSelectedRows
-    const c = bulkScheduleCategory.trim()
-    return bulkScheduleSelectedRows.filter((r) => (r.topic?.trim() ?? "") === c)
-  }, [bulkScheduleSelectedRows, bulkScheduleCategory])
+  /** Identical options to the Topic filter card above — from `json.topics` on load. */
+  const bulkScheduleTopicOptions = React.useMemo(
+    () => [...topics].sort((a, b) => a.localeCompare(b)),
+    [topics]
+  )
 
+  /** Head = labels on selected rows (always first, any Topic). Tail = channelChoices filtered by Topic like the main filter. */
   const bulkFilteredChannelOptions = React.useMemo(() => {
-    const out: string[] = []
-    const seen = new Set<string>()
-    for (const row of bulkRowsAfterCategoryFilter) {
-      for (const label of [row.channel?.trim(), row.chatName?.trim()].filter(Boolean) as string[]) {
-        if (!seen.has(label)) {
-          seen.add(label)
-          out.push(label)
-        }
+    const topicForChannels =
+      bulkScheduleCategory !== BULK_SCHEDULE_SELECT_UNSET ? bulkScheduleCategory.trim() : ""
+
+    const baseSorted =
+      topicForChannels === ""
+        ? [...channelChoices].sort((a, b) => a.localeCompare(b))
+        : channelChoices
+            .filter((name) => channelNameMatchesTopicPrefix(name, topicForChannels))
+            .sort((a, b) => a.localeCompare(b))
+
+    const head: string[] = []
+    const seenSel = new Set<string>()
+    for (const row of bulkScheduleSelectedRows) {
+      for (const label of chatLabelsFromPublisherRow(row)) {
+        if (seenSel.has(label)) continue
+        seenSel.add(label)
+        head.push(label)
       }
     }
-    return [...out].sort((a, b) => a.localeCompare(b))
-  }, [bulkRowsAfterCategoryFilter])
+
+    const headSet = new Set(head)
+    const tail = baseSorted.filter((name) => !headSet.has(name))
+    return [...head, ...tail]
+  }, [channelChoices, bulkScheduleCategory, bulkScheduleSelectedRows])
 
   const filteredBulkSchedulePages = React.useMemo(() => {
-    // Filter by category (topic) if chosen; then push pages used by selected items to the top.
+    // Topic unset → all pages. Topic set → pages whose stored topic/category matches (same string as `topics[]`).
     const selectedRowPageKeys = new Set<string>()
-    for (const row of bulkRowsAfterCategoryFilter) {
+    for (const row of bulkScheduleSelectedRows) {
       const raw = row.raw as Record<string, unknown>
 
       // 1) item.targetPages: ["Page A", "Page B", ...]
@@ -699,7 +816,12 @@ export function ContentPublisherView() {
     let list = bulkSchedulePages
     if (bulkScheduleCategory !== BULK_SCHEDULE_SELECT_UNSET) {
       const c = bulkScheduleCategory.trim()
-      list = list.filter((p) => (typeof p.topic === "string" ? p.topic.trim() : "") === c)
+      const cl = c.toLowerCase()
+      list = list.filter((p) => {
+        const pt = typeof p.topic === "string" ? p.topic.trim() : ""
+        const pc = typeof p.category === "string" ? p.category.trim() : ""
+        return pt === c || pc === c || pt.toLowerCase() === cl || pc.toLowerCase() === cl
+      })
     }
 
     const matchesSelectedRows = (p: MongoPageData) => {
@@ -716,7 +838,33 @@ export function ContentPublisherView() {
       if (sel !== 0) return sel
       return (a.name || a.pageId || "").localeCompare(b.name || b.pageId || "")
     })
-  }, [bulkSchedulePages, bulkScheduleCategory, bulkRowsAfterCategoryFilter])
+  }, [bulkSchedulePages, bulkScheduleSelectedRows, bulkScheduleCategory])
+
+  /** Target page → Topic dropdown: must be one of `topics` (same as filter above). */
+  React.useEffect(() => {
+    if (bulkSchedulePageOid === BULK_SCHEDULE_SELECT_UNSET) return
+    const pageDoc = bulkSchedulePages.find((p) => p._id.$oid === bulkSchedulePageOid)
+    if (!pageDoc) return
+    const raw =
+      (typeof pageDoc.topic === "string" && pageDoc.topic.trim()) ||
+      (typeof pageDoc.category === "string" && pageDoc.category.trim()) ||
+      ""
+    if (!raw) {
+      setBulkScheduleCategory(BULK_SCHEDULE_SELECT_UNSET)
+      return
+    }
+    const exact = topics.find((x) => x === raw)
+    if (exact) {
+      setBulkScheduleCategory(exact)
+      return
+    }
+    const ci = topics.find((x) => x.toLowerCase() === raw.toLowerCase())
+    if (ci) {
+      setBulkScheduleCategory(ci)
+      return
+    }
+    setBulkScheduleCategory(BULK_SCHEDULE_SELECT_UNSET)
+  }, [bulkSchedulePageOid, bulkSchedulePages, topics])
 
   React.useEffect(() => {
     if (bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET) return
@@ -735,6 +883,20 @@ export function ContentPublisherView() {
     const t = setTimeout(() => setDebouncedSearch(searchInput.trim()), 400)
     return () => clearTimeout(t)
   }, [searchInput])
+
+  const channelOptionsForTopic = React.useMemo(() => {
+    if (topic === "__all__") return channelChoices
+    return channelChoices
+      .filter((name) => channelNameMatchesTopicPrefix(name, topic))
+      .sort((a, b) => a.localeCompare(b))
+  }, [channelChoices, topic])
+
+  React.useEffect(() => {
+    if (channel === CHANNEL_ALL) return
+    if (!channelOptionsForTopic.includes(channel)) {
+      setChannel(CHANNEL_ALL)
+    }
+  }, [topic, channelOptionsForTopic, channel])
 
   const load = React.useCallback(async () => {
     setLoading(true)
@@ -849,6 +1011,7 @@ export function ContentPublisherView() {
   const bulkScheduleCanApply =
     selectedRowIds.length > 0 &&
     bulkSchedulePageOid !== BULK_SCHEDULE_SELECT_UNSET &&
+    bulkScheduleChannel !== BULK_SCHEDULE_SELECT_UNSET &&
     !schedulePublishLocked
 
   const handleBulkScheduleApply = async () => {
@@ -857,10 +1020,7 @@ export function ContentPublisherView() {
     const pageDoc = bulkSchedulePages.find((p) => p._id.$oid === bulkSchedulePageOid)
     const pageForFlags = (pageDoc?.name ?? pageDoc?.pageId ?? "").trim()
 
-    const chatNameOverride =
-      bulkScheduleChannel === BULK_SCHEDULE_SELECT_UNSET
-        ? undefined
-        : bulkScheduleChannel.trim()
+    const chatNameOverride = bulkScheduleChannel.trim()
 
     const selectedRows: ContentPublisherRow[] = []
     for (const socialId of selectedRowIds) {
@@ -888,16 +1048,16 @@ export function ContentPublisherView() {
             body: JSON.stringify(payload),
           })
           const text = await res.text()
-          let data: { error?: string; message?: string } = {}
+          let parsed: unknown = null
           if (text) {
             try {
-              data = JSON.parse(text) as { error?: string; message?: string }
+              parsed = JSON.parse(text) as unknown
             } catch {
               /* non-JSON body */
             }
           }
-          if (!res.ok)
-            throw new Error(data.error || text || res.statusText || "Schedule request failed")
+          const outcome = interpretScheduleApplyResponse(res, parsed, text)
+          if (!outcome.ok) throw new Error(outcome.message)
           return row.itemId
         })
       )
@@ -997,14 +1157,22 @@ export function ContentPublisherView() {
               <div className="min-w-0 flex-1 space-y-1">
                 <Label htmlFor="publisher-channel">Channel</Label>
                 <Select value={channel} onValueChange={setChannel}>
-                  <SelectTrigger id="publisher-channel" className="w-full min-w-0 cursor-pointer">
+                  <SelectTrigger
+                    id="publisher-channel"
+                    className="w-full min-w-0 cursor-pointer"
+                    title={
+                      topic !== "__all__"
+                        ? "Channels whose name starts with the selected topic (e.g. NFL - …, NFL 1)"
+                        : undefined
+                    }
+                  >
                     <SelectValue placeholder="All channels" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={CHANNEL_ALL} className="cursor-pointer">
                       All channels
                     </SelectItem>
-                    {channelChoices.map((name) => (
+                    {channelOptionsForTopic.map((name) => (
                       <SelectItem key={name} value={name} className="cursor-pointer">
                         {name}
                       </SelectItem>
@@ -1162,36 +1330,47 @@ export function ContentPublisherView() {
                     ) : null}
                   </div>
                 ) : null}
+                {scheduleGate !== null && !scheduleGate.locked ? (
+                  <p className="text-[12px] leading-snug text-muted-foreground">
+                    Topic here is the same list as <span className="font-medium">Topic</span> in the filters
+                    above. It narrows <span className="font-medium">Target page</span>; “All topics” shows
+                    every page. Picking a page sets Topic when it matches the list.
+                  </p>
+                ) : null}
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="publisher-bulk-categories">Categories</Label>
+                    <Label htmlFor="publisher-bulk-topic">Topic</Label>
                     <Select
                       value={bulkScheduleCategory}
                       onValueChange={setBulkScheduleCategory}
-                      disabled={bulkScheduleCategoryChoices.length === 0}
+                      disabled={bulkScheduleTopicOptions.length === 0}
                     >
-                      <SelectTrigger id="publisher-bulk-categories" className="w-full cursor-pointer">
-                        <SelectValue placeholder="Choose" />
+                      <SelectTrigger id="publisher-bulk-topic" className="w-full cursor-pointer">
+                        <SelectValue placeholder="All topics" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem
                           value={BULK_SCHEDULE_SELECT_UNSET}
                           className="cursor-pointer text-muted-foreground"
                         >
-                          Choose
+                          All topics
                         </SelectItem>
-                        {bulkScheduleCategoryChoices.map((t) => (
+                        {bulkScheduleTopicOptions.map((t) => (
                           <SelectItem key={t} value={t} className="cursor-pointer">
                             {t}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
-                    {bulkScheduleCategoryChoices.length === 0 ? (
+                    {bulkScheduleTopicOptions.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground">
-                        No topics yet — same list as Topic above; refresh after a successful load.
+                        Same list as Topic above — refresh after the table loads.
                       </p>
-                    ) : null}
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Narrows Target page; All topics = full page list.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="publisher-bulk-channel">Channel</Label>
@@ -1215,10 +1394,13 @@ export function ContentPublisherView() {
                     </Select>
                     {bulkFilteredChannelOptions.length === 0 ? (
                       <p className="text-[11px] text-muted-foreground">
-                        No channels on the selected rows
-                        {bulkScheduleCategory !== BULK_SCHEDULE_SELECT_UNSET ? " for this category" : ""}.
+                        No channels on rows and none in the topic list — try All topics or refresh.
                       </p>
-                    ) : null}
+                    ) : (
+                      <p className="text-[11px] text-muted-foreground">
+                        Selected rows’ channels stay on top; rest follows Topic (same rule as Channel above).
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="publisher-bulk-target-page">Target page</Label>
@@ -1406,15 +1588,24 @@ export function ContentPublisherView() {
                           {previewRow.itemStatus}
                         </Badge>
                       )}
-                      {previewRow.page && <Badge variant="outline">{previewRow.page}</Badge>}
-                      {previewRow.topic && <Badge variant="secondary">{previewRow.topic}</Badge>}
-                      {previewRow.channel ? (
-                        <Badge variant="outline" className="max-w-full truncate font-normal">
-                          {previewRow.channel}
+                      {previewRow.topic ? (
+                        <Badge variant="secondary" className="max-w-full gap-1 truncate font-normal">
+                          <span className="shrink-0 font-medium text-muted-foreground">Topic</span>
+                          <span className="min-w-0 truncate">{previewRow.topic}</span>
                         </Badge>
                       ) : null}
-                      {previewRow.chatName ? (
-                        <Badge variant="secondary">{previewRow.chatName}</Badge>
+                      {previewRow.chatName?.trim() || previewRow.channel?.trim() ? (
+                        <Badge variant="secondary" className="max-w-full gap-1 truncate font-normal">
+                          <span className="shrink-0 font-medium text-muted-foreground">Channel</span>
+                          <span className="min-w-0 truncate">
+                            {previewRow.chatName?.trim() || previewRow.channel?.trim()}
+                          </span>
+                        </Badge>
+                      ) : null}
+                      {previewRow.page ? (
+                        <Badge variant="outline" className="max-w-full truncate font-normal">
+                          {previewRow.page}
+                        </Badge>
                       ) : null}
                       {previewRow.chatType ? (
                         <Badge variant="outline" className="font-normal text-[10px]">
