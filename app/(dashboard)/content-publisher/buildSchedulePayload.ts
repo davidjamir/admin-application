@@ -22,20 +22,52 @@ function stringArray(v: unknown): string[] {
  * `const { chatId, chatName, chatType, flags, tags, text, topics, images, videos, contentType, link } = body`
  *
  * `link` — khóa nhận diện bản ghi đã có trong DB (URL bài hoặc id nội bộ); không gửi full `raw` hay metadata admin.
- * Trong `flags` (thứ tự): `type`, `modeSocial`, `page`, `schedule`, rồi merge từ `raw.flags` (không ghi đè các key này).
+ *
+ * `flags` — **mảng** chuỗi `key:value` (chỉ dấu `:` đầu tiên tách key/value), ví dụ:
+ * `["type:social","modeSocial:auto","schedule:on","page:Minnesota Wolves FanHub"]`
+ * Thứ tự cố định cho 4 flag hệ thống, sau đó nối thêm từ `raw.flags` (không trùng key `type|modeSocial|page|schedule`).
  */
 export type ScheduleToggle = "on" | "off"
+
+const RESERVED_FLAG_KEYS = new Set(["type", "modeSocial", "page", "schedule"])
+
+function flagKeyFromEntry(s: string): string | null {
+  const i = s.indexOf(":")
+  if (i <= 0) return null
+  return s.slice(0, i).trim()
+}
+
+/** Chuỗi bổ sung từ document (object legacy hoặc mảng `key:value`) — bỏ qua key đã dành cho cụm chuẩn. */
+function extraFlagStringsFromRaw(rawFlags: unknown): string[] {
+  if (Array.isArray(rawFlags)) {
+    const out: string[] = []
+    for (const x of rawFlags) {
+      if (typeof x !== "string" || !x.trim()) continue
+      const t = x.trim()
+      const k = flagKeyFromEntry(t)
+      if (!k || RESERVED_FLAG_KEYS.has(k)) continue
+      out.push(t)
+    }
+    return out
+  }
+  if (rawFlags && typeof rawFlags === "object" && !Array.isArray(rawFlags)) {
+    const out: string[] = []
+    for (const [key, val] of Object.entries(rawFlags as Record<string, unknown>)) {
+      if (RESERVED_FLAG_KEYS.has(key)) continue
+      if (val === undefined || val === null) continue
+      out.push(`${key}:${String(val)}`)
+    }
+    return out
+  }
+  return []
+}
 
 export interface SchedulePublishBody {
   chatId: string | number | ""
   chatName: string
   chatType: string
-  flags: Record<string, unknown> & {
-    type: "social"
-    modeSocial: "auto"
-    page: string
-    schedule: ScheduleToggle
-  }
+  /** `["type:social","modeSocial:auto","schedule:on","page:…", ...extras]` */
+  flags: string[]
   tags: unknown[]
   text: string
   topics: string[]
@@ -74,7 +106,7 @@ export function buildSchedulePublishPayload(
     /** Khi chọn Channel ở bulk panel — khớp entry trong `pages[]` */
     chatNameOverride?: string
     schedule: ScheduleToggle
-    /** Target page đã chọn — `flags.page` */
+    /** Target page đã chọn — thành phần `page:…` trong mảng `flags` */
     page: string
   }
 ): SchedulePublishBody {
@@ -143,26 +175,13 @@ export function buildSchedulePublishPayload(
 
   const tags = Array.isArray(raw.tags) ? raw.tags : []
 
-  const baseFlags =
-    raw.flags !== undefined &&
-    typeof raw.flags === "object" &&
-    raw.flags !== null &&
-    !Array.isArray(raw.flags)
-      ? ({ ...(raw.flags as Record<string, unknown>) } as Record<string, unknown>)
-      : {}
-
-  const reservedFlagKeys = new Set(["type", "modeSocial", "page", "schedule"])
-  const restFlags = Object.fromEntries(
-    Object.entries(baseFlags).filter(([k]) => !reservedFlagKeys.has(k))
-  )
-
-  const flags = {
-    type: "social" as const,
-    modeSocial: "auto" as const,
-    page: opts.page,
-    schedule: opts.schedule,
-    ...restFlags,
-  } as SchedulePublishBody["flags"]
+  const flags: string[] = [
+    "type:social",
+    "modeSocial:auto",
+    `schedule:${opts.schedule}`,
+    `page:${opts.page}`,
+    ...extraFlagStringsFromRaw(raw.flags),
+  ]
 
   return {
     chatId: chatId ?? "",
