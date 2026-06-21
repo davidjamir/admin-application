@@ -12,6 +12,7 @@ export interface PagePayload {
   appName: string
   category: string
   token: string
+  status?: string
 }
 
 export async function POST(req: Request) {
