@@ -37,7 +37,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-muted-foreground/50 mr-1 capitalize tracking-tighter text-black">Shortcuts:</span>
+                        <span className="text-[10px] font-bold text-muted-foreground/50  mr-1 capitalize tracking-tighter text-black">Shortcuts:</span>
                         {[1, 2, 3].map((part) => (
                             <Button
                                 key={part}
