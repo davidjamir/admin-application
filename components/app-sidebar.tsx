@@ -18,6 +18,7 @@ import {
   ShieldCheck,
   KeyRound,
   FilePenLine,
+  SlidersHorizontal,
 } from "lucide-react"
 
 import {
@@ -74,6 +75,11 @@ const navItems = [
     title: "Websites Manager",
     url: "/website-manager",
     icon: Globe,
+  },
+  {
+    title: "Origin Config",
+    url: "/origin-config",
+    icon: SlidersHorizontal,
   },
   {
     title: "Ad Creatives",

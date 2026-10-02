@@ -97,6 +97,7 @@ export function DashboardHeader() {
     "/settings": "Settings",
     "/business-manager": "Business Manager",
     "/website-manager": "Websites Manager",
+    "/origin-config": "Origin Config",
     "/ad-creatives": "Ad Creatives",
     "/blogger-accounts": "Blogger API",
   }
