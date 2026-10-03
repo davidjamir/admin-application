@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import type { OriginDocument, OriginStaticPage } from "@/types/origin"
-import { Plus, Trash2, Layers } from "lucide-react"
+import { Plus, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 export function StaticPagesEditor({
@@ -48,22 +48,6 @@ export function StaticPagesEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-muted/30 p-4">
-        <div>
-          <h4 className="text-sm font-semibold flex items-center gap-2">
-            <Layers className="size-4 text-primary" />
-            Static Pages ({pages.length})
-          </h4>
-          <p className="text-xs text-muted-foreground">
-            Essential legal and information pages (Privacy Policy, Terms of Service, Contact Us, Disclaimer).
-          </p>
-        </div>
-        <Button type="button" onClick={handleAddPage} size="sm">
-          <Plus className="size-4" />
-          Add Static Page
-        </Button>
-      </div>
-
       {pages.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-dashed p-8 text-center bg-card/40 space-y-3">
           <p className="text-sm text-muted-foreground">No static pages defined.</p>
@@ -83,7 +67,7 @@ export function StaticPagesEditor({
 
           {pages.map((page, idx) => (
             <div
-              key={`${page.id}-${idx}`}
+              key={idx}
               className="grid gap-2.5 rounded-xl border bg-card p-3 sm:grid-cols-[90px_1fr_1fr_auto] sm:items-center sm:p-2.5 shadow-2xs"
             >
               <div>

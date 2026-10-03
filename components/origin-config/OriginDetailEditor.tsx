@@ -1,7 +1,15 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import type { OriginDocument, OriginPatchSection } from "@/types/origin"
+import type {
+  OriginAdUnit,
+  OriginAdsScript,
+  OriginCategory,
+  OriginDocument,
+  OriginPatchSection,
+  OriginScript,
+  OriginStaticPage,
+} from "@/types/origin"
 import {
   Globe,
   Palette,
@@ -23,13 +31,15 @@ import {
   Network,
   Save,
   Loader2,
+  Plus,
 } from "lucide-react"
 import { useCallback, useEffect } from "react"
+import { toast } from "sonner"
 
 import { IdentityEditor } from "./editors/IdentityEditor"
 import { AppearanceEditor } from "./editors/AppearanceEditor"
 import { AdsTxtEditor } from "./editors/AdsTxtEditor"
-import { AdsPlacementsEditor } from "./editors/AdsPlacementsEditor"
+import { AdsPlacementsEditor, type AdPlacementKey, PLACEMENT_INFO } from "./editors/AdsPlacementsEditor"
 import { HeadScriptsEditor } from "./editors/HeadScriptsEditor"
 import { SeoEditor } from "./editors/SeoEditor"
 import { AnalyticsVerificationEditor } from "./editors/AnalyticsVerificationEditor"
@@ -224,39 +234,229 @@ export function OriginDetailEditor({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [handleSave])
 
+  // Handlers for Add action in sticky header
+  const handleAddScript = useCallback(() => {
+    const newScript: OriginScript = {
+      id: `script-${crypto.randomUUID().slice(0, 6)}`,
+      src: "",
+      async: true,
+      defer: false,
+      crossOrigin: "anonymous",
+      strategy: "afterInteractive",
+      enabled: true,
+    }
+    onChange((prev) => ({
+      ...prev,
+      script: [...(prev.script ?? []), newScript],
+    }))
+    toast.success("Script added")
+  }, [onChange])
+
+  const handleAddAdUnit = useCallback((placementKey: AdPlacementKey) => {
+    const info = PLACEMENT_INFO[placementKey]
+    const newUnit: OriginAdUnit = {
+      id: `${info.prefix}-${crypto.randomUUID().slice(0, 6)}`,
+      source: "",
+      content: "",
+      enabled: true,
+    }
+    onChange((prev) => {
+      const curr = prev.ads?.adsScript ?? {}
+      let updatedScript: OriginAdsScript
+      if (placementKey === "beforePost") {
+        updatedScript = { ...curr, adsBody: { ...(curr.adsBody ?? {}), beforePost: newUnit } }
+      } else if (placementKey === "afterPost") {
+        updatedScript = { ...curr, adsBody: { ...(curr.adsBody ?? {}), afterPost: newUnit } }
+      } else if (placementKey === "adsVideoHeader") {
+        updatedScript = { ...curr, adsVideoHeader: newUnit }
+      } else if (placementKey === "inPost") {
+        const list = curr.adsBody?.inPost ?? []
+        updatedScript = { ...curr, adsBody: { ...(curr.adsBody ?? {}), inPost: [...list, newUnit] } }
+      } else {
+        const list = curr[placementKey] ?? []
+        updatedScript = { ...curr, [placementKey]: [...list, newUnit] }
+      }
+      return {
+        ...prev,
+        ads: {
+          ...(prev.ads ?? {}),
+          adsScript: updatedScript,
+        },
+      }
+    })
+    toast.success(info.isSingleton ? `${info.title} slot configured` : "New ad unit added")
+  }, [onChange])
+
+  const handleAddPage = useCallback(() => {
+    const newPage: OriginStaticPage = {
+      id: `page-${crypto.randomUUID().slice(0, 4)}`,
+      name: "",
+      slug: "",
+    }
+    onChange((prev) => ({
+      ...prev,
+      pages: [...(prev.pages ?? []), newPage],
+    }))
+    toast.success("Static page added")
+  }, [onChange])
+
+  const handleAddCategory = useCallback(() => {
+    const newCat: OriginCategory = {
+      id: `cat-${crypto.randomUUID().slice(0, 4)}`,
+      name: "",
+      slug: "",
+    }
+    onChange((prev) => ({
+      ...prev,
+      categories: [...(prev.categories ?? []), newCat],
+    }))
+    toast.success("Category added")
+  }, [onChange])
+
+  const getPrimaryAddAction = (): { label: string; onClick: () => void } | null => {
+    switch (activeSection) {
+      case "scripts":
+        return { label: "Add Script", onClick: handleAddScript }
+      case "ads-header":
+        return { label: "Add Unit", onClick: () => handleAddAdUnit("adsHeader") }
+      case "ads-footer":
+        return { label: "Add Unit", onClick: () => handleAddAdUnit("adsFooter") }
+      case "ads-left":
+        return { label: "Add Unit", onClick: () => handleAddAdUnit("adsLeftSidebar") }
+      case "ads-right":
+        return { label: "Add Unit", onClick: () => handleAddAdUnit("adsRightSidebar") }
+      case "ads-in-post":
+        return { label: "Add Unit", onClick: () => handleAddAdUnit("inPost") }
+      case "ads-before-post":
+        if (!origin.ads?.adsScript?.adsBody?.beforePost) {
+          return { label: "Add Unit", onClick: () => handleAddAdUnit("beforePost") }
+        }
+        return null
+      case "ads-after-post":
+        if (!origin.ads?.adsScript?.adsBody?.afterPost) {
+          return { label: "Add Unit", onClick: () => handleAddAdUnit("afterPost") }
+        }
+        return null
+      case "ads-video-header":
+        if (!origin.ads?.adsScript?.adsVideoHeader) {
+          return { label: "Add Unit", onClick: () => handleAddAdUnit("adsVideoHeader") }
+        }
+        return null
+      case "pages":
+        return { label: "Add Page", onClick: handleAddPage }
+      case "categories":
+        return { label: "Add Category", onClick: handleAddCategory }
+      default:
+        return null
+    }
+  }
+
+  const primaryAddAction = getPrimaryAddAction()
+
+  const getSectionStats = (): string | null => {
+    switch (activeSection) {
+      case "scripts": {
+        const count = (origin.script ?? []).length
+        return `${count} ${count === 1 ? "script" : "scripts"}`
+      }
+      case "ads-header": {
+        const count = (origin.ads?.adsScript?.adsHeader ?? []).length
+        return `${count} ${count === 1 ? "unit" : "units"}`
+      }
+      case "ads-footer": {
+        const count = (origin.ads?.adsScript?.adsFooter ?? []).length
+        return `${count} ${count === 1 ? "unit" : "units"}`
+      }
+      case "ads-left": {
+        const count = (origin.ads?.adsScript?.adsLeftSidebar ?? []).length
+        return `${count} ${count === 1 ? "unit" : "units"}`
+      }
+      case "ads-right": {
+        const count = (origin.ads?.adsScript?.adsRightSidebar ?? []).length
+        return `${count} ${count === 1 ? "unit" : "units"}`
+      }
+      case "ads-in-post": {
+        const count = (origin.ads?.adsScript?.adsBody?.inPost ?? []).length
+        return `${count} ${count === 1 ? "unit" : "units"}`
+      }
+      case "ads-before-post": {
+        const isConfigured = Boolean(origin.ads?.adsScript?.adsBody?.beforePost)
+        return isConfigured ? "1 unit" : "0 units"
+      }
+      case "ads-after-post": {
+        const isConfigured = Boolean(origin.ads?.adsScript?.adsBody?.afterPost)
+        return isConfigured ? "1 unit" : "0 units"
+      }
+      case "ads-video-header": {
+        const isConfigured = Boolean(origin.ads?.adsScript?.adsVideoHeader)
+        return isConfigured ? "1 unit" : "0 units"
+      }
+      case "pages": {
+        const count = (origin.pages ?? []).length
+        return `${count} ${count === 1 ? "page" : "pages"}`
+      }
+      case "categories": {
+        const count = (origin.categories ?? []).length
+        return `${count} ${count === 1 ? "category" : "categories"}`
+      }
+      default:
+        return null
+    }
+  }
+
+  const sectionStats = getSectionStats()
+
   return (
     <div className="flex h-full flex-col overflow-hidden rounded-xl border bg-card">
-      {/* Sticky Header with Single Save Button */}
+      {/* Sticky Header with Action Buttons */}
       <div className="flex items-center justify-between gap-4 border-b bg-muted/20 px-6 py-3 shrink-0">
         <div className="flex items-center gap-2.5">
           <div className="flex size-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
             <Icon className="size-4" />
           </div>
-          <div>
+          <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
               <span className="font-mono">{origin.origin}</span>
               <span>/</span>
               <span className="font-semibold text-foreground">{meta.title}</span>
             </div>
+            {sectionStats && (
+              <span className="rounded-md border border-border/70 bg-muted/60 px-2 py-0.5 font-mono text-[11px] font-medium text-foreground/80">
+                {sectionStats}
+              </span>
+            )}
           </div>
         </div>
 
-        <Button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={isSaving}
-          className="h-8 px-3.5 text-xs font-medium"
-        >
-          {isSaving ? (
-            <Loader2 className="size-3.5 animate-spin" />
-          ) : (
-            <Save className="size-3.5" />
+        <div className="flex items-center gap-2">
+          {primaryAddAction && (
+            <Button
+              type="button"
+              onClick={primaryAddAction.onClick}
+              className="h-8 px-3 text-xs font-semibold bg-emerald-600 hover:bg-emerald-500 text-white shadow-xs transition-colors"
+            >
+              <Plus className="size-3.5 mr-1" />
+              <span>{primaryAddAction.label}</span>
+            </Button>
           )}
-          <span>{isSaving ? "Saving…" : "Save Changes"}</span>
-          <kbd className="hidden rounded bg-primary-foreground/20 px-1 py-0.2 font-mono text-[9px] text-primary-foreground md:inline-block ml-1">
-            ⌘S
-          </kbd>
-        </Button>
+
+          <Button
+            type="button"
+            onClick={() => void handleSave()}
+            disabled={isSaving}
+            className="h-8 px-3.5 text-xs font-medium"
+          >
+            {isSaving ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <Save className="size-3.5" />
+            )}
+            <span>{isSaving ? "Saving…" : "Save Changes"}</span>
+            <kbd className="hidden rounded bg-primary-foreground/20 px-1 py-0.2 font-mono text-[9px] text-primary-foreground md:inline-block ml-1">
+              ⌘S
+            </kbd>
+          </Button>
+        </div>
       </div>
 
       {/* Scrollable Editor Body - No bottom save button */}

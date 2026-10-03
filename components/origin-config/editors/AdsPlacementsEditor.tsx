@@ -29,7 +29,7 @@ export type AdPlacementKey =
   | "afterPost"
   | "adsVideoHeader"
 
-const PLACEMENT_INFO: Record<
+export const PLACEMENT_INFO: Record<
   AdPlacementKey,
   { title: string; prefix: string; isSingleton: boolean }
 > = {
@@ -218,7 +218,7 @@ function AdUnitCard({
               ID
             </Label>
             <Input
-              value={unit.id}
+              value={unit.id ?? ""}
               onChange={(e) => onChange({ ...unit, id: e.target.value })}
               className="h-8 font-mono text-xs bg-background"
               placeholder="monetag-multitag, adsense-300x250…"
@@ -229,7 +229,7 @@ function AdUnitCard({
               Source / Network
             </Label>
             <Input
-              value={unit.source}
+              value={unit.source ?? ""}
               onChange={(e) => onChange({ ...unit, source: e.target.value })}
               className="h-8 text-xs bg-background"
               placeholder="monetag, adcash, mgid, adsense…"
@@ -249,7 +249,7 @@ function AdUnitCard({
             </span>
           </div>
           <Textarea
-            value={unit.content}
+            value={unit.content ?? ""}
             onChange={(e) => onChange({ ...unit, content: e.target.value })}
             className="h-28 min-h-20 max-h-52 resize-y font-mono text-xs leading-relaxed bg-zinc-950 text-zinc-100 border-zinc-800 placeholder:text-zinc-600 focus-visible:ring-primary/40"
             placeholder={'<script src="https://..." async></script>\n<!-- or paste ad unit HTML here -->'}
@@ -292,9 +292,7 @@ export function AdsPlacementsEditor({
     else if (placementKey === "afterPost") currentSlot = adsScript.adsBody?.afterPost
     else if (placementKey === "adsVideoHeader") currentSlot = adsScript.adsVideoHeader
 
-    const isSlotConfigured =
-      currentSlot &&
-      (currentSlot.id !== "" || currentSlot.source !== "" || currentSlot.content !== "")
+    const isSlotConfigured = Boolean(currentSlot)
 
     const handleCreateSlot = () => {
       const newSlot: OriginAdUnit = {
@@ -342,21 +340,6 @@ export function AdsPlacementsEditor({
 
     return (
       <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold">{info.title}</h3>
-            <span className="rounded bg-primary/10 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-primary">
-              SINGLE SLOT
-            </span>
-          </div>
-          {!isSlotConfigured && (
-            <Button type="button" onClick={handleCreateSlot} size="sm">
-              <Plus className="size-3.5" />
-              Configure
-            </Button>
-          )}
-        </div>
-
         {isSlotConfigured && currentSlot ? (
           <AdUnitCard
             unit={currentSlot}
@@ -369,7 +352,7 @@ export function AdsPlacementsEditor({
             <p className="text-xs text-muted-foreground">No slot configured for this placement.</p>
             <Button type="button" variant="outline" onClick={handleCreateSlot} size="sm">
               <Plus className="size-3.5" />
-              Add Slot
+              Add Unit
             </Button>
           </div>
         )}
@@ -433,20 +416,6 @@ export function AdsPlacementsEditor({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <h3 className="text-sm font-semibold">{info.title}</h3>
-          <span className="rounded bg-muted px-1.5 py-0.5 font-mono text-[10px] font-medium text-muted-foreground">
-            {units.length} {units.length === 1 ? "unit" : "units"}
-          </span>
-        </div>
-        <Button type="button" onClick={handleAddUnit} size="sm">
-          <Plus className="size-3.5" />
-          Add Unit
-        </Button>
-      </div>
-
       {units.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center space-y-3">
           <Code2 className="size-8 text-muted-foreground/40" />
@@ -460,7 +429,7 @@ export function AdsPlacementsEditor({
         <div className="space-y-3">
           {units.map((unit, idx) => (
             <AdUnitCard
-              key={`${unit.id}-${idx}`}
+              key={idx}
               unit={unit}
               index={idx}
               totalUnits={units.length}

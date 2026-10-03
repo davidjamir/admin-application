@@ -181,7 +181,7 @@ function ScriptCard({
               ID
             </Label>
             <Input
-              value={script.id}
+              value={script.id ?? ""}
               onChange={(e) => onChange({ ...script, id: e.target.value })}
               className="h-8 w-full font-mono text-xs bg-background"
               placeholder="gtm-main, adsense-1…"
@@ -340,16 +340,6 @@ export function HeadScriptsEditor({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-          {scripts.length} Injected Script{scripts.length !== 1 ? "s" : ""}
-        </span>
-        <Button type="button" onClick={handleAddScript} size="sm">
-          <Plus className="size-4" />
-          Add Script
-        </Button>
-      </div>
-
       {scripts.length === 0 ? (
         <div className="rounded-lg border border-dashed p-8 text-center space-y-3">
           <Code2 className="size-8 mx-auto text-muted-foreground/40" />
@@ -363,7 +353,7 @@ export function HeadScriptsEditor({
         <div className="space-y-3">
           {scripts.map((script, idx) => (
             <ScriptCard
-              key={`${script.id}-${idx}`}
+              key={idx}
               script={script}
               index={idx}
               total={scripts.length}
