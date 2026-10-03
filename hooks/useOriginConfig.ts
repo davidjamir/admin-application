@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 import type {
   OriginDocument,
@@ -15,10 +15,16 @@ export function useOriginConfig() {
   const [loadingOrigin, setLoadingOrigin] = useState(false)
   const [savingSection, setSavingSection] = useState<OriginPatchSection | null>(null)
 
+  // Track the last saved snapshot to detect unsaved changes
+  const savedOriginRef = useRef<OriginDocument | null>(null)
+  const [isDirty, setIsDirty] = useState(false)
+
   const loadOrigin = useCallback(async (id: string) => {
     if (!id) {
       setOrigin(null)
       setSelectedId("")
+      savedOriginRef.current = null
+      setIsDirty(false)
       return
     }
     try {
@@ -28,6 +34,8 @@ export function useOriginConfig() {
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || "Failed to load origin")
       setOrigin(data.item)
+      savedOriginRef.current = data.item
+      setIsDirty(false)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Failed to load origin"
       toast.error(message)
@@ -70,7 +78,13 @@ export function useOriginConfig() {
   }, [loadList])
 
   const updateOrigin = useCallback((updater: (prev: OriginDocument) => OriginDocument) => {
-    setOrigin((prev) => (prev ? updater(prev) : prev))
+    setOrigin((prev) => {
+      if (!prev) return prev
+      const next = updater(prev)
+      // Compare JSON to detect changes vs saved snapshot
+      setIsDirty(JSON.stringify(next) !== JSON.stringify(savedOriginRef.current))
+      return next
+    })
   }, [])
 
   const saveSection = useCallback(
@@ -86,6 +100,8 @@ export function useOriginConfig() {
         const payload = await res.json()
         if (!res.ok) throw new Error(payload.error || "Save failed")
         setOrigin(payload.item)
+        savedOriginRef.current = payload.item
+        setIsDirty(false)
         setOrigins((prev) =>
           prev.map((item) =>
             item._id === payload.item._id
@@ -129,6 +145,7 @@ export function useOriginConfig() {
     updateOrigin,
     loadingOrigin,
     savingSection,
+    isDirty,
     loadList,
     loadOrigin,
     saveSection,

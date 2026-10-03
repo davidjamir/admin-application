@@ -117,7 +117,7 @@ export function OriginNavTree({
         items: [
           {
             id: "ads-txt",
-            label: "ads.txt",
+            label: "Ads.txt",
             icon: FileText,
             badge: `${adsTxtLines} lines`,
           },

@@ -65,25 +65,17 @@ export function useAdCreatives() {
 
   const fetchWebsiteOrigins = useCallback(async () => {
     try {
-      const res = await fetch("/api/websites")
+      const res = await fetch("/api/origins")
       if (!res.ok) return
       const data = await res.json()
       
-      const origins = new Set<string>()
-      const getOrigin = (domain: string) => domain.split(".").slice(-2).join(".")
+      const list: string[] = (data.items || [])
+        .map((item: { origin?: string }) => item.origin)
+        .filter((origin: unknown): origin is string => Boolean(origin))
       
-      if (data.blogs) data.blogs.forEach((b: { blogDns: string }) => origins.add(getOrigin(b.blogDns)))
-      if (data.wraps) data.wraps.forEach((w: { target_host: string }) => origins.add(getOrigin(w.target_host)))
-      if (data.quotas) {
-        data.quotas.forEach((q: { type: string, domain: string }) => {
-          if (q.type === 'origin') origins.add(q.domain)
-          else origins.add(getOrigin(q.domain))
-        })
-      }
-      
-      setWebsiteOrigins(Array.from(origins).sort())
+      setWebsiteOrigins(Array.from(new Set(list)).sort())
     } catch (err) {
-      console.error("Failed to fetch website origins", err)
+      console.error("Failed to fetch origins from Origin Manager", err)
     }
   }, [])
 

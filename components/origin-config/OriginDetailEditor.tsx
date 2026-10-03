@@ -73,7 +73,7 @@ export function OriginDetailEditor({
         }
       case "ads-txt":
         return {
-          title: "ads.txt",
+          title: "Ads.txt",
           icon: FileText,
           sectionKey: "adsTxt" as OriginPatchSection,
           getData: () => origin.ads?.adsTxt ?? "",
@@ -260,7 +260,13 @@ export function OriginDetailEditor({
       </div>
 
       {/* Scrollable Editor Body - No bottom save button */}
-      <div className="flex-1 overflow-y-auto p-6 max-h-full">
+      <div
+        className={`flex-1 p-6 ${
+          activeSection === "ads-txt"
+            ? "flex flex-col min-h-0 overflow-hidden"
+            : "overflow-y-auto max-h-full"
+        }`}
+      >
         {activeSection === "identity" && (
           <IdentityEditor origin={origin} onChange={onChange} />
         )}

@@ -53,9 +53,9 @@ export function NetworksEditor({
             }
           }}
           placeholder="Enter network key (e.g. sports-group, tier1-network)"
-          className="max-w-md text-xs font-mono"
+          className="flex-1 text-xs font-mono"
         />
-        <Button type="button" onClick={handleAdd} size="sm">
+        <Button type="button" onClick={handleAdd} size="sm" className="ml-auto shrink-0">
           <Plus className="size-4" />
           Add Network
         </Button>

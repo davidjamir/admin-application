@@ -112,6 +112,7 @@ export async function PATCH(request: Request) {
       ...(fields.source    !== undefined && { source:   fields.source   }),
       ...(fields.domain    !== undefined && { domain:   fields.domain   }),
       ...(fields.origin    !== undefined && { origin:   fields.origin   }),
+      ...(fields.content   !== undefined && { content:  fields.content  }),
       ...(fields.note      !== undefined && { note:     fields.note     }),
       ...(fields.priority  !== undefined && { priority: Number(fields.priority) }),
       ...(fields.enabled   !== undefined && { enabled:  fields.enabled  }),

@@ -6,7 +6,7 @@ export const AdCreativeAddPanel: React.FC<AdCreativeAddPanelProps> = ({
   onClose, form, setForm, submitting, onSubmit, websiteOrigins
 }) => {
   return (
-    <div className="fixed top-0 right-0 h-full w-[440px] bg-background border-l shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col z-40 text-black">
+    <div className="fixed top-0 right-0 h-full w-[440px] bg-background border-l shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col z-40">
       <div className="flex items-center justify-between p-5 border-b">
         <div>
           <h2 className="font-bold text-base">New Ad Creative</h2>

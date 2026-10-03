@@ -19,6 +19,7 @@ import {
   Search,
   Check,
   ChevronDown,
+  AlertCircle,
 } from "lucide-react"
 import { useState } from "react"
 import { OriginNavTree } from "./OriginNavTree"
@@ -36,6 +37,7 @@ export function OriginConfigView() {
     updateOrigin,
     loadingOrigin,
     savingSection,
+    isDirty,
     loadList,
     loadOrigin,
     saveSection,
@@ -163,7 +165,7 @@ export function OriginConfigView() {
                     : ""
                 }`}
               >
-                {selectedOriginItem.enabledAds ? "ADS ENABLED" : "ADS DISABLED"}
+                {selectedOriginItem.enabledAds ? "Ads Enabled" : "Ads Disabled"}
               </Badge>
               <Badge variant="outline" className="font-mono text-[11px]">
                 {selectedOriginItem.totalItems.toLocaleString()} items
@@ -172,12 +174,15 @@ export function OriginConfigView() {
           ) : null}
         </div>
 
-        {/* Right Info */}
-        <div className="hidden md:flex items-center gap-3 text-xs text-muted-foreground">
-          {origin?.updatedAt ? (
-            <span>
-              Updated: {new Date(origin.updatedAt).toLocaleString("en-US")}
+        {/* Right side: unsaved indicator or last-updated timestamp */}
+        <div className="hidden md:flex items-center gap-3 text-xs text-muted-foreground shrink-0">
+          {isDirty && origin ? (
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/40 bg-amber-500/10 px-3 py-1 text-[11px] font-medium text-amber-600 dark:text-amber-400">
+              <AlertCircle className="size-3 shrink-0" />
+              Unsaved changes on <span className="font-mono font-semibold">{origin.origin}</span>
             </span>
+          ) : origin?.updatedAt ? (
+            <span>Updated: {new Date(origin.updatedAt).toLocaleString("en-US")}</span>
           ) : null}
         </div>
       </div>

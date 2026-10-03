@@ -16,14 +16,14 @@ export const AdCreativeFilters: React.FC<AdCreativeFiltersProps> = ({
           placeholder="Search name, domain, source..."
           value={search}
           onChange={e => setSearch(e.target.value)}
-          className="w-full pl-9 pr-4 py-2 rounded-lg border bg-card text-sm text-black focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm"
+          className="w-full pl-9 pr-4 py-2 rounded-lg border bg-card text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-sm"
         />
       </div>
       <div className="flex items-center gap-2">
         <select
           value={sourceFilter}
           onChange={e => setSourceFilter(e.target.value)}
-          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm text-black font-normal focus:outline-none cursor-pointer shadow-sm"
+          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm font-normal focus:outline-none cursor-pointer shadow-sm"
         >
           {sources.map(s => <option key={s} value={s}>{s === "all" ? "All Sources" : s}</option>)}
         </select>
@@ -32,7 +32,7 @@ export const AdCreativeFilters: React.FC<AdCreativeFiltersProps> = ({
         <select
           value={domainFilter}
           onChange={e => setDomainFilter(e.target.value)}
-          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm text-black font-normal focus:outline-none cursor-pointer shadow-sm"
+          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm font-normal focus:outline-none cursor-pointer shadow-sm"
         >
           {domainsInUI.map(d => <option key={d} value={d}>{d === "all" ? "All Domains" : d}</option>)}
         </select>
@@ -41,7 +41,7 @@ export const AdCreativeFilters: React.FC<AdCreativeFiltersProps> = ({
         <select
           value={enabledFilter}
           onChange={e => setEnabledFilter(e.target.value as "all" | "enabled" | "disabled")}
-          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm text-black font-normal focus:outline-none cursor-pointer shadow-sm"
+          className="w-[160px] px-2 py-2 rounded-lg border bg-card text-sm font-normal focus:outline-none cursor-pointer shadow-sm"
         >
           <option value="all">All Status</option>
           <option value="enabled">Enabled</option>

@@ -77,16 +77,6 @@ const navItems = [
     icon: Globe,
   },
   {
-    title: "Origin Config",
-    url: "/origin-config",
-    icon: SlidersHorizontal,
-  },
-  {
-    title: "Ad Creatives",
-    url: "/ad-creatives",
-    icon: ImagePlay,
-  },
-  {
     title: "Blogger API",
     url: "/blogger-accounts",
     icon: KeyRound,
@@ -95,6 +85,16 @@ const navItems = [
     title: "Content Publisher",
     url: "/content-publisher",
     icon: FilePenLine,
+  },
+  {
+    title: "Ads Creatives",
+    url: "/ad-creatives",
+    icon: ImagePlay,
+  },
+  {
+    title: "Origin Manager",
+    url: "/origin-manager",
+    icon: SlidersHorizontal,
   },
 ]
 

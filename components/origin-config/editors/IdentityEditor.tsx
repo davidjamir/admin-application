@@ -14,6 +14,20 @@ export function IdentityEditor({
 }) {
   return (
     <div className="space-y-6">
+      {/* ID / Created / Updated / Ads — metadata row at the top */}
+      <div className="rounded-lg border bg-muted/20 p-3 text-xs text-muted-foreground">
+        <div className="grid grid-cols-2 gap-2 font-mono sm:grid-cols-4">
+          <div><span className="text-foreground/70">ID:</span> {origin._id}</div>
+          <div><span className="text-foreground/70">Created:</span> {origin.createdAt ? new Date(origin.createdAt).toLocaleDateString() : "—"}</div>
+          <div><span className="text-foreground/70">Updated:</span> {origin.updatedAt ? new Date(origin.updatedAt).toLocaleDateString() : "—"}</div>
+          <div><span className="text-foreground/70">Ads:</span>{" "}
+            <span className={origin.config?.enabledAds ? "text-emerald-500 font-semibold" : "text-destructive font-semibold"}>
+              {origin.config?.enabledAds ? "Enabled" : "Disabled"}
+            </span>
+          </div>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-2">
         <div className="space-y-1.5">
           <Label className="text-xs font-semibold text-muted-foreground">Domain</Label>
@@ -93,15 +107,6 @@ export function IdentityEditor({
               placeholder="https://.../logo.png"
             />
           </div>
-        </div>
-      </div>
-
-      <div className="rounded-lg border bg-muted/20 p-3 text-xs text-muted-foreground">
-        <div className="grid grid-cols-2 gap-2 font-mono sm:grid-cols-4">
-          <div><span className="text-foreground/70">ID:</span> {origin._id}</div>
-          <div><span className="text-foreground/70">Created:</span> {origin.createdAt ? new Date(origin.createdAt).toLocaleDateString() : "—"}</div>
-          <div><span className="text-foreground/70">Updated:</span> {origin.updatedAt ? new Date(origin.updatedAt).toLocaleDateString() : "—"}</div>
-          <div><span className="text-foreground/70">Ads:</span> {origin.config?.enabledAds ? "Enabled" : "Disabled"}</div>
         </div>
       </div>
     </div>

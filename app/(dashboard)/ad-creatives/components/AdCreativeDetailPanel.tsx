@@ -19,7 +19,7 @@ export const AdCreativeDetailPanel: React.FC<AdCreativeDetailPanelProps> = ({
   }
 
   return (
-    <div className="fixed top-0 right-0 h-full w-[440px] bg-background border-l shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col z-40 text-black">
+    <div className="fixed top-0 right-0 h-full w-[440px] bg-background border-l shadow-2xl animate-in slide-in-from-right duration-300 flex flex-col z-40">
       {confirmDelete && (
         <div className="absolute inset-0 z-50 bg-background/80 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-200">
           <div className="bg-card border shadow-xl rounded-xl p-6 w-full max-w-[320px] text-center space-y-4 animate-in zoom-in-95 duration-200">
@@ -132,6 +132,9 @@ export const AdCreativeDetailPanel: React.FC<AdCreativeDetailPanelProps> = ({
               <select value={editForm!.domain} onChange={e => setEditForm(f => f && ({ ...f, domain: e.target.value, origin: e.target.value }))}
                 className="w-full px-3 py-2 rounded-lg border bg-muted/50 text-sm focus:outline-none cursor-pointer">
                 <option value="">Select Domain</option>
+                {editForm!.domain && !websiteOrigins.includes(editForm!.domain) && (
+                  <option value={editForm!.domain}>{editForm!.domain}</option>
+                )}
                 {websiteOrigins.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
             </div>
