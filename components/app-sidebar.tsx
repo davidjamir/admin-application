@@ -19,6 +19,7 @@ import {
   KeyRound,
   FilePenLine,
   SlidersHorizontal,
+  RefreshCw,
 } from "lucide-react"
 
 import {
@@ -95,6 +96,11 @@ const navItems = [
     title: "Origin Manager",
     url: "/origin-manager",
     icon: SlidersHorizontal,
+  },
+  {
+    title: "R2 Sync",
+    url: "/r2-sync",
+    icon: RefreshCw,
   },
 ]
 

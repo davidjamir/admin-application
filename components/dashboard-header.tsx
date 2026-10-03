@@ -100,6 +100,7 @@ export function DashboardHeader() {
     "/origin-manager": "Origin Manager",
     "/ad-creatives": "Ads Creatives",
     "/blogger-accounts": "Blogger API",
+    "/r2-sync": "R2 Sync",
   }
 
   const formattedTitle = routeMap[pathname] || "Dashboard"

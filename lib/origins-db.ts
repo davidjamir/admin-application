@@ -46,3 +46,11 @@ export async function getOriginsCollection(): Promise<Collection> {
   const db = await getOriginsDb()
   return db.collection(ORIGINS_COLLECTION)
 }
+
+const SITES_COLLECTION = "sites"
+
+/** Access the `sites` collection in the URI3 cluster. */
+export async function getSitesCollection(): Promise<Collection> {
+  const db = await getOriginsDb()
+  return db.collection(SITES_COLLECTION)
+}
