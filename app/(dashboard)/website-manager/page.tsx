@@ -31,7 +31,7 @@ export default function WebsiteManagerPage() {
     }
 
     return (
-        <div className="flex flex-col gap-5 p-6 h-full" suppressHydrationWarning>
+        <div className="flex flex-col gap-5 h-full" suppressHydrationWarning>
             {selected && (
                 <div className="fixed inset-0 z-30 bg-background/50 backdrop-blur-[2px] animate-in fade-in"
                     onClick={() => setSelected(null)} />

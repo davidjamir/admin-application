@@ -29,11 +29,11 @@ export default function SystemUserManager({ adminPassword, isAdminVerified }: Pr
                             <Users className="w-5 h-5 text-primary" />
                         </div>
                         <div>
-                            <CardTitle className="text-lg text-black">Personnel Management</CardTitle>
+                            <CardTitle className="text-lg text-foreground">Personnel Management</CardTitle>
                             <p className="text-xs text-muted-foreground mt-0.5">{status}</p>
                         </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px] font-mono bg-background/50 text-black">
+                    <Badge variant="outline" className="text-[10px] font-mono bg-background/50 text-foreground">
                         System User Module v2.0
                     </Badge>
                 </div>

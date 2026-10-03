@@ -25,9 +25,9 @@ export const DiscoveryTableRow: React.FC<DiscoveryTableRowProps> = ({
         />
       </TableCell>
       <TableCell className="py-3 text-left">
-        <span className="text-[10px] font-medium text-black transition-colors group-hover:text-primary">{page.name}</span>
+        <span className="text-[10px] font-medium text-foreground transition-colors group-hover:text-primary">{page.name}</span>
         <div className="flex items-center gap-2">
-          <span className="text-[10px] font-mono text-black">{page.id}</span>
+          <span className="text-[10px] font-mono text-foreground">{page.id}</span>
           <button 
             onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Page ID") }}
             className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 hover:text-primary cursor-pointer"
@@ -37,12 +37,12 @@ export const DiscoveryTableRow: React.FC<DiscoveryTableRowProps> = ({
         </div>
       </TableCell>
       <TableCell className="py-3 text-left">
-        <span className="text-[10px] font-medium text-black">
+        <span className="text-[10px] font-medium text-foreground">
           {page.category || "-"}
         </span>
       </TableCell>
       <TableCell className="py-3 text-left">
-        <span className="text-[10px] font-medium text-black">
+        <span className="text-[10px] font-medium text-foreground">
           {page.topic || "-"}
         </span>
       </TableCell>
@@ -57,7 +57,7 @@ export const DiscoveryTableRow: React.FC<DiscoveryTableRowProps> = ({
           size="sm"
           variant="outline"
           onClick={() => handleCopy(page.access_token || "", "Page Token")}
-          className="h-7 text-[10px] px-2 font-mono border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all text-black cursor-pointer"
+          className="h-7 text-[10px] px-2 font-mono border-border/50 hover:bg-primary/10 hover:text-primary hover:border-primary/30 transition-all text-foreground cursor-pointer"
         >
           <Copy className="w-3 h-3 mr-1.5" />
           EP...{(page.access_token || "").slice(-6)}

@@ -13,7 +13,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
         <SheetContent side="right" className="sm:max-w-[30vw] min-w-[500px] bg-card/95 backdrop-blur-3xl border-l-border/50 shadow-2xl p-0 overflow-hidden">
             <div className="h-full flex flex-col">
                 <SheetHeader className="p-8 border-b border-border/50 bg-muted/20 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-black">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-foreground">
                         <Database className="w-32 h-32 -rotate-12" />
                     </div>
                     <SheetTitle className="flex items-center gap-4 text-2xl">
@@ -22,7 +22,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                         </div>
                         <div className="flex flex-col text-left">
                             <span className="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest mb-0.5">System User Profile</span>
-                            <span className="font-black text-2xl text-black tracking-tight leading-none truncate max-w-[320px]">{editingUser?.name}</span>
+                            <span className="font-black text-2xl text-foreground tracking-tight leading-none truncate max-w-[320px]">{editingUser?.name}</span>
                         </div>
                     </SheetTitle>
                 </SheetHeader>
@@ -34,7 +34,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                 <div className="flex items-start justify-between">
                                     <div className="space-y-1.5">
                                         <p className="text-[10px] font-bold tracking-widest text-muted-foreground/50 uppercase">Identity Profile</p>
-                                        <h3 className="font-black text-2xl text-black tracking-tight">{editingUser?.name}</h3>
+                                        <h3 className="font-black text-2xl text-foreground tracking-tight">{editingUser?.name}</h3>
                                     </div>
                                     <div className="p-3 bg-primary/10 rounded-2xl border border-primary/20 shadow-inner">
                                         <ShieldCheck className="w-6 h-6 text-primary" />
@@ -43,7 +43,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                 <div className="grid grid-cols-2 gap-x-8 gap-y-5 pt-5 border-t border-border/20">
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">Business Name</p>
-                                        <p className="text-sm font-bold truncate text-black">{editingUser?.businessName || "Unassigned"}</p>
+                                        <p className="text-sm font-bold truncate text-foreground">{editingUser?.businessName || "Unassigned"}</p>
                                     </div>
                                     <div className="space-y-1">
                                         <p className="text-[10px] font-bold text-muted-foreground/40 tracking-wider uppercase">Business Id</p>
@@ -76,7 +76,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
-                                            className="h-7 px-2 text-[10px] font-bold text-black/70 border border-border/50 hover:bg-black/5 hover:text-black hover:border-black/20 flex items-center gap-1.5 rounded-lg transition-all"
+                                            className="h-7 px-2 text-[10px] font-bold text-black/70 border border-border/50 hover:bg-black/5 hover:text-foreground hover:border-black/20 flex items-center gap-1.5 rounded-lg transition-all"
                                             onClick={async () => {
                                                 try {
                                                     const text = await navigator.clipboard.readText()
@@ -93,7 +93,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                         <Button 
                                             variant="ghost" 
                                             size="sm" 
-                                            className="h-7 px-2 text-[10px] font-bold text-black/70 border border-border/50 hover:bg-black/5 hover:text-black hover:border-black/20 flex items-center gap-1.5 rounded-lg transition-all"
+                                            className="h-7 px-2 text-[10px] font-bold text-black/70 border border-border/50 hover:bg-black/5 hover:text-foreground hover:border-black/20 flex items-center gap-1.5 rounded-lg transition-all"
                                             onClick={() => {
                                                 navigator.clipboard.writeText(editForm.token)
                                                 toast.success("Token copied to clipboard")
@@ -107,7 +107,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                 <Input
                                     value={editForm.token}
                                     onChange={(e) => setEditForm({ ...editForm, token: e.target.value })}
-                                    className="bg-background/50 border-border/40 font-mono text-xs h-12 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl text-black"
+                                    className="bg-background/50 border-border/40 font-mono text-xs h-12 focus:ring-1 focus:ring-blue-500/20 transition-all rounded-xl text-foreground"
                                     placeholder="Enter secure access token..."
                                 />
                             </div>
@@ -118,7 +118,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                     <Input
                                         value={editForm.appName}
                                         onChange={(e) => setEditForm({ ...editForm, appName: e.target.value })}
-                                        className="h-12 bg-background/50 border-border/40 text-black rounded-xl font-medium text-sm"
+                                        className="h-12 bg-background/50 border-border/40 text-foreground rounded-xl font-medium text-sm"
                                         placeholder="App identifier"
                                     />
                                 </div>
@@ -127,7 +127,7 @@ export const EditUserSheet: React.FC<EditUserSheetProps> = ({
                                     <Input
                                         value={editForm.category}
                                         onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                                        className="h-12 bg-background/50 border-border/40 text-black rounded-xl font-medium text-sm"
+                                        className="h-12 bg-background/50 border-border/40 text-foreground rounded-xl font-medium text-sm"
                                         placeholder="Market category"
                                     />
                                 </div>

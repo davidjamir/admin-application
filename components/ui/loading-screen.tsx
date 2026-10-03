@@ -26,7 +26,7 @@ export function LoadingScreen({ message = "Admin System", fullScreen = true }: L
           </div>
         </div>
         <div className="flex flex-col items-center gap-1.5 overflow-hidden">
-          <h1 className="text-2xl font-black tracking-[0.2em] text-black dark:text-white select-none">
+          <h1 className="text-2xl font-black tracking-[0.2em] text-foreground dark:text-white select-none">
             7 Forge Inc
           </h1>
           <div className="flex items-center gap-3">

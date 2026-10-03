@@ -97,8 +97,8 @@ export const DiscoveryPipeline: React.FC<DiscoveryPipelineProps> = ({
                             (pages.length > 0 && selectedPageIds.length > 0)
                                 ? "bg-blue-500 border-blue-500 text-white shadow-md hover:bg-blue-600 cursor-pointer"
                                 : (pages.length > 0)
-                                    ? "bg-white border-blue-50 text-black border-2"
-                                    : "bg-white text-gray-400",
+                                    ? "bg-card dark:bg-card border-blue-200 dark:border-blue-800/50 text-foreground border-2"
+                                    : "bg-muted/60 dark:bg-muted/30 text-muted-foreground",
                             "disabled:opacity-90 disabled:cursor-not-allowed"
                         )}
                     >

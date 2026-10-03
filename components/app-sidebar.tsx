@@ -132,8 +132,11 @@ export function AppSidebar({ user, ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild className="hover:bg-transparent">
               <Link href="/" className="flex items-center w-full justify-start gap-3">
-                <div className="flex aspect-square size-10 items-center justify-center rounded-xl bg-gradient-to-tr from-primary to-blue-600 text-primary-foreground shadow-lg shadow-primary/20 shrink-0 transition-all duration-200 group-data-[collapsible=icon]:size-8">
-                  <ShieldCheck className="size-6 transition-all duration-200 group-data-[collapsible=icon]:size-5" />
+                <div 
+                  className="flex aspect-square size-10 items-center justify-center rounded-xl text-white shadow-lg shadow-blue-600/20 shrink-0 transition-all duration-200 group-data-[collapsible=icon]:size-8"
+                  style={{ background: "linear-gradient(135deg, #0f172a 0%, #2563eb 100%)" }}
+                >
+                  <ShieldCheck className="size-6 text-white transition-all duration-200 group-data-[collapsible=icon]:size-5" />
                 </div>
                 <div className="flex flex-col gap-0.5 leading-none transition-all duration-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0 group-data-[collapsible=icon]:hidden">
                   <span className="font-bold text-lg tracking-tight truncate">7 Forge Inc</span>

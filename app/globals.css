@@ -85,37 +85,37 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.13 0.016 260);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.17 0.020 260);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.17 0.020 260);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --primary: oklch(0.60 0.22 258);
+  --primary-foreground: oklch(0.99 0 0);
+  --secondary: oklch(0.24 0.024 260);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.22 0.020 260);
+  --muted-foreground: oklch(0.72 0.015 260);
+  --accent: oklch(0.24 0.024 260);
   --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.28 0.022 260);
+  --input: oklch(0.28 0.022 260);
+  --ring: oklch(0.60 0.22 258 / 50%);
+  --chart-1: oklch(0.65 0.22 255);
+  --chart-2: oklch(0.72 0.19 160);
+  --chart-3: oklch(0.68 0.22 300);
+  --chart-4: oklch(0.78 0.18 75);
+  --chart-5: oklch(0.65 0.24 15);
+  --sidebar: oklch(0.145 0.018 260);
+  --sidebar-foreground: oklch(0.95 0 0);
+  --sidebar-primary: oklch(0.60 0.22 258);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.22 0.024 260);
+  --sidebar-accent-foreground: oklch(0.99 0 0);
+  --sidebar-border: oklch(0.26 0.022 260);
+  --sidebar-ring: oklch(0.60 0.22 258 / 50%);
 }
 
 @layer base {
@@ -137,28 +137,107 @@
 }
 
 .dark {
-  --primary-rgb: 147, 197, 253;
-  --card-rgb: 15, 15, 25;
-  --background-rgb: 10, 10, 20;
+  --primary-rgb: 96, 165, 250;
+  --card-rgb: 23, 27, 44;
+  --background-rgb: 15, 18, 30;
 }
 
 @layer utilities {
   .glass-pane {
-    @apply bg-white/40 backdrop-blur-3xl border border-blue-500/10;
+    @apply bg-white/40 dark:bg-card/75 backdrop-blur-3xl border border-blue-500/10 dark:border-blue-500/20 shadow-xs;
   }
   
   .glass-premium {
-    @apply relative overflow-hidden bg-white/30 backdrop-blur-2xl border border-white/20 transition-all duration-500;
+    @apply relative overflow-hidden bg-white/30 dark:bg-card/85 backdrop-blur-2xl border border-white/20 dark:border-blue-500/20 transition-all duration-500 shadow-xs;
     background: linear-gradient(135deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.1) 100%);
   }
 
+  .dark .glass-premium {
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.75) 0%, rgba(15, 23, 42, 0.85) 100%);
+  }
+
   .glass-card {
-    @apply relative overflow-hidden bg-white/60 backdrop-blur-sm border border-blue-500/5 transition-all duration-300;
+    @apply relative overflow-hidden bg-white/60 dark:bg-card/80 backdrop-blur-sm border border-blue-500/5 dark:border-blue-500/20 transition-all duration-300;
   }
 
   .bg-mesh-blue {
     background-image: 
       radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.05) 0px, transparent 50%),
       radial-gradient(at 100% 0%, rgba(147, 197, 253, 0.05) 0px, transparent 50%);
+  }
+
+  .dark .bg-mesh-blue {
+    background-image: 
+      radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(147, 197, 253, 0.08) 0px, transparent 50%),
+      radial-gradient(at 50% 100%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+
+  /* Automatically ensure text-black classes maintain high contrast in dark mode */
+  .dark .text-black:not([data-force-black]) {
+    color: var(--foreground) !important;
+  }
+  .dark .text-black\/90:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 90%) !important;
+  }
+  .dark .text-black\/80:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 80%) !important;
+  }
+  .dark .text-black\/70:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 70%) !important;
+  }
+  .dark .text-black\/60:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 60%) !important;
+  }
+  .dark .text-black\/50:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 50%) !important;
+  }
+  .dark .text-black\/40:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 40%) !important;
+  }
+  .dark .text-black\/30:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 30%) !important;
+  }
+  .dark .text-black\/20:not([data-force-black]) {
+    color: oklch(0.95 0 0 / 20%) !important;
+  }
+
+  /* text-gray-* overrides for dark mode */
+  .dark .text-gray-900 { color: oklch(0.95 0 0) !important; }
+  .dark .text-gray-800 { color: oklch(0.90 0 0) !important; }
+  .dark .text-gray-700 { color: oklch(0.85 0 0) !important; }
+  .dark .text-gray-600 { color: oklch(0.78 0.01 260) !important; }
+  .dark .text-gray-500 { color: oklch(0.70 0.01 260) !important; }
+  .dark .text-gray-400 { color: oklch(0.62 0.01 260) !important; }
+
+  /* bg-white input/field overrides for dark mode */
+  .dark input.bg-white,
+  .dark textarea.bg-white,
+  .dark select.bg-white {
+    background-color: var(--input) !important;
+    color: var(--foreground) !important;
+  }
+
+  /* Card/popover bg-white overrides */
+  .dark .bg-white\/95 { background-color: var(--popover) !important; }
+  .dark .bg-white\/90 { background-color: color-mix(in oklch, var(--card) 90%, transparent) !important; }
+  .dark .bg-white\/80 { background-color: color-mix(in oklch, var(--card) 80%, transparent) !important; }
+  .dark .bg-white\/70 { background-color: color-mix(in oklch, var(--card) 70%, transparent) !important; }
+  .dark .bg-white\/60 { background-color: color-mix(in oklch, var(--card) 60%, transparent) !important; }
+  .dark .bg-white\/50 { background-color: color-mix(in oklch, var(--card) 50%, transparent) !important; }
+
+  /* Table header text fix in dark mode */
+  .dark thead th.text-black,
+  .dark th.text-black {
+    color: var(--muted-foreground) !important;
   }
 }

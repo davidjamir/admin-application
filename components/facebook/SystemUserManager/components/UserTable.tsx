@@ -55,15 +55,15 @@ export const UserTable: React.FC<UserTableProps> = ({
             </div>
 
             {/* Personnel Table */}
-            <div className="rounded-xl border border-border/50 bg-background/50 overflow-hidden text-black">
+            <div className="rounded-xl border border-border/50 bg-background/50 overflow-hidden text-foreground">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-transparent border-border/50">
-                            <TableHead className="w-[180px] text-xs uppercase font-bold tracking-wider text-black">Identity Name</TableHead>
-                            <TableHead className="text-xs uppercase font-bold tracking-wider text-black">Node Context</TableHead>
-                            <TableHead className="text-xs uppercase font-bold tracking-wider text-black">Status</TableHead>
-                            <TableHead className="text-xs uppercase font-bold tracking-wider text-black">Sync Integrity</TableHead>
-                            <TableHead className="text-right text-xs uppercase font-bold tracking-wider pr-6 text-black">Operations</TableHead>
+                            <TableHead className="w-[180px] text-xs uppercase font-bold tracking-wider text-muted-foreground">Identity Name</TableHead>
+                            <TableHead className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Node Context</TableHead>
+                            <TableHead className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Status</TableHead>
+                            <TableHead className="text-xs uppercase font-bold tracking-wider text-muted-foreground">Sync Integrity</TableHead>
+                            <TableHead className="text-right text-xs uppercase font-bold tracking-wider pr-6 text-muted-foreground">Operations</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -142,7 +142,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                                 }}
                                                 title="Copy Token"
                                             >
-                                                <History className="w-3.5 h-3.5 text-black" />
+                                                <History className="w-3.5 h-3.5 text-foreground" />
                                             </Button>
                                              <Button 
                                                  size="icon" 
@@ -152,7 +152,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                                  title="Re-synchronize"
                                                  disabled={recrawlingIds.has(user.id)}
                                              >
-                                                 <RefreshCcw className={`w-3.5 h-3.5 ${recrawlingIds.has(user.id) ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "text-black"}`} />
+                                                 <RefreshCcw className={`w-3.5 h-3.5 ${recrawlingIds.has(user.id) ? "animate-spin text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.8)]" : "text-foreground"}`} />
                                              </Button>
                                             <Button 
                                                 size="icon" 
@@ -162,7 +162,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                                 disabled={saving}
                                                 title="Flash to Cloud"
                                             >
-                                                <Database className="w-3.5 h-3.5 text-black" />
+                                                <Database className="w-3.5 h-3.5 text-foreground" />
                                             </Button>
                                             <Button 
                                                 size="icon" 
@@ -171,7 +171,7 @@ export const UserTable: React.FC<UserTableProps> = ({
                                                 onClick={() => handleDelete(user)}
                                                 title="Terminate Identity"
                                             >
-                                                <Trash2 className="w-3.5 h-3.5 text-black" />
+                                                <Trash2 className="w-3.5 h-3.5 text-foreground" />
                                             </Button>
                                         </div>
                                     </TableCell>

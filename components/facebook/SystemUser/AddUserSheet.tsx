@@ -43,7 +43,7 @@ export const AddUserSheet: React.FC<AddUserSheetProps> = ({
         <SheetContent side="right" className="sm:max-w-[30vw] min-w-[500px] bg-card/95 backdrop-blur-3xl border-l-border/50 shadow-2xl p-0 overflow-hidden">
             <div className="h-full flex flex-col">
                 <SheetHeader className="p-8 border-b border-border/50 bg-muted/20 relative overflow-hidden">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-black">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none text-foreground">
                         <ShieldCheck className="w-32 h-32 rotate-12" />
                     </div>
                     <SheetTitle className="flex items-center gap-4 text-3xl">
@@ -51,7 +51,7 @@ export const AddUserSheet: React.FC<AddUserSheetProps> = ({
                             <ShieldCheck className="w-8 h-8 text-emerald-500" />
                         </div>
                         <div className="flex flex-col text-left">
-                            <span className="font-black tracking-tightest text-black">Provision Identity</span>
+                            <span className="font-black tracking-tightest text-foreground">Provision Identity</span>
                             <span className="text-xs font-mono text-muted-foreground uppercase tracking-[0.3em] opacity-60">System Registry v3.0</span>
                         </div>
                     </SheetTitle>
@@ -67,7 +67,7 @@ export const AddUserSheet: React.FC<AddUserSheetProps> = ({
                                 value={addForm.token}
                                 onChange={(e) => setAddForm({ ...addForm, token: e.target.value })}
                                 placeholder="EAAG..."
-                                className="h-11 bg-background/50 border-border/50 focus:ring-primary/20 transition-all font-mono text-xs text-black"
+                                className="h-11 bg-background/50 border-border/50 focus:ring-primary/20 transition-all font-mono text-xs text-foreground"
                             />
                         </div>
                         <div className="space-y-2 text-left">
@@ -76,27 +76,27 @@ export const AddUserSheet: React.FC<AddUserSheetProps> = ({
                                 value={addForm.businessId}
                                 onChange={(e) => setAddForm({ ...addForm, businessId: e.target.value })}
                                 placeholder="123456789..."
-                                className="h-11 bg-background/50 border-border/50 text-black"
+                                className="h-11 bg-background/50 border-border/50 text-foreground"
                             />
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2 text-left">
                                 <label className="text-xs font-bold tracking-tight text-muted-foreground ml-1">BM Name</label>
-                                <Input value={addForm.businessName} disabled className="h-11 bg-muted/50 text-black" />
+                                <Input value={addForm.businessName} disabled className="h-11 bg-muted/50 text-foreground" />
                             </div>
                             <div className="space-y-2 text-left">
                                 <label className="text-xs font-bold tracking-tight text-muted-foreground ml-1">Role</label>
-                                <Input value={addForm.role} disabled className="h-11 bg-muted/50 text-black" />
+                                <Input value={addForm.role} disabled className="h-11 bg-muted/50 text-foreground" />
                             </div>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                             <div className="space-y-2 text-left">
                                 <label className="text-xs font-bold tracking-tight text-muted-foreground ml-1">System User Name</label>
-                                <Input value={addForm.name} disabled className="h-11 bg-muted/50 text-black" />
+                                <Input value={addForm.name} disabled className="h-11 bg-muted/50 text-foreground" />
                             </div>
                             <div className="space-y-2 text-left">
                                 <label className="text-xs font-bold tracking-tight text-muted-foreground ml-1">System User ID</label>
-                                <Input value={addForm.id} disabled className="h-11 bg-muted/50 text-black" />
+                                <Input value={addForm.id} disabled className="h-11 bg-muted/50 text-foreground" />
                             </div>
                         </div>
                     </div>

@@ -14,7 +14,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
   email, setEmail, password, setPassword, handleLogin, isLoading
 }) => {
   return (
-    <div className="bg-white dark:bg-[#111] p-8 lg:p-10 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/5 animate-in slide-in-from-right-8 duration-1000 text-black">
+    <div className="bg-white dark:bg-[#111] p-8 lg:p-10 rounded-[2.5rem] shadow-2xl border border-slate-100 dark:border-white/5 animate-in slide-in-from-right-8 duration-1000 text-foreground">
       <div className="mb-8 text-left">
         <h3 className="text-2xl font-bold mb-1">Welcome Operator</h3>
         <p className="text-sm text-slate-500 dark:text-slate-400">Initialize authorized session to proceed.</p>
@@ -34,7 +34,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="block w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-white/10 font-bold text-sm text-black"
+              className="block w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-white/10 font-bold text-sm text-foreground dark:text-foreground"
               placeholder="admin@7forge.com"
             />
           </div>
@@ -53,7 +53,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="block w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-white/10 font-bold text-sm text-black"
+              className="block w-full pl-11 pr-4 py-4 bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all placeholder:text-slate-300 dark:placeholder:text-white/10 font-bold text-sm text-foreground dark:text-foreground"
               placeholder="••••••••••••"
             />
           </div>

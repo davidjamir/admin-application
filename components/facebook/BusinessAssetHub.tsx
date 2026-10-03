@@ -30,11 +30,11 @@ export default function BusinessAssetHub() {
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as TabKey)} className="w-full">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-3">
-             <div className="p-2.5 bg-primary/10 rounded-xl">
-               <Briefcase className="w-6 h-6 text-primary" />
+             <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+               <Briefcase className="size-5" />
              </div>
              <div>
-               <h1 className="text-2xl font-bold tracking-tight">Business Manager</h1>
+               <h1 className="text-2xl font-bold tracking-tight text-foreground">Business Manager</h1>
                <div className="flex items-center gap-2 mt-0.5">
                   <Badge variant="outline" className="text-[10px] font-mono h-4 bg-muted/50 border-border/50">Platform v3.0</Badge>
                   <div className="w-1 h-1 rounded-full bg-emerald-500" />

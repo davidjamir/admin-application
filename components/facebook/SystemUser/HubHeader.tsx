@@ -13,7 +13,7 @@ export const HubHeader: React.FC<HubHeaderProps> = ({ status }) => {
                         <Users className="w-5 h-5 text-primary" />
                     </div>
                     <div>
-                        <CardTitle className="text-xl tracking-tight text-black">System User Control Hub</CardTitle>
+                        <CardTitle className="text-xl tracking-tight text-foreground">System User Control Hub</CardTitle>
                         <div className="flex items-center gap-2 mt-0.5">
                             <Activity className="w-3 h-3 text-primary animate-pulse" />
                             <p className="text-[10px] font-medium text-muted-foreground tracking-widest">{status ? status.charAt(0).toUpperCase() + status.slice(1).toLowerCase() : status}</p>

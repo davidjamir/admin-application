@@ -44,7 +44,7 @@ export default function SystemUserHub({ adminPassword, isAdminVerified }: Props)
 
                 <div className="flex items-center gap-1 text-xs text-muted-foreground ml-1">
                     <span>Showing</span>
-                    <span className="font-bold text-black">{filteredUsers.length}</span>
+                    <span className="font-bold text-foreground">{filteredUsers.length}</span>
                     <span>users</span>
                     <span className="mx-1">•</span>
                     <span className="font-bold text-emerald-600">{filteredUsers.filter(u => u.status !== "Disabled").length}</span>

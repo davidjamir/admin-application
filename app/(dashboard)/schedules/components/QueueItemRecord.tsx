@@ -87,26 +87,26 @@ export const QueueItemRecord: React.FC<QueueItemRecordProps> = ({ item, type, on
 
   return (
     <div 
-      className={`relative flex flex-col gap-2.5 p-3.5 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] border-l-[3px] group hover:shadow-md transition-all duration-300 text-black`}
+      className={`relative flex flex-col gap-2.5 p-3.5 bg-card border border-border rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] border-l-[3px] group hover:shadow-md transition-all duration-300 text-black dark:text-white`}
       style={{ borderLeftColor: `rgba(${color === 'emerald' ? '16,185,129' : color === 'yellow' ? '250,204,21' : color === 'rose' ? '244,63,94' : '168,85,247'}, ${intensity})` }}
     >
-      <div className="flex flex-col gap-2 text-black">
+      <div className="flex flex-col gap-2 text-black dark:text-white">
         {/* Row 1: ID and Created info (Aligned) */}
         <div className="flex justify-between items-center gap-4">
           <div className="flex items-center gap-2 group/id min-w-0">
-            <span className="text-[10px] font-mono text-slate-400 dark:text-slate-500 truncate" title={item.itemId}>
+            <span className="text-[10px] font-mono text-muted-foreground truncate" title={item.itemId}>
               {item.itemId.slice(0, 15)}...
             </span>
             <button 
               onClick={onCopy} 
-              className="p-1 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-300 hover:text-slate-500 transition-colors opacity-0 group-hover:opacity-100 group-hover/id:opacity-100 cursor-pointer"
+              className="p-1 rounded-md hover:bg-muted/60 text-muted-foreground hover:text-black dark:hover:text-white transition-colors opacity-0 group-hover:opacity-100 group-hover/id:opacity-100 cursor-pointer"
             >
               <Copy className="size-3" />
             </button>
           </div>
           {type === 'social' && (
-             <p className="text-[9px] font-bold text-slate-400 dark:text-slate-500 opacity-70 shrink-0 italic">
-               Created: <span className="font-black text-slate-600 dark:text-slate-400 ml-0.5">{formattedCreated}</span>
+             <p className="text-[9px] font-bold text-muted-foreground opacity-70 shrink-0 italic">
+               Created: <span className="font-black text-black dark:text-white ml-0.5">{formattedCreated}</span>
              </p>
           )}
         </div>
@@ -115,12 +115,12 @@ export const QueueItemRecord: React.FC<QueueItemRecordProps> = ({ item, type, on
         <div className="flex justify-between items-center gap-4">
           <div className="flex flex-col gap-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-[12px] font-bold text-slate-700 dark:text-slate-200">
+              <span className="text-[12px] font-bold text-black dark:text-white">
                 {formattedDisplayTime}
               </span>
               {type === 'social' && (
                 <>
-                  <div className="size-1 rounded-full bg-slate-200 dark:bg-slate-800" />
+                  <div className="size-1 rounded-full bg-border" />
                   <span className={`text-[10px] font-bold ${statusColorMap[color]}`}>
                     {statusLabel}
                   </span>
@@ -131,7 +131,7 @@ export const QueueItemRecord: React.FC<QueueItemRecordProps> = ({ item, type, on
             {type !== 'social' && (
               <>
                 {formattedUpdated && (
-                  <span className="text-[10px] text-slate-400 dark:text-slate-500 italic">
+                  <span className="text-[10px] text-muted-foreground italic">
                     Updated: {formattedUpdated}
                   </span>
                 )}
@@ -145,13 +145,13 @@ export const QueueItemRecord: React.FC<QueueItemRecordProps> = ({ item, type, on
           </div>
           
           {type === 'social' && (
-             <p className="text-[13px] font-bold tracking-tight text-slate-800 dark:text-slate-100 shrink-0">{getCountdown((scheduleTime ?? now) - now)}</p>
+             <p className="text-[13px] font-bold tracking-tight text-black dark:text-white shrink-0">{getCountdown((scheduleTime ?? now) - now)}</p>
           )}
         </div>
       </div>
 
       {(type === 'social' && item.page) && (
-        <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-slate-100/50 dark:border-slate-800/30">
+        <div className="flex items-center justify-between pt-1.5 mt-0.5 border-t border-border">
            <div className="flex items-center gap-1.5 opacity-30 group-hover:opacity-50 transition-opacity">
               <Share2 className="size-2.5" />
               <span className="text-[8px] font-bold uppercase tracking-[0.2em]">{item.page}</span>

@@ -20,14 +20,14 @@ const TZ_LINES = [
     label: "Hanoi",
     timeZone: "Asia/Ho_Chi_Minh",
     labelBadge:
-      "rounded-md bg-gradient-to-r from-emerald-100/85 via-teal-50/45 to-white px-2 py-0.5 text-[10px] font-medium tracking-tight text-foreground shadow-none sm:text-[11px] dark:from-emerald-950/40 dark:via-teal-950/22 dark:to-white/92",
+      "rounded-md bg-gradient-to-r from-emerald-100/85 via-teal-50/45 to-white px-2 py-0.5 text-[10px] font-medium tracking-tight text-foreground shadow-none sm:text-[11px] dark:from-emerald-950/80 dark:via-teal-900/50 dark:to-emerald-900/30 dark:text-emerald-300 dark:border dark:border-emerald-800/40",
   },
   {
     id: "ny",
     label: "New York",
     timeZone: "America/New_York",
     labelBadge:
-      "rounded-md bg-gradient-to-r from-sky-100/85 via-blue-50/45 to-white px-2 py-0.5 text-[10px] font-medium tracking-tight text-foreground shadow-none sm:text-[11px] dark:from-sky-950/40 dark:via-blue-950/22 dark:to-white/92",
+      "rounded-md bg-gradient-to-r from-sky-100/85 via-blue-50/45 to-white px-2 py-0.5 text-[10px] font-medium tracking-tight text-foreground shadow-none sm:text-[11px] dark:from-sky-950/80 dark:via-blue-900/50 dark:to-sky-900/30 dark:text-sky-300 dark:border dark:border-sky-800/40",
   },
 ] as const
 

@@ -152,8 +152,18 @@ export function R2SyncView() {
     [domainsCache],
   )
 
+  // Lock outer page scrolling while viewing R2 Sync so columns scroll independently
+  useEffect(() => {
+    const originalOverflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    return () => {
+      document.body.style.overflow = originalOverflow
+    }
+  }, [])
+
   useEffect(() => {
     void loadOrigins()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // When user clicks an Origin
@@ -318,19 +328,24 @@ export function R2SyncView() {
   }
 
   return (
-    <div className="flex flex-col flex-1 h-[calc(100vh-5rem)] w-full gap-3 overflow-hidden">
+    <div className="flex flex-col flex-1 h-[calc(100dvh-7.5rem)] md:h-[calc(100dvh-7rem)] max-h-[calc(100dvh-7.5rem)] md:max-h-[calc(100dvh-7rem)] w-full gap-3 overflow-hidden overscroll-none">
       {/* Top Header Bar */}
-      <div className="flex items-center justify-between border-b pb-2 shrink-0">
+      <div className="flex items-center justify-between border-b pb-3 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2">
-            <h1 className="text-xl font-bold tracking-tight">R2 Sync</h1>
-            <Badge variant="outline" className="text-xs">
-              CDN & DB Sync
-            </Badge>
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <RefreshCw className="size-5" />
           </div>
-          <span className="text-xs text-muted-foreground hidden sm:inline">
-            Direct sync trigger for Cloudflare R2
-          </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-bold tracking-tight text-foreground">R2 Sync</h1>
+              <Badge variant="outline" className="text-xs font-mono">
+                CDN & DB Sync
+              </Badge>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Direct sync trigger for Cloudflare R2
+            </p>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -353,7 +368,7 @@ export function R2SyncView() {
       {/* 3-Column Full Screen Workspace */}
       <div className="grid grid-cols-1 md:grid-cols-12 gap-3 flex-1 min-h-0 overflow-hidden">
         {/* Column 1: Origins List (From collection 'origins') */}
-        <div className="md:col-span-2 flex flex-col border rounded-lg bg-card overflow-hidden">
+        <div className="md:col-span-2 flex flex-col border rounded-lg bg-card overflow-hidden min-h-0">
           <div className="p-2 border-b bg-muted/30 flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Globe className="h-3.5 w-3.5" />
@@ -390,7 +405,7 @@ export function R2SyncView() {
             </form>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-1.5 space-y-1 no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {originSearch.trim() &&
               !filteredOrigins.some(
                 (o) => o.origin.toLowerCase() === originSearch.trim().toLowerCase(),
@@ -438,7 +453,7 @@ export function R2SyncView() {
         </div>
 
         {/* Column 2: Domains List (Fetched on-demand from collection 'sites') */}
-        <div className="md:col-span-3 flex flex-col border rounded-lg bg-card overflow-hidden">
+        <div className="md:col-span-3 flex flex-col border rounded-lg bg-card overflow-hidden min-h-0">
           <div className="p-2 border-b bg-muted/30 flex items-center justify-between shrink-0">
             <span className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
               <Layers className="h-3.5 w-3.5" />
@@ -465,7 +480,7 @@ export function R2SyncView() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-1.5 space-y-1">
+          <div className="flex-1 overflow-y-auto overscroll-contain p-1.5 space-y-1 no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {!selectedOrigin ? (
               <div className="py-8 text-center text-xs text-muted-foreground">
                 Select an origin first
@@ -663,7 +678,7 @@ export function R2SyncView() {
                   </button>
                 </div>
               </div>
-              <div className="p-2 bg-muted/60 border rounded font-mono text-[11px] text-muted-foreground break-all select-all leading-relaxed max-h-16 overflow-y-auto">
+              <div className="p-2 bg-muted/60 border rounded font-mono text-[11px] text-muted-foreground break-all select-all leading-relaxed max-h-16 overflow-y-auto overscroll-contain no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {requestUrl || "Select an origin to generate request"}
               </div>
             </div>
@@ -688,7 +703,7 @@ export function R2SyncView() {
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 space-y-1.5">
+            <div className="flex-1 overflow-y-auto overscroll-contain p-2 space-y-1.5 no-scrollbar [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {logs.length === 0 ? (
                 <div className="h-full min-h-[140px] flex flex-col items-center justify-center text-xs text-muted-foreground border border-dashed rounded p-4 text-center">
                   <span>No sync history yet</span>

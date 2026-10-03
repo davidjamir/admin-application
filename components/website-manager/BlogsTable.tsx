@@ -36,7 +36,7 @@ export const BlogsTable: React.FC<BlogsTableProps> = ({ blogs, selectedId, onSel
     return (
         <div className="rounded-lg border border-border bg-card overflow-x-auto mt-3">
             <table className="w-full text-sm table-fixed min-w-[1120px]">
-                <thead><tr className="border-b bg-muted/40 text-black">
+                <thead><tr className="border-b bg-muted/40 text-foreground">
                     <th className="px-4 py-3 font-semibold text-left w-[50px]">#</th>
                     <SortableTH label="DNS" col="blogDns" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[250px]" />
                     <SortableTH label="Channel" col="channel" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
@@ -51,15 +51,15 @@ export const BlogsTable: React.FC<BlogsTableProps> = ({ blogs, selectedId, onSel
                     ) : sorted.map((b, i) => (
                         <tr key={b._id} onClick={() => onSelect({ tab: "blogs", data: b })}
                             className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${selectedId === b._id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
-                            <td className="px-4 py-4 font-mono text-black w-[50px]">{i + 1}</td>
-                            <td className="px-4 py-4 font-mono truncate text-black w-[250px]">{b.blogDns}</td>
-                            <td className="px-4 py-4 text-black truncate w-[120px]">{b.channel || ""}</td>
-                            <td className="px-4 py-4 truncate text-black w-[200px]">{b.blogUser}</td>
-                            <td className="px-4 py-4 text-center w-[150px] text-black">{b.blogPriority}</td>
-                            <td className="px-4 py-4 text-center w-[150px] text-black">{b.enabled
+                            <td className="px-4 py-4 font-mono text-foreground w-[50px]">{i + 1}</td>
+                            <td className="px-4 py-4 font-mono truncate text-foreground w-[250px]">{b.blogDns}</td>
+                            <td className="px-4 py-4 text-foreground truncate w-[120px]">{b.channel || ""}</td>
+                            <td className="px-4 py-4 truncate text-foreground w-[200px]">{b.blogUser}</td>
+                            <td className="px-4 py-4 text-center w-[150px] text-foreground">{b.blogPriority}</td>
+                            <td className="px-4 py-4 text-center w-[150px] text-foreground">{b.enabled
                                 ? <span className="inline-flex items-center gap-1.5 text-emerald-600 font-medium"><CheckCircle2 className="w-3 h-3" /> Enabled</span>
                                 : <span className="inline-flex items-center gap-1.5 text-rose-500 font-medium"><PauseCircle className="w-3 h-3" /> Disabled</span>}</td>
-                            <td className="px-4 py-4 text-center w-[200px] italic tabular-nums text-black truncate">{fmtFull(b.updatedAt)}</td>
+                            <td className="px-4 py-4 text-center w-[200px] italic tabular-nums text-foreground truncate">{fmtFull(b.updatedAt)}</td>
                         </tr>
                     ))}
                 </tbody>

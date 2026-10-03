@@ -9,7 +9,7 @@ export const SortableTH: React.FC<SortableTHProps> = ({ label, col, sort, align 
     return (
         <th
             onClick={() => toggle(col)}
-            className={`px-4 py-4 cursor-pointer hover:bg-muted/60 transition-colors group text-black ${alignmentClasses} font-bold text-sm ${className}`}
+            className={`px-4 py-4 cursor-pointer hover:bg-muted/60 transition-colors group text-foreground ${alignmentClasses} font-bold text-sm ${className}`}
         >
             <div className={`flex items-center gap-1.5 ${justifyClasses}`}>
                 {label}

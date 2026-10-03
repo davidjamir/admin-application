@@ -7,5 +7,9 @@ export const metadata: Metadata = {
 }
 
 export default function R2SyncPage() {
-  return <R2SyncView />
+  return (
+    <div className="flex flex-1 flex-col h-full w-full overflow-hidden min-h-0">
+      <R2SyncView />
+    </div>
+  )
 }

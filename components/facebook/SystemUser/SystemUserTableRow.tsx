@@ -14,12 +14,12 @@ export const SystemUserTableRow: React.FC<SystemUserTableRowProps> = ({
             className="group border-border/30 hover:bg-muted/30 transition-all duration-300 cursor-pointer"
             onClick={() => onEdit(user)}
         >
-            <TableCell className="py-5 px-6 text-sm text-black tracking-tight w-10 text-center">
+            <TableCell className="py-5 px-6 text-sm text-foreground tracking-tight w-10 text-center">
                 {index + 1}
             </TableCell>
             <TableCell className="py-5 px-6">
                 <div className="flex items-center gap-4">
-                    <span className="text-sm text-black w-[140px] truncate">{user.id}</span>
+                    <span className="text-sm text-foreground w-[140px] truncate">{user.id}</span>
                     <Button
                         variant="ghost"
                         size="icon"
@@ -35,7 +35,7 @@ export const SystemUserTableRow: React.FC<SystemUserTableRowProps> = ({
                 </div>
             </TableCell>
             <TableCell className="py-5 px-6">
-                <span className="text-sm text-black tracking-tight group-hover:text-primary transition-colors">{user.name}</span>
+                <span className="text-sm text-foreground tracking-tight group-hover:text-primary transition-colors">{user.name}</span>
             </TableCell>
             <TableCell className="py-5 px-6 shrink-0">
                 <Badge 
@@ -50,17 +50,17 @@ export const SystemUserTableRow: React.FC<SystemUserTableRowProps> = ({
                 </Badge>
             </TableCell>
             <TableCell className="py-5 px-6 text-left">
-                <span className="text-sm text-black tracking-tight">
+                <span className="text-sm text-foreground tracking-tight">
                     {user.category || "—"}
                 </span>
             </TableCell>
             <TableCell className="py-5 px-6 text-left">
-                <span className="text-sm text-black tracking-tight">
+                <span className="text-sm text-foreground tracking-tight">
                     {user.appName ? user.appName.charAt(0).toUpperCase() + user.appName.slice(1) : "Standard Core"}
                 </span>
             </TableCell>
             <TableCell className="py-5 px-6 text-left">
-                <span className="text-sm text-black tracking-tight">
+                <span className="text-sm text-foreground tracking-tight">
                     {user.updatedAt ? new Date(user.updatedAt).toLocaleString('en-US', {
                         month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
                     }).replace(" at ", " ") : "—"}

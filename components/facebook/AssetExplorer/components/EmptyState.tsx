@@ -12,8 +12,8 @@ export function EmptyState({ mode }: EmptyStateProps) {
         <Layers className="w-8 h-8" />
       </div>
       <div className="max-w-xs space-y-1">
-        <h3 className="text-sm text-black font-normal capitalize">No pages found</h3>
-        <p className="text-[10px] tracking-tight leading-relaxed text-black/40">
+        <h3 className="text-sm text-foreground font-normal capitalize">No pages found</h3>
+        <p className="text-[10px] tracking-tight leading-relaxed text-muted-foreground">
            {mode === "System User" ? "Select a system user to discover assets." : "Establish an identity link to begin."}
         </p>
       </div>

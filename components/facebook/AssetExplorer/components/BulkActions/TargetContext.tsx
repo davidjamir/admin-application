@@ -26,7 +26,7 @@ export function TargetContext({
     <div className="space-y-3 p-4 bg-muted/30 border border-border/40 rounded-xl">
       {showBmSelect && (
         <div className="space-y-1.5">
-          <label className="text-sm font-bold tracking-tight text-black ml-1">Target Business (Context)</label>
+          <label className="text-sm font-bold tracking-tight text-foreground ml-1">Target Business (Context)</label>
           <Select value={targetBmId} onValueChange={setTargetBmId}>
             <SelectTrigger className="h-11 bg-background/50 border-border/50 text-sm">
               <SelectValue placeholder="Select BM..." />
@@ -40,14 +40,14 @@ export function TargetContext({
 
       {showUserSelect && (
         <div className="space-y-1.5">
-          <label className="text-sm font-bold tracking-tight text-black ml-1">Target Identity (User)</label>
+          <label className="text-sm font-bold tracking-tight text-foreground ml-1">Target Identity (User)</label>
           <Select value={targetSystemUserId} onValueChange={setTargetSystemUserId}>
-            <SelectTrigger className="h-11 bg-background/50 border-border/50 text-sm font-bold text-black">
+            <SelectTrigger className="h-11 bg-background/50 border-border/50 text-sm font-bold text-foreground">
               <SelectValue placeholder="Select User..." />
             </SelectTrigger>
             <SelectContent>
               {systemUsers.filter(u => (u.status || "Active") === "Active").map(u => (
-                 <SelectItem key={u.id} value={u.id} className="text-sm font-bold text-black">
+                 <SelectItem key={u.id} value={u.id} className="text-sm font-bold text-foreground">
                    {u.name} • {u.businessName || "No BM"}
                  </SelectItem>
               ))}

@@ -13,7 +13,7 @@ export function AuthorityLevel({ action, taskMode, setTaskMode }: AuthorityLevel
 
   return (
     <div className="space-y-1.5">
-      <label className="text-sm font-bold tracking-tight text-black ml-1">Authority Level</label>
+      <label className="text-sm font-bold tracking-tight text-foreground ml-1">Authority Level</label>
       <div className="flex gap-2">
         <Button 
           size="sm" 

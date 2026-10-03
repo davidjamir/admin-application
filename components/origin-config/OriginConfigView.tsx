@@ -20,6 +20,7 @@ import {
   Check,
   ChevronDown,
   AlertCircle,
+  SlidersHorizontal,
 } from "lucide-react"
 import { useState } from "react"
 import { OriginNavTree } from "./OriginNavTree"
@@ -49,10 +50,22 @@ export function OriginConfigView() {
   const selectedOriginItem = origins.find((item) => item._id === selectedId)
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-100px)] min-h-[660px]">
-      {/* Top Bar: Domain Select on the Top-Left + Actions */}
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3 shrink-0">
+    <div className="flex flex-col gap-4 h-[calc(100vh-130px)] min-h-[660px]">
+      {/* Top Header Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-4 shrink-0">
         <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <SlidersHorizontal className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Origin Manager</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Configure origin settings, domain mappings, and integration rules.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
           {/* Domain Selector Dropdown (Top-Left) */}
           <div className="flex items-center gap-2">
             <DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>

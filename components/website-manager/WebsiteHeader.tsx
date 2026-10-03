@@ -8,31 +8,33 @@ const fmtDate = (ms: number) =>
 
 export const WebsiteHeader: React.FC<WebsiteHeaderProps> = ({ fetchedAt, onRefresh, refreshing, fetchData }) => {
     return (
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
             <div>
-                <div className="flex items-center gap-3 mb-1">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                        <Globe className="w-5 h-5 text-primary" />
+                <div className="flex items-center gap-3">
+                    <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+                        <Globe className="size-5" />
                     </div>
-                    <h1 className="text-2xl font-bold">Websites Manager</h1>
+                    <div>
+                        <h1 className="text-2xl font-bold tracking-tight text-foreground">Websites Manager</h1>
+                        {fetchedAt && (
+                            <p className="text-xs text-muted-foreground mt-0.5 italic flex items-center gap-1.5">
+                                <Clock className="size-3" />
+                                Cached Sync: {fmtDate(fetchedAt)}
+                                <button 
+                                    disabled={refreshing}
+                                    onClick={async () => { 
+                                        const id = toast.loading("Recrawling..."); 
+                                        await fetchData(true); 
+                                        toast.success("Refreshed", { id }) 
+                                    }} 
+                                    className={`cursor-pointer transition-colors ${refreshing ? "text-green-600" : "text-muted-foreground hover:text-foreground"}`}
+                                >
+                                    <RefreshCcw className={`size-3 ${refreshing ? "animate-spin" : ""}`} />
+                                </button>
+                            </p>
+                        )}
+                    </div>
                 </div>
-                {fetchedAt && (
-                    <p className="text-xs text-muted-foreground ml-[52px] italic flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" />
-                        Cached Sync: {fmtDate(fetchedAt)}
-                        <button 
-                            disabled={refreshing}
-                            onClick={async () => { 
-                                const id = toast.loading("Recrawling..."); 
-                                await fetchData(true); 
-                                toast.success("Refreshed", { id }) 
-                            }} 
-                            className={`cursor-pointer transition-colors ${refreshing ? "text-green-600" : "text-muted-foreground hover:text-foreground"}`}
-                        >
-                            <RefreshCcw className={`w-3 h-3 ${refreshing ? "animate-spin" : ""}`} />
-                        </button>
-                    </p>
-                )}
             </div>
             <button 
                 onClick={onRefresh}

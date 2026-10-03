@@ -37,7 +37,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                         </span>
                     </div>
                     <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-muted-foreground/50  mr-1 capitalize tracking-tighter text-black">Shortcuts:</span>
+                        <span className="text-[10px] font-bold text-muted-foreground/50  mr-1 capitalize tracking-tighter text-foreground">Shortcuts:</span>
                         {[1, 2, 3].map((part) => (
                             <Button
                                 key={part}
@@ -71,18 +71,18 @@ export const AssetTable: React.FC<AssetTableProps> = ({
             )}
 
             {/* Registry Staging Area */}
-            <div className="rounded-2xl border border-border/50 bg-background/50 overflow-hidden shadow-inner text-black">
+            <div className="rounded-2xl border border-border/50 bg-background/50 overflow-hidden shadow-inner text-foreground">
                 <Table>
                     <TableHeader className="bg-muted/50">
                         <TableRow className="hover:bg-transparent border-border/50">
-                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black w-10 py-4">#</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[140px]">Asset ID</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 min-w-[220px]">Asset Identity</TableHead>
-                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black py-4 w-[80px]">Traffic</TableHead>
-                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-black py-4 w-[80px]">Viral</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Category</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Topic</TableHead>
-                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-black py-4 w-[130px]">Access Token</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-foreground w-10 py-4">#</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-foreground py-4 w-[140px]">Asset ID</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-foreground py-4 min-w-[220px]">Asset Identity</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-foreground py-4 w-[80px]">Traffic</TableHead>
+                        <TableHead className="text-center text-xs font-extrabold tracking-wider text-foreground py-4 w-[80px]">Viral</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-foreground py-4 w-[130px]">Category</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-foreground py-4 w-[130px]">Topic</TableHead>
+                        <TableHead className="text-left text-xs font-extrabold tracking-wider text-foreground py-4 w-[130px]">Access Token</TableHead>
                         <TableHead className="w-14 text-center py-4">
                             <Checkbox
                                 checked={isAllSelected}
@@ -128,46 +128,46 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                         setSelectedPageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
                                     }}
                                 >
-                                <TableCell className="text-center py-4 text-sm text-black tracking-tight w-10">
+                                <TableCell className="text-center py-4 text-sm text-foreground tracking-tight w-10">
                                     {idx + 1}
                                 </TableCell>
                                 <TableCell className="py-4 w-[140px]">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-mono text-black">{page.id}</span>
+                                        <span className="text-sm font-mono text-foreground">{page.id}</span>
                                         <Button
                                             variant="ghost"
                                             size="icon"
                                             onClick={(e) => { e.stopPropagation(); handleCopy(page.id, "Asset ID") }}
                                             className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
                                         >
-                                            <Copy className="w-3 h-3 text-black" />
+                                            <Copy className="w-3 h-3 text-foreground" />
                                         </Button>
                                     </div>
                                 </TableCell>
                                 <TableCell className="py-4 min-w-[220px]">
-                                    <span className="text-sm font-normal leading-tight text-black truncate block max-w-[300px]" title={page.name}>
+                                    <span className="text-sm font-normal leading-tight text-foreground truncate block max-w-[300px]" title={page.name}>
                                         {page.name}
                                     </span>
                                 </TableCell>
                                 <TableCell className="py-4 w-[80px] text-center">
-                                    <span className="text-sm font-mono text-black">{trafficInterval}m</span>
+                                    <span className="text-sm font-mono text-foreground">{trafficInterval}m</span>
                                 </TableCell>
                                 <TableCell className="py-4 w-[80px] text-center">
-                                    <span className="text-sm font-mono text-black">{viralInterval}m</span>
+                                    <span className="text-sm font-mono text-foreground">{viralInterval}m</span>
                                 </TableCell>
                                 <TableCell className="py-4 w-[130px]">
-                                    <span className="text-sm font-normal text-black truncate block" title={page.category || "-"}>
+                                    <span className="text-sm font-normal text-foreground truncate block" title={page.category || "-"}>
                                         {page.category || "-"}
                                     </span>
                                 </TableCell>
                                 <TableCell className="py-4 w-[130px]">
-                                    <span className="text-sm font-normal text-black truncate block" title={page.topic || "-"}>
+                                    <span className="text-sm font-normal text-foreground truncate block" title={page.topic || "-"}>
                                         {page.topic || "-"}
                                     </span>
                                 </TableCell>
                                 <TableCell className="py-4 w-[130px]" onClick={e => e.stopPropagation()}>
                                     <div className="flex items-center justify-between">
-                                        <span className="text-sm font-mono text-black">
+                                        <span className="text-sm font-mono text-foreground">
                                             {(page.access_token || "").slice(0, 4)}...{(page.access_token || "").slice(-4)}
                                         </span>
                                         <Button
@@ -176,7 +176,7 @@ export const AssetTable: React.FC<AssetTableProps> = ({
                                             onClick={() => handleCopy(page.access_token || "", "Access Token")}
                                             className="h-6 w-6 text-muted-foreground hover:text-primary hover:bg-primary/10 cursor-pointer"
                                         >
-                                            <Copy className="w-3 h-3 text-black" />
+                                            <Copy className="w-3 h-3 text-foreground" />
                                         </Button>
                                     </div>
                                 </TableCell>

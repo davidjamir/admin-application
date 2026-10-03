@@ -45,7 +45,7 @@ export function SystemUserMode({
       {/* System User Filters Row */}
       <div className="flex flex-wrap items-center gap-3">
         <select 
-          className="h-10 w-[160px] rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-black focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer shrink-0"
+          className="h-10 w-[160px] rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-foreground focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer shrink-0"
           value={selectedBmFilter}
           onChange={(e) => {
             setSelectedBmFilter(e.target.value)
@@ -58,7 +58,7 @@ export function SystemUserMode({
         </select>
 
         <select 
-          className="h-10 flex-1 rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-black focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer min-w-[300px]"
+          className="h-10 flex-1 rounded-lg border border-border/50 bg-background/50 px-3 text-sm text-foreground focus:ring-2 focus:ring-primary/20 hover:border-primary/30 transition-all cursor-pointer min-w-[300px]"
           onChange={(e) => {
             const user = systemUsers.find(u => u.id === e.target.value)
             if (user) handleFetchAssets(user.token || "", user.id)
@@ -100,10 +100,10 @@ export function SystemUserMode({
 
       {/* System Admin selection row */}
       <div className="flex flex-wrap items-center gap-3">
-          <label className="text-sm font-medium text-black/60 w-[160px] shrink-0 tracking-tight text-right pr-3">System User Admin</label>
+          <label className="text-sm font-medium text-muted-foreground w-[160px] shrink-0 tracking-tight text-right pr-3">System User Admin</label>
           <div className="flex-1 flex flex-col gap-1.5 min-w-[300px]">
             {activeSystemUser && ((activeSystemUser.role || "").toLowerCase() === "admin" || ((activeSystemUser.role || "").toLowerCase() === "employee" && availableAdmins.length === 1)) ? (
-              <div className="h-10 w-full rounded-lg border border-primary/10 bg-primary/5 px-3 flex items-center text-sm text-black/60 italic transition-all">
+              <div className="h-10 w-full rounded-lg border border-primary/10 bg-primary/5 px-3 flex items-center text-sm text-muted-foreground italic transition-all">
                 {(() => {
                   const admin = (activeSystemUser.role || "").toLowerCase() === "admin" ? activeSystemUser : availableAdmins[0]
                   return `${admin.name} • ${admin.appName || "Standard"} • ${admin.id}`
@@ -111,7 +111,7 @@ export function SystemUserMode({
               </div>
             ) : (
               <select 
-                  className={`h-10 w-full rounded-lg border px-3 text-sm text-black transition-all ${
+                  className={`h-10 w-full rounded-lg border px-3 text-sm text-foreground transition-all ${
                     activeSystemUser && availableAdmins.length === 0 
                       ? "border-red-500 focus:ring-2 focus:ring-red-100 bg-red-50/10 cursor-not-allowed" 
                       : "border-border/50 bg-background/50 focus:ring-2 focus:ring-primary/20 hover:border-primary/30 cursor-pointer"
@@ -138,14 +138,14 @@ export function SystemUserMode({
       </div>
       
       <p className="text-[10px] text-black/60 italic ml-1">
-         <span className="text-black">Note:</span> Delete works only when the selected system user and system admin are in the same app.
+         <span className="text-foreground">Note:</span> Delete works only when the selected system user and system admin are in the same app.
       </p>
 
       {/* Bulk Actions Header */}
       <div className="flex items-center justify-between pt-4 pb-2 border-t border-border/20">
           <div className="flex items-center gap-4">
               <div className="flex items-center gap-3">
-                <h3 className="text-lg tracking-tighter text-black">All Pages</h3>
+                <h3 className="text-lg tracking-tighter text-foreground">All Pages</h3>
                 {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
               </div>
               <div className="flex items-center gap-3 text-[10px] text-black/40 tracking-wider">
@@ -158,7 +158,7 @@ export function SystemUserMode({
               <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-10 px-4 border-border/50 bg-background/50 text-xs text-black hover:bg-primary/5 cursor-pointer gap-2"
+                  className="h-10 px-4 border-border/50 bg-background/50 text-xs text-foreground hover:bg-primary/5 cursor-pointer gap-2"
                   onClick={handleCopySelected}
                   disabled={selectedPageIds.length === 0}
               >
@@ -193,11 +193,11 @@ export function SystemUserMode({
           <Table>
               <TableHeader className="bg-muted/30">
                   <TableRow className="hover:bg-transparent border-border/50 h-11">
-                      <TableHead className="w-16 text-sm font-bold text-black text-center px-6">#</TableHead>
-                      <TableHead className="text-sm font-bold text-black px-6">Page ID</TableHead>
-                      <TableHead className="text-sm font-bold text-black px-6">Page Name</TableHead>
-                      <TableHead className="text-sm font-bold text-black px-6">Category</TableHead>
-                      <TableHead className="text-sm font-bold text-black px-6 text-center">Actions</TableHead>
+                      <TableHead className="w-16 text-sm font-bold text-muted-foreground text-center px-6">#</TableHead>
+                      <TableHead className="text-sm font-bold text-muted-foreground px-6">Page ID</TableHead>
+                      <TableHead className="text-sm font-bold text-muted-foreground px-6">Page Name</TableHead>
+                      <TableHead className="text-sm font-bold text-muted-foreground px-6">Category</TableHead>
+                      <TableHead className="text-sm font-bold text-muted-foreground px-6 text-center">Actions</TableHead>
                       <TableHead className="w-16 px-6 text-right">
                           <Checkbox 
                               checked={systemUserPages.length > 0 && selectedPageIds.length === systemUserPages.length}
@@ -221,9 +221,9 @@ export function SystemUserMode({
                                   setSelectedPageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
                               }}
                           >
-                              <TableCell className="text-center text-black font-normal text-sm w-16 px-6">{index + 1}</TableCell>
+                              <TableCell className="text-center text-foreground font-normal text-sm w-16 px-6">{index + 1}</TableCell>
                               <TableCell className="px-6 font-mono text-sm text-black/80">{page.id}</TableCell>
-                              <TableCell className="px-6 text-sm text-black tracking-tight font-normal">{page.name}</TableCell>
+                              <TableCell className="px-6 text-sm text-foreground tracking-tight font-normal">{page.name}</TableCell>
                               <TableCell className="px-6 font-normal text-black/60 text-sm capitalize">{(page.category || "").toLowerCase()}</TableCell>
                               <TableCell className="px-6 text-center" onClick={e => e.stopPropagation()}>
                                   <Button 

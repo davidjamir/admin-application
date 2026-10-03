@@ -48,7 +48,7 @@ export default function BulkActionsHub({
           </div>
           <div>
             <CardTitle className="text-sm font-bold">Action Control Hub</CardTitle>
-            <p className="text-xs text-black tracking-tight font-extrabold">
+            <p className="text-xs text-foreground tracking-tight font-extrabold">
               Targets: {selectedPageIds.length} Assets
             </p>
           </div>

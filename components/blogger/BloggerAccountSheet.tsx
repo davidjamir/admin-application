@@ -91,7 +91,7 @@ export function BloggerAccountSheet({ account, formatDate }: BloggerAccountSheet
               <span className="text-[10px] font-extrabold text-blue-500 uppercase tracking-widest mb-0.5">
                 Blogger Account
               </span>
-              <span className="font-black text-xl text-black tracking-tight leading-tight truncate max-w-[300px]">
+              <span className="font-black text-xl text-foreground tracking-tight leading-tight truncate max-w-[300px]">
                 {account.email}
               </span>
             </div>
@@ -110,7 +110,7 @@ export function BloggerAccountSheet({ account, formatDate }: BloggerAccountSheet
               <div className="p-1.5 bg-emerald-500/10 rounded-lg border border-emerald-500/15">
                 <BookOpen className="w-3.5 h-3.5 text-emerald-600" />
               </div>
-              <span className="text-xs font-bold tracking-tight text-black/70">
+              <span className="text-xs font-bold tracking-tight text-muted-foreground">
                 Blogs
               </span>
               {!loadingBlogs && !error && (
@@ -163,7 +163,7 @@ export function BloggerAccountSheet({ account, formatDate }: BloggerAccountSheet
                             <Globe className="w-4 h-4 text-emerald-600" />
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-semibold text-black tracking-tight truncate pr-2">
+                            <p className="text-sm font-semibold text-foreground tracking-tight truncate pr-2">
                               {blog.name}
                             </p>
                             <div className="flex items-center justify-between gap-2 mt-0.5">

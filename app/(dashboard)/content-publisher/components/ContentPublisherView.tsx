@@ -13,6 +13,7 @@ import {
   Share2,
   Trash2,
   X,
+  FilePenLine,
 } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -1086,12 +1087,15 @@ export function ContentPublisherView() {
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-500 text-foreground">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-start gap-4">
-          <div className="shrink-0 rounded-2xl border border-blue-500/20 bg-blue-500/10 p-3 shadow-sm">
-            <Share2 className="size-8 text-blue-500" aria-hidden />
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <FilePenLine className="size-5" aria-hidden />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-black dark:text-white">Content Publisher</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Content Publisher</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Schedule and publish content across satellite channels.
+            </p>
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 md:justify-end">

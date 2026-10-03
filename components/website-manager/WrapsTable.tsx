@@ -36,7 +36,7 @@ export const WrapsTable: React.FC<WrapsTableProps> = ({ wraps, selectedId, onSel
     return (
         <div className="rounded-lg border border-border bg-card overflow-x-auto mt-3">
             <table className="w-full text-sm table-fixed min-w-[1150px]">
-                <thead><tr className="border-b bg-muted/40 text-black">
+                <thead><tr className="border-b bg-muted/40 text-foreground">
                     <th className="px-4 py-3 font-semibold text-left w-[50px]">#</th>
                     <SortableTH label="Wrap Host" col="wrap_host" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[300px]" />
                     <SortableTH label="Channel" col="channel" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
@@ -50,12 +50,12 @@ export const WrapsTable: React.FC<WrapsTableProps> = ({ wraps, selectedId, onSel
                     ) : sorted.map((w, i) => (
                         <tr key={w._id} onClick={() => onSelect({ tab: "wraps", data: w })}
                             className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${selectedId === w._id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
-                            <td className="px-4 py-4 font-mono text-black w-[50px]">{i + 1}</td>
-                            <td className="px-4 py-4 font-mono text-black w-[300px]">{w.wrap_host}</td>
-                            <td className="px-4 py-4 text-black truncate w-[120px]">{channelMap.get(w._id) || ""}</td>
+                            <td className="px-4 py-4 font-mono text-foreground w-[50px]">{i + 1}</td>
+                            <td className="px-4 py-4 font-mono text-foreground w-[300px]">{w.wrap_host}</td>
+                            <td className="px-4 py-4 text-foreground truncate w-[120px]">{channelMap.get(w._id) || ""}</td>
                             <td className="px-4 py-4 w-[120px]"><span className="px-2 py-0.5 rounded-full border border-green-600 text-green-600 font-mono text-sm">{w.prefix}</span></td>
-                            <td className="px-4 py-4 text-black font-mono w-[300px]">{w.target_host}</td>
-                            <td className="px-4 py-4 text-center text-black italic w-[250px]">{fmtFull(w.updatedAt)}</td>
+                            <td className="px-4 py-4 text-foreground font-mono w-[300px]">{w.target_host}</td>
+                            <td className="px-4 py-4 text-center text-foreground italic w-[250px]">{fmtFull(w.updatedAt)}</td>
                         </tr>
                     ))}
                 </tbody>

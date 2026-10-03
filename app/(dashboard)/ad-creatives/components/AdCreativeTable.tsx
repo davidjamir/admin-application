@@ -18,9 +18,9 @@ export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
 
   return (
     <div className="rounded-xl border bg-card overflow-hidden shadow-sm">
-      <table className="w-full text-sm text-left text-black">
+      <table className="w-full text-sm text-left text-foreground">
         <thead>
-          <tr className="border-b bg-muted/40 font-bold text-sm text-black">
+          <tr className="border-b bg-muted/40 font-bold text-sm text-foreground">
             <TH label="#"        col="createdAt" sortKey={sortKey} sortDir={sortDir} handleSort={handleSort} />
             <TH label="Name"     col="name"      sortKey={sortKey} sortDir={sortDir} handleSort={handleSort} />
             <TH label="Source"   col="source"    sortKey={sortKey} sortDir={sortDir} handleSort={handleSort} align="center" />
@@ -44,8 +44,8 @@ export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
                 onClick={() => onOpenDetail(item)}
                 className={`border-b transition-colors cursor-pointer group ${selectedId === item._id ? "bg-primary/5 border-l-2 border-l-primary" : "hover:bg-muted/30"}`}
               >
-                <td className="px-4 py-5 text-black text-sm font-normal">{index + 1}</td>
-                <td className="px-4 py-5 font-normal truncate max-w-[180px] text-sm text-black capitalize">
+                <td className="px-4 py-5 text-foreground text-sm font-normal">{index + 1}</td>
+                <td className="px-4 py-5 font-normal truncate max-w-[180px] text-sm text-foreground capitalize">
                   {item.name}
                 </td>
                 <td className="px-4 py-5 text-center">
@@ -53,8 +53,8 @@ export const AdCreativeTable: React.FC<AdCreativeTableProps> = ({
                     {item.source}
                   </span>
                 </td>
-                <td className="px-4 py-5 text-sm text-black font-normal truncate max-w-[150px] text-center">{item.domain}</td>
-                <td className="px-4 py-5 text-sm font-normal text-center text-black">{item.priority}</td>
+                <td className="px-4 py-5 text-sm text-foreground font-normal truncate max-w-[150px] text-center">{item.domain}</td>
+                <td className="px-4 py-5 text-sm font-normal text-center text-foreground">{item.priority}</td>
                 <td className="px-4 py-5 text-center">
                   <div className="flex justify-center">
                     {item.enabled
@@ -86,7 +86,7 @@ function TH<T>({
 
   return (
     <th onClick={() => handleSort(col)}
-      className={`px-4 py-5 ${alignClass} cursor-pointer select-none hover:bg-muted transition-colors group text-black`}>
+      className={`px-4 py-5 ${alignClass} cursor-pointer select-none hover:bg-muted transition-colors group text-foreground`}>
       <span className={`flex items-center gap-1.5 ${justifyClass}`}>
         {label}
         {isSorted ? (

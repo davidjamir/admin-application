@@ -22,7 +22,7 @@ export default function SchedulesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-8 h-[calc(100vh-100px)] overflow-hidden">
+    <div className="flex flex-col gap-6 h-[calc(100vh-130px)] overflow-hidden">
       <ScheduleHeader 
         lastSyncTime={lastSyncTime}
         isRefreshing={isRefreshing}

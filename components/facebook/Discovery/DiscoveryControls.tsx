@@ -21,7 +21,7 @@ export const DiscoveryControls: React.FC<DiscoveryControlsProps> = ({
         onValueChange={setSelectedSystemUserId} 
         disabled={!isAdminVerified || systemUsers.length === 0}
       >
-        <SelectTrigger className="h-10 bg-background/50 border-border/50 text-black">
+        <SelectTrigger className="h-10 bg-background/50 border-border/50 text-foreground">
           <SelectValue placeholder="Select Identity..." />
         </SelectTrigger>
         <SelectContent>

@@ -1,6 +1,7 @@
 import { getServerSession } from "@/lib/auth/session"
-import { SettingsForm } from "@/components/settings-form"
+import { SettingsView } from "@/components/settings-view"
 import { redirect } from "next/navigation"
+import { Settings } from "lucide-react"
 
 export default async function SettingsPage() {
   const user = await getServerSession()
@@ -10,20 +11,21 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h2 className="text-3xl font-bold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground">
-            Manage your account settings and preferences.
-          </p>
+    <div className="flex-1 space-y-6">
+      <div className="flex items-center justify-between border-b pb-4">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <Settings className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">Settings</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Manage your account settings, security credentials, appearance, and system preferences.
+            </p>
+          </div>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        <div className="col-span-full xl:col-span-4">
-          <SettingsForm user={user} />
-        </div>
-      </div>
+      <SettingsView user={user} />
     </div>
   )
 }

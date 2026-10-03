@@ -24,7 +24,7 @@ export const HubFilters: React.FC<HubFiltersProps> = ({
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by name or identity ID..."
-                    className="pl-10 h-12 text-sm bg-muted/20 border-border/40 focus:bg-background/50 focus:ring-primary/20 transition-all rounded-xl text-black"
+                    className="pl-10 h-12 text-sm bg-muted/20 border-border/40 focus:bg-background/50 focus:ring-primary/20 transition-all rounded-xl text-foreground"
                 />
             </div>
 
@@ -34,7 +34,7 @@ export const HubFilters: React.FC<HubFiltersProps> = ({
                     onValueChange={setSelectedBmFilter}
                     disabled={bmFilterOptions.length === 0}
                 >
-                    <SelectTrigger className="!h-12 min-w-[240px] px-4 bg-background/50 border-border/50 text-sm font-semibold rounded-xl hover:border-primary/30 transition-all text-black">
+                    <SelectTrigger className="!h-12 min-w-[240px] px-4 bg-background/50 border-border/50 text-sm font-semibold rounded-xl hover:border-primary/30 transition-all text-foreground">
                         <SelectValue placeholder={bmFilterOptions.length === 0 ? "No Business Data" : "All Business"} />
                     </SelectTrigger>
                     <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl w-[var(--radix-select-trigger-width)]">
@@ -50,13 +50,13 @@ export const HubFilters: React.FC<HubFiltersProps> = ({
                     onValueChange={setSelectedStatusFilter}
                     disabled={bmFilterOptions.length === 0}
                 >
-                    <SelectTrigger className="!h-12 min-w-[160px] px-4 bg-background/50 border-border/50 text-sm font-semibold rounded-xl hover:border-primary/30 transition-all text-black">
+                    <SelectTrigger className="!h-12 min-w-[160px] px-4 bg-background/50 border-border/50 text-sm font-semibold rounded-xl hover:border-primary/30 transition-all text-foreground">
                         <SelectValue placeholder={bmFilterOptions.length === 0 ? "No Data" : "All Status"} />
                     </SelectTrigger>
                     <SelectContent className="bg-card/95 backdrop-blur-xl border-border/50 rounded-xl w-[var(--radix-select-trigger-width)]">
-                        <SelectItem value="all" className="py-2.5 cursor-pointer text-black">All Status</SelectItem>
-                        <SelectItem value="Active" className="py-2.5 cursor-pointer text-black">Active</SelectItem>
-                        <SelectItem value="Disabled" className="py-2.5 cursor-pointer text-black">Disabled</SelectItem>
+                        <SelectItem value="all" className="py-2.5 cursor-pointer text-foreground">All Status</SelectItem>
+                        <SelectItem value="Active" className="py-2.5 cursor-pointer text-foreground">Active</SelectItem>
+                        <SelectItem value="Disabled" className="py-2.5 cursor-pointer text-foreground">Disabled</SelectItem>
                     </SelectContent>
                 </Select>
 
@@ -67,7 +67,7 @@ export const HubFilters: React.FC<HubFiltersProps> = ({
                     onClick={onRefresh}
                     disabled={loadingUsers}
                 >
-                    <RefreshCcw className={`w-4 h-4 ${loadingUsers ? "animate-spin text-emerald-500" : "text-black"}`} />
+                    <RefreshCcw className={`w-4 h-4 ${loadingUsers ? "animate-spin text-emerald-500" : "text-foreground"}`} />
                 </Button>
 
                 <Button 

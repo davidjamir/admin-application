@@ -30,12 +30,12 @@ export function PageListTable({
       <TableHeader className="bg-muted/10">
         <TableRow className="hover:bg-transparent border-border/50">
           <TableHead className="text-center py-4 px-4">
-             <Layers className="w-4 h-4 mx-auto text-black/40" />
+             <Layers className="w-4 h-4 mx-auto text-muted-foreground/50" />
           </TableHead>
-          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-black py-4 px-6 text-left">Page Identity</TableHead>
-          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-black py-4 px-6 text-left">Category</TableHead>
-          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-black py-4 px-6 text-left">Identity Status</TableHead>
-          <TableHead className="text-right text-xs font-extrabold uppercase tracking-wider text-black py-4 pr-10">Operations</TableHead>
+          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground py-4 px-6 text-left">Page Identity</TableHead>
+          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground py-4 px-6 text-left">Category</TableHead>
+          <TableHead className="text-xs font-extrabold uppercase tracking-wider text-muted-foreground py-4 px-6 text-left">Identity Status</TableHead>
+          <TableHead className="text-right text-xs font-extrabold uppercase tracking-wider text-muted-foreground py-4 pr-10">Operations</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -64,12 +64,12 @@ export function PageListTable({
               </TableCell>
               <TableCell className="py-3">
                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-black leading-none group-hover:text-primary transition-colors">{page.name}</span>
-                    <span className="text-[11px] font-mono text-black/60 mt-1.5">{page.id}</span>
+                    <span className="text-sm font-bold text-foreground leading-none group-hover:text-primary transition-colors">{page.name}</span>
+                    <span className="text-[11px] font-mono text-muted-foreground mt-1.5">{page.id}</span>
                  </div>
               </TableCell>
               <TableCell className="py-3">
-                 <Badge variant="outline" className="text-xs py-0 px-2 h-6 border-black/10 text-black bg-black/5 font-bold">
+                 <Badge variant="outline" className="text-xs py-0 px-2 h-6 border-border text-foreground bg-muted/40 font-bold">
                     {page.category || "General"}
                  </Badge>
               </TableCell>
@@ -77,12 +77,12 @@ export function PageListTable({
                  {assignedPageIds.includes(page.id) ? (
                    <div className="flex items-center gap-1.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]" />
-                      <span className="text-sm font-extrabold text-emerald-700">In Control</span>
+                      <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400">In Control</span>
                    </div>
                  ) : (
                    <div className="flex items-center gap-1.5 opacity-60">
-                      <Lock className="w-3 h-3 text-black" />
-                      <span className="text-sm font-bold text-black">Locked</span>
+                      <Lock className="w-3 h-3 text-muted-foreground" />
+                      <span className="text-sm font-bold text-foreground">Locked</span>
                    </div>
                  )}
               </TableCell>

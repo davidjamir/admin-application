@@ -93,15 +93,15 @@ export default function BloggerAccountsPage() {
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-500/10 rounded-2xl border border-blue-500/20 shadow-sm">
-            <KeyRound className="w-8 h-8 text-blue-500" />
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <KeyRound className="size-5" />
           </div>
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-black">
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
               Blogger API
             </h1>
-            <p className="text-muted-foreground text-sm font-medium">
+            <p className="text-xs text-muted-foreground mt-0.5">
               Manage credentials and token lifecycle.
             </p>
           </div>
@@ -159,7 +159,7 @@ export default function BloggerAccountsPage() {
       </div>
 
       <div className="flex items-center justify-between px-1">
-        <p className="text-sm font-medium tracking-tight text-black">
+        <p className="text-sm font-medium tracking-tight text-foreground">
           Showing{" "}
           <span className="font-bold tabular-nums">{filteredAccounts.length}</span>{" "}
           {filteredAccounts.length === 1 ? "account" : "accounts"} in{" "}
@@ -173,14 +173,14 @@ export default function BloggerAccountsPage() {
         <Table>
           <TableHeader className="bg-muted/20">
             <TableRow className="hover:bg-transparent border-border/50">
-              <TableHead className="py-5 font-bold text-black/70 text-xs pl-8 w-[56px]">#</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[25%]">Account</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[100px]">Status</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[80px]">Version</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[140px]">Access Token</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[140px]">Refresh Token</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs w-[150px]">Expiration</TableHead>
-              <TableHead className="py-5 font-bold text-black/70 text-xs px-8 w-[150px]">Updated</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs pl-8 w-[56px]">#</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[25%]">Account</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[100px]">Status</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[80px]">Version</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[140px]">Access Token</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[140px]">Refresh Token</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs w-[150px]">Expiration</TableHead>
+              <TableHead className="py-5 font-bold text-muted-foreground text-xs px-8 w-[150px]">Updated</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -213,7 +213,7 @@ export default function BloggerAccountsPage() {
                   className="group hover:bg-muted/20 border-border/40 transition-colors cursor-pointer"
                   onClick={() => { setSelectedAccount(account); setSheetOpen(true) }}
                 >
-                  <TableCell className="pl-8 py-5 text-sm font-normal text-black/80 tracking-tight">
+                  <TableCell className="pl-8 py-5 text-sm font-normal text-foreground/80 tracking-tight">
                     {index + 1}
                   </TableCell>
                   <TableCell className="py-5">
@@ -222,7 +222,7 @@ export default function BloggerAccountsPage() {
                         <Mail className="w-4.5 h-4.5 text-blue-500/80" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm text-black tracking-tight">{account.email}</span>
+                        <span className="text-sm text-foreground tracking-tight">{account.email}</span>
                       </div>
                     </div>
                   </TableCell>
@@ -240,7 +240,7 @@ export default function BloggerAccountsPage() {
                     })()}
                   </TableCell>
                   <TableCell className="py-5">
-                    <span className="text-[10px] text-black/40 font-bold px-1.5 py-0.5 rounded-md border border-black/5 bg-black/[0.02] tracking-wider">
+                    <span className="text-[10px] text-muted-foreground font-bold px-1.5 py-0.5 rounded-md border border-border bg-muted/30 tracking-wider">
                       v{account.version}
                     </span>
                   </TableCell>
@@ -253,7 +253,7 @@ export default function BloggerAccountsPage() {
                       }}
                       title="Click to copy Access Token"
                     >
-                      <code className="text-sm font-mono font-normal text-black/80">
+                      <code className="text-sm font-mono font-normal text-foreground/80">
                         {truncateToken(account.accessToken)}
                       </code>
                     </div>
@@ -267,18 +267,18 @@ export default function BloggerAccountsPage() {
                       }}
                       title="Click to copy Refresh Token"
                     >
-                      <code className="text-sm font-mono font-normal text-black/80">
+                      <code className="text-sm font-mono font-normal text-foreground/80">
                         {truncateToken(account.refreshToken)}
                       </code>
                     </div>
                   </TableCell>
                   <TableCell className="py-5">
-                    <div className="flex items-center gap-2 text-sm font-normal text-black/80 tracking-tight">
+                    <div className="flex items-center gap-2 text-sm font-normal text-foreground/80 tracking-tight">
                       <Clock className="size-3 text-muted-foreground/60" />
                       {formatDate(account.expired)}
                     </div>
                   </TableCell>
-                  <TableCell className="px-8 py-5 text-sm font-normal text-black/80 tracking-tight">
+                  <TableCell className="px-8 py-5 text-sm font-normal text-foreground/80 tracking-tight">
                     <div className="flex items-center gap-2">
                       <Clock className="size-3 text-muted-foreground/60" />
                       {formatDate(account.updatedAt)}

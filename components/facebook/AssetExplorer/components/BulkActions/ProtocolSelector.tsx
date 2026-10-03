@@ -13,7 +13,7 @@ export function ProtocolSelector({ action, setAction }: ProtocolSelectorProps) {
     <div className="space-y-1.5">
       <label className="text-sm font-bold tracking-widest text-muted-foreground ml-1">Protocol Type</label>
       <Select value={action} onValueChange={(v) => setAction(v as ActionType)}>
-        <SelectTrigger className="h-10 bg-background/50 border-border/50 text-sm font-bold text-black">
+        <SelectTrigger className="h-10 bg-background/50 border-border/50 text-sm font-bold text-foreground">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>

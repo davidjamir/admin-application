@@ -20,11 +20,11 @@ interface BusinessSystemOverviewProps {
 
 export function BusinessSystemOverview({ stats }: BusinessSystemOverviewProps) {
   return (
-    <Card className="glass-pane overflow-hidden h-full border-r border-y border-l-0 border-purple-500/10">
+    <Card className="glass-pane overflow-hidden h-full border border-purple-500/20 dark:border-purple-500/30 rounded-3xl">
       <CardHeader className="pb-4 pt-6 px-6 relative z-10">
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-2xl font-medium text-black dark:text-white tracking-tighter flex items-center gap-2">
+            <CardTitle className="text-2xl font-medium text-foreground dark:text-white tracking-tighter flex items-center gap-2">
               Business Assets
             </CardTitle>
             <CardDescription className="text-[11px] font-medium text-muted-foreground/60">
@@ -33,11 +33,11 @@ export function BusinessSystemOverview({ stats }: BusinessSystemOverviewProps) {
           </div>
           <div className="flex items-center gap-4">
              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-black dark:text-white">{stats.total}</span>
+                <span className="text-sm font-bold text-foreground dark:text-white">{stats.total}</span>
                 <span className="text-[9px] text-muted-foreground font-bold tracking-widest">Bms</span>
              </div>
              <div className="flex flex-col items-end">
-                <span className="text-sm font-bold text-black dark:text-white">{stats.users}</span>
+                <span className="text-sm font-bold text-foreground dark:text-white">{stats.users}</span>
                 <span className="text-[9px] text-muted-foreground font-bold tracking-widest">Users</span>
              </div>
           </div>
@@ -52,14 +52,14 @@ export function BusinessSystemOverview({ stats }: BusinessSystemOverviewProps) {
                 <Briefcase className="w-3.5 h-3.5 text-purple-500" />
                 <span className="text-[10px] font-medium text-purple-500/80">Business Units</span>
               </div>
-              <div className="text-lg font-bold text-black dark:text-white">{stats.total}</div>
+              <div className="text-lg font-bold text-foreground dark:text-white">{stats.total}</div>
             </div>
             <div className="p-3 rounded-2xl bg-blue-500/5 border border-blue-500/10 inner-glow">
               <div className="flex items-center gap-2 mb-1">
                 <Shield className="w-3.5 h-3.5 text-blue-500" />
                 <span className="text-[10px] font-medium text-blue-500/80">Active Users</span>
               </div>
-              <div className="text-lg font-bold text-black dark:text-white">{stats.users}</div>
+              <div className="text-lg font-bold text-foreground dark:text-white">{stats.users}</div>
             </div>
           </div>
 

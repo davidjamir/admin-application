@@ -8,16 +8,16 @@ import { AlertCircle, Layers, Share2, Database } from "lucide-react"
 
 export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats, icon, onCopy, type }) => {
   return (
-    <div className="flex flex-col h-full min-h-0 text-black">
-      <Card className="flex flex-col h-full bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 overflow-hidden transition-all duration-300">
-        <CardHeader className="pb-4 border-b border-slate-100 dark:border-slate-800/50 shrink-0 bg-slate-50/30 dark:bg-slate-900/20">
+    <div className="flex flex-col h-full min-h-0 text-black dark:text-white">
+      <Card className="flex flex-col h-full bg-card border-border overflow-hidden transition-all duration-300">
+        <CardHeader className="pb-4 border-b border-border/50 shrink-0 bg-muted/20">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2.5 bg-white dark:bg-slate-950 rounded-xl border border-slate-100 dark:border-slate-800`}>
+              <div className={`p-2.5 bg-card rounded-xl border border-border`}>
                 {icon}
               </div>
               <div>
-                <CardTitle className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">{title}</CardTitle>
+                <CardTitle className="text-xl font-bold tracking-tight text-black dark:text-white">{title}</CardTitle>
                 <div className="flex items-center gap-2">
                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold tracking-widest uppercase opacity-80 flex items-center gap-1.5">
                       <div className="size-1.5 rounded-full bg-emerald-500 animate-pulse" /> Running
@@ -26,7 +26,7 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats,
               </div>
             </div>
             <div className="text-right">
-                <span className="text-2xl font-bold tabular-nums tracking-tight text-slate-900 dark:text-slate-100">{stats?.total || 0}</span>
+                <span className="text-2xl font-bold tabular-nums tracking-tight text-black dark:text-white">{stats?.total || 0}</span>
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest opacity-60">Units</p>
             </div>
           </div>
@@ -51,7 +51,7 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats,
           </div>
         </CardHeader>
         
-        <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-white dark:bg-slate-950/20">
+        <CardContent className="flex-1 overflow-y-auto p-4 custom-scrollbar bg-card">
           <div className="flex flex-col gap-2.5">
             {items && items.length > 0 ? (
               items.map((item) => (
@@ -59,12 +59,12 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats,
               ))
             ) : (
               <div className="py-24 text-center flex flex-col items-center justify-center gap-5">
-                <div className="size-20 rounded-full bg-white/50 dark:bg-slate-900/50 flex items-center justify-center border border-slate-100 dark:border-slate-800">
-                    <Clock className="size-10 text-slate-300 dark:text-slate-700" />
+                <div className="size-20 rounded-full bg-muted/40 flex items-center justify-center border border-border">
+                    <Clock className="size-10 text-muted-foreground/40" />
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-400 dark:text-slate-600">Queue Clear</p>
-                  <p className="text-[11px] text-slate-400/60 dark:text-slate-600/60 italic">Standby for incoming node cluster.</p>
+                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">Queue Clear</p>
+                  <p className="text-[11px] text-muted-foreground/60 italic">Standby for incoming node cluster.</p>
                 </div>
               </div>
             )}
@@ -74,3 +74,4 @@ export const QueueSection: React.FC<QueueSectionProps> = ({ title, items, stats,
     </div>
   )
 }
+

@@ -215,7 +215,7 @@ export function AccountUserMode({
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-normal tracking-tighter text-black">Businesses</h2>
+            <h2 className="text-lg font-normal tracking-tighter text-foreground">Businesses</h2>
             {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
           </div>
           <div className="text-[10px] text-black/40 tracking-wider">
@@ -226,13 +226,13 @@ export function AccountUserMode({
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow className="hover:bg-transparent border-border/50 h-11">
-                <TableHead className="w-16 text-sm font-bold text-black text-center px-6">#</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6">Business ID</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6">Business Name</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6 text-center">Status</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6 text-center">Role</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6 text-center">Total Apps</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6 text-center">Total Pages</TableHead>
+                <TableHead className="w-16 text-sm font-bold text-foreground text-center px-6">#</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6">Business ID</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6">Business Name</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6 text-center">Status</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6 text-center">Role</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6 text-center">Total Apps</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6 text-center">Total Pages</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -243,7 +243,7 @@ export function AccountUserMode({
                     className={`group border-border/20 transition-all duration-300 cursor-pointer h-14 ${selectedBusinessIds.includes(bm.id) ? "bg-primary/[0.03]" : "hover:bg-muted/40"}`}
                     onClick={() => openBusinessDetail(bm)}
                   >
-                    <TableCell className="text-center text-black font-normal text-sm w-16 px-6">{index + 1}</TableCell>
+                    <TableCell className="text-center text-foreground font-normal text-sm w-16 px-6">{index + 1}</TableCell>
                     <TableCell className="px-6 font-mono text-sm text-black/80">
                       <div className="flex items-center justify-start group/id">
                         <span className="truncate w-[135px]">{bm.id}</span>
@@ -261,7 +261,7 @@ export function AccountUserMode({
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 text-sm text-black tracking-tight font-normal">{bm.name}</TableCell>
+                    <TableCell className="px-6 text-sm text-foreground tracking-tight font-normal">{bm.name}</TableCell>
                     <TableCell className="px-6 text-center">
                       <TooltipProvider>
                         <Tooltip>
@@ -304,7 +304,7 @@ export function AccountUserMode({
                               <div className="border-t border-border/40 my-1 pt-1.5">
                                 <div className="flex items-center justify-between gap-4">
                                   <span className="text-[10px] text-black/40">Verification</span>
-                                  <span className="text-[10px] font-medium capitalize text-black">{bm.verification_status || "unverified"}</span>
+                                  <span className="text-[10px] font-medium capitalize text-foreground">{bm.verification_status || "unverified"}</span>
                                 </div>
                               </div>
                             </div>
@@ -315,7 +315,7 @@ export function AccountUserMode({
                     <TableCell className="px-6 text-center">
                       <div className="flex flex-wrap justify-center gap-1.5">
                         {bm.permitted_roles && bm.permitted_roles.length > 0 ? (
-                          <span className="text-sm text-black capitalize">
+                          <span className="text-sm text-foreground capitalize">
                             {bm.permitted_roles.map(role => role.toLowerCase()).join(", ")}
                           </span>
                         ) : (
@@ -324,12 +324,12 @@ export function AccountUserMode({
                       </div>
                     </TableCell>
                     <TableCell className="px-6 text-center">
-                      <span className="text-sm text-black font-medium tabular-nums">
+                      <span className="text-sm text-foreground font-medium tabular-nums">
                         {bm._expectedAppsCount !== undefined ? bm._expectedAppsCount : (bm.apps?.length || 0)}
                       </span>
                     </TableCell>
                     <TableCell className="px-6 text-center">
-                      <span className="text-sm text-black font-medium tabular-nums">
+                      <span className="text-sm text-foreground font-medium tabular-nums">
                         {bm._expectedPagesCount !== undefined ? bm._expectedPagesCount : (bm.pages?.length || 0)}
                       </span>
                     </TableCell>
@@ -363,7 +363,7 @@ export function AccountUserMode({
       <div className="space-y-4 pb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <h2 className="text-lg font-normal tracking-tighter text-black">Pages Outside Business</h2>
+            <h2 className="text-lg font-normal tracking-tighter text-foreground">Pages Outside Business</h2>
             {loading && <Loader2 className="h-4 w-4 animate-spin text-primary/40 shrink-0" />}
           </div>
           <div className="flex items-center gap-4 text-[10px] text-black/40 tracking-wider">
@@ -371,7 +371,7 @@ export function AccountUserMode({
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 px-3 text-xs text-black/60 hover:text-black hover:bg-black/5 gap-1.5 transition-all duration-200 rounded-lg border border-border/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                className="h-8 px-3 text-xs text-black/60 hover:text-foreground hover:bg-black/5 gap-1.5 transition-all duration-200 rounded-lg border border-border/40 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 onClick={() => {
                   const ids = selectedStandalonePageIds.join("\n")
                   navigator.clipboard.writeText(ids)
@@ -399,8 +399,8 @@ export function AccountUserMode({
                     <span>Add ({selectedStandalonePageIds.length}) into Business</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-[240px] max-h-[350px] overflow-y-auto p-1 rounded-xl shadow-xl backdrop-blur-md bg-white/95 border-border/40">
-                  <div className="p-2 text-[10px] font-bold uppercase tracking-wider text-black/40 border-b border-border/20 mb-1">
+                <DropdownMenuContent align="end" className="w-[240px] max-h-[350px] overflow-y-auto p-1 rounded-xl shadow-xl backdrop-blur-md bg-popover/95 dark:bg-popover border-border/40">
+                  <div className="p-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/20 mb-1">
                     Select Target Business
                   </div>
                   {businessRows.filter(bm => bm.permitted_roles?.includes("ADMIN")).length > 0 ? (
@@ -412,8 +412,8 @@ export function AccountUserMode({
                           onClick={() => handleAddToBm(bm.id)}
                           className="flex flex-col items-start gap-1 p-2 cursor-pointer focus:bg-muted/60 rounded-lg"
                         >
-                          <span className="text-xs font-medium text-black truncate w-full">{bm.name}</span>
-                          <span className="text-[9px] font-mono text-black/40">{bm.id}</span>
+                          <span className="text-xs font-medium text-foreground truncate w-full">{bm.name}</span>
+                          <span className="text-[9px] font-mono text-muted-foreground">{bm.id}</span>
                         </DropdownMenuItem>
                       ))
                   ) : (
@@ -431,11 +431,11 @@ export function AccountUserMode({
           <Table>
             <TableHeader className="bg-muted/30">
               <TableRow className="hover:bg-transparent border-border/50 h-11">
-                <TableHead className="w-16 text-sm font-bold text-black text-center px-6">#</TableHead>
-                <TableHead className="w-[200px] text-sm font-bold text-black px-6">Page ID</TableHead>
-                <TableHead className="text-sm font-bold text-black px-6">Page Name</TableHead>
-                <TableHead className="w-[200px] text-sm font-bold text-black px-6 text-center">Category</TableHead>
-                <TableHead className="w-[200px] text-sm font-bold text-black px-6 text-center">
+                <TableHead className="w-16 text-sm font-bold text-foreground text-center px-6">#</TableHead>
+                <TableHead className="w-[200px] text-sm font-bold text-foreground px-6">Page ID</TableHead>
+                <TableHead className="text-sm font-bold text-foreground px-6">Page Name</TableHead>
+                <TableHead className="w-[200px] text-sm font-bold text-foreground px-6 text-center">Category</TableHead>
+                <TableHead className="w-[200px] text-sm font-bold text-foreground px-6 text-center">
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger className="cursor-help">
@@ -446,19 +446,19 @@ export function AccountUserMode({
                           <p className="text-[10px] font-bold uppercase tracking-widest text-black/40 border-b border-border/40 pb-1">Permission Levels</p>
                           <div className="grid gap-1.5">
                             <div className="flex items-start gap-2">
-                              <span className="text-[10px] font-bold text-black w-14 shrink-0">Owner</span>
+                              <span className="text-[10px] font-bold text-foreground w-14 shrink-0">Owner</span>
                               <span className="text-[10px] text-black/60 leading-tight">Full access to all 6 core page tasks.</span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <span className="text-[10px] font-bold text-black w-14 shrink-0">Admin</span>
+                              <span className="text-[10px] font-bold text-foreground w-14 shrink-0">Admin</span>
                               <span className="text-[10px] text-black/60 leading-tight">Can manage page settings and permissions.</span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <span className="text-[10px] font-bold text-black w-14 shrink-0">Editor</span>
+                              <span className="text-[10px] font-bold text-foreground w-14 shrink-0">Editor</span>
                               <span className="text-[10px] text-black/60 leading-tight">Can publish content and send messages.</span>
                             </div>
                             <div className="flex items-start gap-2">
-                              <span className="text-[10px] font-bold text-black w-14 shrink-0">Moderator</span>
+                              <span className="text-[10px] font-bold text-foreground w-14 shrink-0">Moderator</span>
                               <span className="text-[10px] text-black/60 leading-tight">Can respond to comments and moderate.</span>
                             </div>
                           </div>
@@ -467,7 +467,7 @@ export function AccountUserMode({
                     </Tooltip>
                   </TooltipProvider>
                 </TableHead>
-                <TableHead className="w-[200px] text-sm font-bold text-black px-6 text-center">Actions</TableHead>
+                <TableHead className="w-[200px] text-sm font-bold text-foreground px-6 text-center">Actions</TableHead>
                 <TableHead className="w-16 px-6 text-right">
                   <Checkbox
                     checked={standalonePages.length > 0 && selectedStandalonePageIds.length === standalonePages.length}
@@ -491,7 +491,7 @@ export function AccountUserMode({
                       setSelectedStandalonePageIds(prev => isChecked ? prev.filter(id => id !== page.id) : [...prev, page.id])
                     }}
                   >
-                    <TableCell className="text-center text-black font-normal text-sm w-16 px-6">{index + 1}</TableCell>
+                    <TableCell className="text-center text-foreground font-normal text-sm w-16 px-6">{index + 1}</TableCell>
                     <TableCell className="w-[200px] px-6 font-mono text-sm text-black/80">
                       <div className="flex items-center justify-start group/id">
                         <span className="truncate w-[135px]">{page.id}</span>
@@ -509,9 +509,9 @@ export function AccountUserMode({
                         </Button>
                       </div>
                     </TableCell>
-                    <TableCell className="px-6 text-sm text-black tracking-tight font-normal">{page.name}</TableCell>
+                    <TableCell className="px-6 text-sm text-foreground tracking-tight font-normal">{page.name}</TableCell>
                     <TableCell className="w-[200px] px-6 text-center">
-                      <span className="text-sm text-black capitalize">
+                      <span className="text-sm text-foreground capitalize">
                         {(page.category || "").toLowerCase()}
                       </span>
                     </TableCell>

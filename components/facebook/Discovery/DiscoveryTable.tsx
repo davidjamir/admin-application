@@ -33,11 +33,11 @@ export const DiscoveryTable: React.FC<DiscoveryTableProps> = ({
                 className="border-border/60 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
             </TableHead>
-            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-black">Page Identity</TableHead>
-            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-black">Category</TableHead>
-            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-black">Topic</TableHead>
-            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-black">Token Health</TableHead>
-            <TableHead className="text-right text-xs uppercase font-extrabold tracking-wider pr-6 text-black">Operations</TableHead>
+            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Page Identity</TableHead>
+            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Category</TableHead>
+            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Topic</TableHead>
+            <TableHead className="text-left text-xs uppercase font-extrabold tracking-wider text-foreground">Token Health</TableHead>
+            <TableHead className="text-right text-xs uppercase font-extrabold tracking-wider pr-6 text-foreground">Operations</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -51,9 +51,9 @@ export const DiscoveryTable: React.FC<DiscoveryTableProps> = ({
             <TableRow>
               <TableCell colSpan={6} className="py-20 text-center">
                 <div className="flex flex-col items-center gap-3 opacity-30">
-                  <Layers className="w-10 h-10 text-black" />
+                  <Layers className="w-10 h-10 text-foreground" />
                   <div className="space-y-1">
-                    <p className="text-xs font-bold uppercase tracking-widest text-black">Discovery Required</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-foreground">Discovery Required</p>
                     <p className="text-[10px] text-muted-foreground">Select an active identity to crawl linked page assets.</p>
                   </div>
                 </div>

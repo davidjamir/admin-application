@@ -4,14 +4,14 @@ import { Terminal } from "./Terminal"
 
 export const LoginBranding = () => {
   return (
-    <div className="flex flex-col space-y-8 animate-in slide-in-from-left-8 duration-1000 text-black">
+    <div className="flex flex-col space-y-8 animate-in slide-in-from-left-8 duration-1000 text-foreground">
       <div className="space-y-4 text-left">
         <div className="flex items-center gap-3 mb-2">
           <div className="size-12 bg-gradient-to-tr from-primary to-blue-600 rounded-xl flex items-center justify-center shadow-xl">
             <ShieldCheck className="size-7 text-white" />
           </div>
           <div>
-            <h2 className="text-2xl font-black tracking-tighter uppercase italic text-black">
+            <h2 className="text-2xl font-black tracking-tighter uppercase italic text-foreground">
               7 FORGE <span className="text-primary not-italic">INC</span>
             </h2>
             <p className="text-[10px] font-bold tracking-[0.3em] text-slate-400 dark:text-white/30 uppercase leading-none">

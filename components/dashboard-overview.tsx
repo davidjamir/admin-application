@@ -14,7 +14,7 @@ import { BusinessSystemOverview } from "@/components/business-system-overview"
 import { QueueOverview } from "@/components/queue-overview"
 import { SystemVitals } from "@/components/system-vitals"
 // import { CommandCenter } from "@/components/command-center"
-import { RefreshCcw, Facebook, BookOpen, FileText, Activity } from "lucide-react"
+import { RefreshCcw, Facebook, BookOpen, FileText, Activity, LayoutDashboard } from "lucide-react"
 import { LoadingScreen } from "./ui/loading-screen"
 import { Button } from "@/components/ui/button"
 import { Area, AreaChart, ResponsiveContainer } from "recharts"
@@ -93,7 +93,7 @@ function StatCard({ title, icon: Icon, value, desc, trend, data, color }: StatCa
                 <div className={`p-2 rounded-2xl ${color.bg} ${color.text} inner-glow`}>
                   <Icon className="h-4 w-4" />
                 </div>
-                <p className="text-[13px] font-medium text-black dark:text-white tracking-tight">
+                <p className="text-[13px] font-medium text-foreground dark:text-white tracking-tight">
                   {title}
                 </p>
               </div>
@@ -200,24 +200,29 @@ export function DashboardOverview() {
       animate="visible"
       className="space-y-2 mt-0"
     >
-      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-white/[0.02] py-2.5 px-4 rounded-3xl border border-white/5">
-        <div className="flex items-baseline gap-4">
-          <h2 className="text-4xl font-medium tracking-tight text-black dark:text-white">
-            Dash Board
-          </h2>
-          <div className="flex items-center gap-2">
-            <p className="text-[11px] text-muted-foreground/60 italic">
-              Last Sync: {new Date(stats.fetchedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date(stats.fetchedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-            </p>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => fetchStats(true)}
-              className={`rounded-full h-6 w-6 transition-all cursor-pointer ${loading ? "bg-green-500/20" : "hover:bg-green-500/5"}`}
-              disabled={loading}
-            >
-              <RefreshCcw className={`h-3 w-3 transition-colors ${loading ? "text-green-600 animate-spin" : "text-green-500/70"}`} />
-            </Button>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between bg-card/40 dark:bg-card/60 py-2.5 px-4 rounded-2xl border border-border/40 backdrop-blur-md">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary shadow-xs">
+            <LayoutDashboard className="size-5" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight text-foreground">
+              Dashboard
+            </h1>
+            <div className="flex items-center gap-2 mt-0.5">
+              <p className="text-[11px] text-muted-foreground/70 italic">
+                Last Sync: {new Date(stats.fetchedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date(stats.fetchedAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
+              </p>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => fetchStats(true)}
+                className={`rounded-full h-5 w-5 transition-all cursor-pointer ${loading ? "bg-green-500/20" : "hover:bg-green-500/5"}`}
+                disabled={loading}
+              >
+                <RefreshCcw className={`h-3 w-3 transition-colors ${loading ? "text-green-600 animate-spin" : "text-green-500/70"}`} />
+              </Button>
+            </div>
           </div>
         </div>
         <div className="hidden md:block">
@@ -270,9 +275,9 @@ export function DashboardOverview() {
 
       <div className="grid gap-6 md:grid-cols-2">
         <motion.div variants={itemVariants} className="col-span-1">
-          <Card className="glass-pane overflow-hidden h-full border-r border-y border-l-0 border-blue-500/10">
+          <Card className="glass-pane overflow-hidden h-full border border-blue-500/20 dark:border-blue-500/30 rounded-3xl">
             <CardHeader className="pb-4 pt-6 px-6 relative z-10">
-              <CardTitle className="text-2xl font-medium text-black dark:text-white tracking-tighter">
+              <CardTitle className="text-2xl font-medium text-foreground tracking-tighter">
                 Website Posts Activity
               </CardTitle>
               <CardDescription className="text-[11px] font-medium text-muted-foreground/60">

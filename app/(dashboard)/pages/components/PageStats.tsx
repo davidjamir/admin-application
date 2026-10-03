@@ -15,9 +15,9 @@ export const PageStats: React.FC<PageStatsProps> = ({
       {pageCount !== null && (
         <div className="text-sm text-muted-foreground">
           Showing{" "}
-          <span className="font-semibold tabular-nums text-black">{countLabel}</span>{" "}
+          <span className="font-semibold tabular-nums text-foreground">{countLabel}</span>{" "}
           <span>{pageCount === 1 ? "page" : "pages"}</span> in{" "}
-          <span className="font-medium text-black">{filterLabel}</span>
+          <span className="font-medium text-foreground">{filterLabel}</span>
           {searchLabel}
         </div>
       )}

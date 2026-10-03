@@ -225,7 +225,7 @@ export const PageDetailSheet: React.FC<PageDetailSheetProps> = ({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end text-black">
+    <div className="fixed inset-0 z-50 flex justify-end text-foreground">
       <div 
         className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity animate-in fade-in" 
         onClick={onClose}

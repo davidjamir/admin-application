@@ -41,7 +41,7 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, on
         <div className="rounded-xl border border-border/40 bg-card overflow-x-auto shadow-sm mt-3">
             <table className="w-full text-xs table-fixed min-w-[1120px]">
                 <thead><tr className="border-b bg-muted/40">
-                    <th className="px-4 py-4 font-bold text-sm text-left w-[50px] text-black">#</th>
+                    <th className="px-4 py-4 font-bold text-sm text-left w-[50px] text-foreground">#</th>
                     <SortableTH label="Domain" col="domain" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[300px]" />
                     <SortableTH label="Channel" col="channel" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
                     <SortableTH label="Last Active" col="date" align="center" sort={{ toggle: toggleSort, Icon: sortIcon, key: sortKey }} className="w-[120px]" />
@@ -58,18 +58,18 @@ export const QuotasTable: React.FC<QuotasTableProps> = ({ quotas, selectedId, on
                         return (
                             <tr key={g.domain} onClick={() => onSelect({ tab: "quotas", data: g })}
                                 className={`border-b hover:bg-muted/30 cursor-pointer transition-colors ${selectedId === g.domain ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}>
-                                <td className="px-4 py-4 text-black text-sm w-[50px]">{i + 1}</td>
-                                <td className="px-4 py-4 w-[300px] text-black text-sm"><div className="truncate">{g.domain}</div><div className="text-[10px] lowercase">{g.type}</div></td>
-                                <td className="px-4 py-4 text-black truncate w-[120px] text-sm">{channelMap.get(g.domain) || ""}</td>
-                                <td className="px-4 py-4 text-center w-[120px] text-black text-sm whitespace-nowrap">{g.latest.date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}</td>
-                                <td className="px-4 py-4 text-center w-[85px] text-black text-sm tabular-nums">{g.latest.count}</td>
-                                <td className="px-4 py-4 text-center text-black text-sm tabular-nums w-[85px]">{g.latest.limit}</td>
+                                <td className="px-4 py-4 text-foreground text-sm w-[50px]">{i + 1}</td>
+                                <td className="px-4 py-4 w-[300px] text-foreground text-sm"><div className="truncate">{g.domain}</div><div className="text-[10px] lowercase">{g.type}</div></td>
+                                <td className="px-4 py-4 text-foreground truncate w-[120px] text-sm">{channelMap.get(g.domain) || ""}</td>
+                                <td className="px-4 py-4 text-center w-[120px] text-foreground text-sm whitespace-nowrap">{g.latest.date.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3")}</td>
+                                <td className="px-4 py-4 text-center w-[85px] text-foreground text-sm tabular-nums">{g.latest.count}</td>
+                                <td className="px-4 py-4 text-center text-foreground text-sm tabular-nums w-[85px]">{g.latest.limit}</td>
                                 <td className="px-4 py-4 w-[250px]">
                                     <div className="flex items-center gap-2">
                                         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                                             <div className={`h-full rounded-full transition-all ${barColor}`} style={{ width: `${Math.min(pct, 100)}%` }} />
                                         </div>
-                                        <span className="text-[10px] text-black font-bold tabular-nums w-7">{pct}%</span>
+                                        <span className="text-[10px] text-foreground font-bold tabular-nums w-7">{pct}%</span>
                                     </div>
                                 </td>
                             </tr>

@@ -94,7 +94,7 @@ export function QueueOverview({ queues, fetchedAt, onRefresh }: QueueOverviewPro
               </div>
               <div>
                 <div className="text-[10px] font-medium text-muted-foreground tracking-wider mb-0.5">{item.label}</div>
-                <div className="text-2xl font-black text-black dark:text-white tabular-nums tracking-tighter">
+                <div className="text-2xl font-black text-foreground dark:text-white tabular-nums tracking-tighter">
                   {item.count.toLocaleString()}
                 </div>
               </div>

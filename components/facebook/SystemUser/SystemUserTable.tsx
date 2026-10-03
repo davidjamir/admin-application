@@ -19,14 +19,14 @@ export const SystemUserTable: React.FC<SystemUserTableProps> = ({
             <Table>
                 <TableHeader className="bg-muted/50">
                     <TableRow className="hover:bg-transparent border-border/50">
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-center w-10">#</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset ID</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Asset Identity</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Status</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Category</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">App</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Update</TableHead>
-                        <TableHead className="text-xs font-extrabold text-black tracking-wider py-4 px-6 text-left">Actions</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-center w-10">#</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Asset ID</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Asset Identity</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Status</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Category</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">App</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Update</TableHead>
+                        <TableHead className="text-xs font-extrabold text-foreground tracking-wider py-4 px-6 text-left">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>

@@ -33,7 +33,7 @@ export default function AdCreativesPage() {
 
   return (
     <div className="flex gap-0 h-full relative min-h-[600px]">
-      <div className="p-6 flex flex-col gap-10 flex-1 min-w-0">
+      <div className="flex flex-col gap-6 flex-1 min-w-0">
         <AdCreativeHeader 
           fetchedAt={fetchedAt}
           refreshing={refreshing}

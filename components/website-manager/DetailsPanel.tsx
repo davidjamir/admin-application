@@ -122,20 +122,20 @@ const QuotaDetails = ({ g, allDates, dateFilter, channel }: { g: QuotaGroup, all
             </div>
             <div className="grid grid-cols-3 gap-2">
                 <div className="p-3 rounded-lg border text-center bg-card shadow-sm border-border/60">
-                    <div className="text-[10px] text-black font-bold uppercase tracking-wider mb-1">Posts</div>
+                    <div className="text-[10px] text-foreground font-bold uppercase tracking-wider mb-1">Posts</div>
                     <div className="font-bold text-xl" style={{ color: barColor }}>{qt.count}</div>
                 </div>
                 <div className="p-3 rounded-lg border text-center bg-card shadow-sm border-border/60">
-                    <div className="text-[10px] text-black font-bold uppercase tracking-wider mb-1">Limit</div>
-                    <div className="font-bold text-xl text-black">{qt.limit}</div>
+                    <div className="text-[10px] text-foreground font-bold uppercase tracking-wider mb-1">Limit</div>
+                    <div className="font-bold text-xl text-foreground">{qt.limit}</div>
                 </div>
                 <div className="p-3 rounded-lg border text-center bg-card shadow-sm border-border/60">
-                    <div className="text-[10px] text-black font-bold uppercase tracking-wider mb-1">Usage</div>
+                    <div className="text-[10px] text-foreground font-bold uppercase tracking-wider mb-1">Usage</div>
                     <div className="font-bold text-xl" style={{ color: barColor }}>{pct}%</div>
                 </div>
             </div>
             <div className="pt-2 px-1">
-                <h3 className="text-xs font-bold text-black uppercase tracking-wider">Post Activity History</h3>
+                <h3 className="text-xs font-bold text-foreground uppercase tracking-wider">Post Activity History</h3>
                 <p className="text-[10px] text-muted-foreground italic">Trend of posts for <span className="font-bold text-primary">{g.domain}</span> over the last 10 recordable days</p>
             </div>
             <div className="rounded-xl border bg-card p-3 h-[250px] shadow-sm">
@@ -155,14 +155,14 @@ const QuotaDetails = ({ g, allDates, dateFilter, channel }: { g: QuotaGroup, all
                 </ResponsiveContainer>
             </div>
             
-            <div className="mt-2 p-4 rounded-xl bg-white border border-emerald-600 shadow-sm flex items-center justify-between">
+            <div className="mt-2 p-4 rounded-xl bg-card dark:bg-emerald-950/20 border border-emerald-600/40 shadow-sm flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-emerald-50">
-                        <Calendar className="w-5 h-5 text-emerald-600" />
+                    <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30">
+                        <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                     </div>
                     <div>
-                        <div className="text-[10px] text-emerald-800 font-bold uppercase tracking-widest">Selected Date</div>
-                        <div className="text-sm font-bold text-black">{formattedDate}</div>
+                        <div className="text-[10px] text-emerald-800 dark:text-emerald-300 font-bold uppercase tracking-widest">Selected Date</div>
+                        <div className="text-sm font-bold text-foreground">{formattedDate}</div>
                     </div>
                 </div>
             </div>
@@ -181,7 +181,7 @@ export const DetailsPanel: React.FC<DetailsPanelProps> = ({ selected, onClose, o
         <div className="fixed inset-y-0 right-0 w-[420px] bg-card border-l shadow-2xl z-40 flex flex-col animate-in slide-in-from-right duration-300">
             <div className="px-5 py-4 border-b flex items-center justify-between">
                 <div className="min-w-0 flex-1 mr-4">
-                    <h2 className="text-lg font-bold truncate text-black">{title}</h2>
+                    <h2 className="text-lg font-bold truncate text-foreground">{title}</h2>
                     <p className="text-xs text-muted-foreground truncate">{subtitle}</p>
                 </div>
                 <button onClick={onClose} className="p-2 hover:bg-muted rounded-full transition-colors cursor-pointer shrink-0"><X className="w-5 h-5" /></button>

@@ -21,9 +21,9 @@ export const DeleteUserDialog: React.FC<DeleteUserDialogProps> = ({
                         <AlertTriangle className="w-10 h-10 text-red-500" />
                     </div>
                     <div className="space-y-2">
-                        <DialogTitle className="text-2xl font-black tracking-tight text-black">Terminate Identity?</DialogTitle>
+                        <DialogTitle className="text-2xl font-black tracking-tight text-foreground">Terminate Identity?</DialogTitle>
                         <DialogDescription className="text-sm font-medium text-muted-foreground px-4">
-                            You are about to permanently remove <span className="font-bold text-black">{deletingUser?.name}</span> from the personnel registry. This action is destructive and irreversible.
+                            You are about to permanently remove <span className="font-bold text-foreground">{deletingUser?.name}</span> from the personnel registry. This action is destructive and irreversible.
                         </DialogDescription>
                     </div>
                 </div>

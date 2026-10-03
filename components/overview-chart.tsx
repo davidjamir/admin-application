@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }: { active?: boolean; payload?:
     return (
       <div className="bg-white/98 dark:bg-[#0c0c0e] rounded-lg border border-border p-2 min-w-[140px] shadow-none ring-1 ring-black/5 backdrop-blur-xl">
         <div className="pb-1 mb-1 border-b border-border/40">
-          <p className="text-[12px] font-bold text-black dark:text-white tracking-tight">
+          <p className="text-[12px] font-bold text-foreground dark:text-white tracking-tight">
             Mar {day}, 2026
           </p>
         </div>

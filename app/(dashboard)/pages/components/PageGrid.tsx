@@ -51,7 +51,7 @@ export const PageGrid: React.FC<PageGridProps> = ({
     return (
       <Card className="flex flex-col items-center justify-center py-20 bg-muted/20 border-dashed">
         <LayoutGrid className="h-12 w-12 text-muted-foreground opacity-20 mb-4" />
-        <h3 className="text-xl font-semibold text-black">No pages found</h3>
+        <h3 className="text-xl font-semibold text-foreground">No pages found</h3>
         <p className="text-muted-foreground text-sm mt-1">Try adjusting your filters or search query.</p>
       </Card>
     )
